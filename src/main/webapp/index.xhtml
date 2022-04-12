@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:f="http://java.sun.com/jsf/core">
+<h:head>
+    <title>JSF Test Startseite</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+    <h:outputStylesheet library="css" name="w3.css"/>
+</h:head>
+
+<h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
+    <ui:insert name="header">
+        <ui:include src="/templates/header.xhtml"/>
+    </ui:insert>
+
+    <h:panelGrid styleClass="maincontrainer" columns="2">
+        <h:panelGroup styleClass="content" id="content" layout="block">
+            Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum.
+        </h:panelGroup>
+        <h:panelGroup styleClass="side" id="sidebar" layout="block">
+            <h:panelGroup id="leaguetable">
+                <h4><b>TABELLE</b></h4>
+                <p class="w3-text-grey">Template by W3.CSS</p>
+                <div class="w3-bar-block">
+                    <h:form>
+                        <h:dataTable value="#{teamTable.teamEntries}" var="teamentry" styleClass="sideLeagueTable"
+                                     headerClass="sideLeagueTableHeader"
+                                     rowClasses="sideLeagueTableUpRow,sideLeagueTableUpRow,sideLeagueTableEvenRow,
+                                     sideLeagueTableEvenRow,sideLeagueTableEvenRow,sideLeagueTableEvenRow,
+                                     sideLeagueTableDownRow,sideLeagueTableDownRow">
+                            <h:column>
+                                <f:facet name="header">Pl.</f:facet>
+                                #{teamentry.place}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header"> Team </f:facet>
+                                <h:commandLink styleClass="team-item" action="#{teamController.doLookup(teamentry.id)}"
+                                               target="_blank" value="#{teamentry.abbrevation}"/>
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Wins</f:facet>
+                                #{teamentry.result}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Score</f:facet>
+                                #{teamentry.score}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">S  U  N</f:facet>
+                                #{teamentry.scoreLong}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Kills</f:facet>
+                                #{teamentry.kills}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Gold</f:facet>
+                                #{teamentry.gold}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Creeps</f:facet>
+                                #{teamentry.cs}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Obj</f:facet>
+                                #{teamentry.objectives}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Dauer</f:facet>
+                                #{teamentry.matchtime}
+                            </h:column>
+                        </h:dataTable>
+                    </h:form>
+                </div>
+            </h:panelGroup>
+            <h:panelGroup id="schedule">
+                <h4><b>SPIELPLAN</b></h4>
+                <div class="w3-bar-block">
+                    <h:form>
+                        <h:dataTable value="#{scheduleTable.scheduledGame}" var="scheduleentry" styleClass="sideLeagueTable"
+                                     headerClass="sideLeagueTableHeader"
+                                     columnClasses="col1,col2,col3,col4,col5"
+                                     rowClasses="sideScheduleTableRow">
+                            <h:column>
+                                <f:facet name="header">in</f:facet>
+                                #{scheduleentry.displayCountdown}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Zeit</f:facet>
+                                #{scheduleentry.displayDate}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Modus</f:facet>
+                                #{scheduleentry.type}
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Gegner</f:facet>
+                                <h:commandLink styleClass="team-item" action="#{matchController.doLookup(scheduleentry.id)}"
+                                               target="_blank" value="#{scheduleentry.enemyTeam}"/>
+                            </h:column>
+
+                            <h:column>
+                                <f:facet name="header">Score</f:facet>
+                                #{scheduleentry.score}
+                            </h:column>
+                        </h:dataTable>
+                    </h:form>
+                </div>
+            </h:panelGroup>
+
+        </h:panelGroup>
+    </h:panelGrid>
+
+
+    <ui:insert name="footer">
+        <ui:include src="/templates/footer.xhtml"/>
+    </ui:insert>
+</h:body>
+</html>

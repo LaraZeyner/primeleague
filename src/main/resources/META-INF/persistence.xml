@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<persistence version="2.1"
+             xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
+    <persistence-unit name="Persistence">
+        <class>de.xeri.league.models.dynamic.Ability</class>
+        <class>de.xeri.league.models.dynamic.Abilitystyle</class>
+        <class>de.xeri.league.models.dynamic.Champion</class>
+        <class>de.xeri.league.models.dynamic.Item</class>
+        <class>de.xeri.league.models.dynamic.ItemStat</class>
+        <class>de.xeri.league.models.dynamic.Item_Stat</class>
+        <class>de.xeri.league.models.dynamic.Itemstyle</class>
+        <class>de.xeri.league.models.dynamic.LeagueMap</class>
+        <class>de.xeri.league.models.dynamic.Resource</class>
+        <class>de.xeri.league.models.dynamic.Runetree</class>
+        <class>de.xeri.league.models.dynamic.Rune</class>
+        <class>de.xeri.league.models.dynamic.Summonerspell</class>
+        <class>de.xeri.league.models.dynamic.Wincondition</class>
+        <class>de.xeri.league.models.ids.ChampionRelationshipId</class>
+        <class>de.xeri.league.models.ids.OutputId</class>
+        <class>de.xeri.league.models.ids.PlaystyleId</class>
+        <class>de.xeri.league.models.ids.WinconditionId</class>
+        <class>de.xeri.league.models.io.Input</class>
+        <class>de.xeri.league.models.io.Output</class>
+        <class>de.xeri.league.models.league.Account</class>
+        <class>de.xeri.league.models.league.League</class>
+        <class>de.xeri.league.models.league.Matchday</class>
+        <class>de.xeri.league.models.league.Matchlog</class>
+        <class>de.xeri.league.models.league.Player</class>
+        <class>de.xeri.league.models.league.Schedule</class>
+        <class>de.xeri.league.models.league.Season</class>
+        <class>de.xeri.league.models.league.SeasonElo</class>
+        <class>de.xeri.league.models.league.Stage</class>
+        <class>de.xeri.league.models.league.Team</class>
+        <class>de.xeri.league.models.league.TurnamentMatch</class>
+        <class>de.xeri.league.models.match.ChampionSelection</class>
+        <class>de.xeri.league.models.match.Game</class>
+        <class>de.xeri.league.models.match.Playerperformance</class>
+        <class>de.xeri.league.models.match.PlayerperformanceSummonerspell</class>
+        <class>de.xeri.league.models.match.ScheduledGame</class>
+        <class>de.xeri.league.models.match.Teamperformance</class>
+        <class>de.xeri.league.models.others.ChampionRelationship</class>
+        <class>de.xeri.league.models.others.Playstyle</class>
+        <properties>
+            <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test?serverTimezone=UTC" />
+            <property name="javax.persistence.jdbc.user" value="trues" />
+            <property name="javax.persistence.jdbc.password" value="Trueszugriff1!" />
+        </properties>
+    </persistence-unit>
+</persistence>
+

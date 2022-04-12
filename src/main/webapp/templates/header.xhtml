@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:b="http://bootsfaces.net/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<body>
+<ui:composition>
+    <ui:fragment>
+        <b:container styleClass="w3-light-grey" fluid="true">
+            <b:row>
+                <b:column span="4">
+                    <b:dropMenu styleClass="h1" icon="logo.jpg" value="TRUE Esports">
+                        <b:navLink value="Startseite" href="index.xhtml"/>
+                        <b:navLink value="Prime League" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Team"/>
+                        <b:navLink value="Teamprofil" href="#"/>
+                        <b:navLink value="Ergebnisse Spring" href="#"/>
+                        <b:navLink value="Teamstats" href="#"/>
+                        <b:navLink value="Historie" href="#"/>
+                    </b:dropMenu>
+                </b:column>
+                <b:column span="2">
+                    <b:dropMenu value="Match gegen BooM">
+                        <b:navLink header="Spiel beendet 0:2"/>
+                        <b:navLink value="Übersicht und Livespiel" href="#"/>
+                        <b:navLink value="Matchinfos" href="#"/>
+                        <b:navLink value="Ereignisse" href="#"/>
+                        <b:navLink value="Die Spieler" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Planung"/>
+                        <b:navLink value="Scounting" href="#"/>
+                        <b:navLink value="Teamkomposition" href="#"/>
+                        <b:navLink value="Terminplanung" href="#"/>
+                    </b:dropMenu>
+                </b:column>
+                <b:column span="2">
+                    <b:dropMenu value="Turniere">
+                        <b:navLink header="Liga: Division 7.14"/>
+                        <b:navLink value="Spielplan und Tabelle" href="#"/>
+                        <b:navLink value="Teams" href="#"/>
+                        <b:navLink value="Ligaspiele" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Winter 2021"/>
+                        <b:navLink value="Übersicht" href="#"/>
+                        <b:navLink value="Prime League" href="#"/>
+                        <b:navLink value="Clash Turnier" href="#"/>
+                        <b:navLink value="Scrimmages" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Summer 2021"/>
+                        <b:navLink value="Übersicht" href="#"/>
+                        <b:navLink value="Prime League" href="#"/>
+                        <b:navLink value="Clash Turnier" href="#"/>
+                        <b:navLink value="Scrimmages" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Spring 2021"/>
+                        <b:navLink value="Übersicht" href="#"/>
+                        <b:navLink value="Prime League" href="#"/>
+                        <b:navLink value="Clash Turnier" href="#"/>
+                        <b:navLink value="Scrimmages" href="#"/>
+                    </b:dropMenu>
+                </b:column>
+                <b:column span="2">
+                    <b:dropMenu value="Auswertung">
+                        <b:navLink header="Ergebnisse"/>
+                        <b:navLink value="Teamresultate" href="#"/>
+                        <b:navLink value="Spielerresultate" href="#"/>
+                        <b:navLink value="Rekorde" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Datenbank"/>
+                        <b:navLink value="Champions" href="#"/>
+                        <b:navLink value="Items" href="#"/>
+                        <b:navLink value="Runen" href="#"/>
+                    </b:dropMenu>
+                </b:column>
+                <b:column span="2">
+                    <b:dropMenu value="Einstellungen" iconAwesome="gear">
+                        <b:navLink header="Einstellungen"/>
+                        <b:navLink value="Anzeigeeinstellungen" href="#"/>
+                        <b:navLink value="Championeinstellungen" href="#"/>
+                        <b:navLink value="Matcheinstellungen" href="#"/>
+                        <b:navLink/>
+                        <b:navLink header="Eintragen"/>
+                        <b:navLink value="Championplaystyle" href="#"/>
+                        <b:navLink value="Spieleraccounts" href="#"/>
+                        <b:navLink value="Scrimpartner" href="#"/>
+                    </b:dropMenu>
+                </b:column>
+
+
+                <!--<b:column span="10">
+                    <b:navBar styleClass="w3-light-grey" fluid="false">
+                        <b:navbarLinks styleClass="hidden-xs">
+                            <b:navLink value="Technically Really Unique Esports" styleClass="h1" href="index.xhtml"/>
+                        </b:navbarLinks>
+                        Following line is needed for TBS 3.0.1 (panel content overflow issue)
+                        <b:navbarLinks pull="right" styleClass="hidden-xs">
+                            <b:dropMenu value="TRUE Esports">
+                                <b:navLink value="Startseite" href="index.xhtml"/>
+                                <b:navLink value="Prime League" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Team"/>
+                                <b:navLink value="Teamprofil" href="#"/>
+                                <b:navLink value="Ergebnisse Spring" href="#"/>
+                                <b:navLink value="Teamstats" href="#"/>
+                                <b:navLink value="Historie" href="#"/>
+                            </b:dropMenu>
+                            <b:dropMenu value="Match gegen BooM">
+                                <b:navLink header="Spiel beendet 0:2"/>
+                                <b:navLink value="Übersicht und Livespiel" href="#"/>
+                                <b:navLink value="Matchinfos" href="#"/>
+                                <b:navLink value="Ereignisse" href="#"/>
+                                <b:navLink value="Die Spieler" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Planung"/>
+                                <b:navLink value="Scounting" href="#"/>
+                                <b:navLink value="Teamkomposition" href="#"/>
+                                <b:navLink value="Terminplanung" href="#"/>
+                            </b:dropMenu>
+                            <b:dropMenu value="Turniere">
+                                <b:navLink header="Liga: Division 7.14"/>
+                                <b:navLink value="Spielplan und Tabelle" href="#"/>
+                                <b:navLink value="Teams" href="#"/>
+                                <b:navLink value="Ligaspiele" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Winter 2021"/>
+                                <b:navLink value="Übersicht" href="#"/>
+                                <b:navLink value="Prime League" href="#"/>
+                                <b:navLink value="Clash Turnier" href="#"/>
+                                <b:navLink value="Scrimmages" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Summer 2021"/>
+                                <b:navLink value="Übersicht" href="#"/>
+                                <b:navLink value="Prime League" href="#"/>
+                                <b:navLink value="Clash Turnier" href="#"/>
+                                <b:navLink value="Scrimmages" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Spring 2021"/>
+                                <b:navLink value="Übersicht" href="#"/>
+                                <b:navLink value="Prime League" href="#"/>
+                                <b:navLink value="Clash Turnier" href="#"/>
+                                <b:navLink value="Scrimmages" href="#"/>
+                            </b:dropMenu>
+                            <b:dropMenu value="Auswertung">
+                                <b:navLink header="Ergebnisse"/>
+                                <b:navLink value="Teamresultate" href="#"/>
+                                <b:navLink value="Spielerresultate" href="#"/>
+                                <b:navLink value="Rekorde" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Datenbank"/>
+                                <b:navLink value="Champions" href="#"/>
+                                <b:navLink value="Items" href="#"/>
+                                <b:navLink value="Runen" href="#"/>
+                            </b:dropMenu>
+                            <b:dropMenu value="Einstellungen" iconAwesome="gear">
+                                <b:navLink header="Einstellungen"/>
+                                <b:navLink value="Anzeigeeinstellungen" href="#"/>
+                                <b:navLink value="Championeinstellungen" href="#"/>
+                                <b:navLink value="Matcheinstellungen" href="#"/>
+                                <b:navLink/>
+                                <b:navLink header="Eintragen"/>
+                                <b:navLink value="Championplaystyle" href="#"/>
+                                <b:navLink value="Spieleraccounts" href="#"/>
+                                <b:navLink value="Scrimpartner" href="#"/>
+                            </b:dropMenu>
+                        </b:navbarLinks>
+                    </b:navBar>
+                </b:column>-->
+            </b:row>
+
+        </b:container>
+    </ui:fragment>
+
+</ui:composition>
+</body>
+</html>
