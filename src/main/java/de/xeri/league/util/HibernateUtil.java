@@ -5,30 +5,9 @@ import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import de.xeri.league.models.league.Account;
-import de.xeri.league.models.league.Matchlog;
-import de.xeri.league.models.others.ChampionRelationship;
-import de.xeri.league.models.match.ChampionSelection;
-import de.xeri.league.models.match.Game;
-import de.xeri.league.models.league.League;
-import de.xeri.league.models.league.Matchday;
-import de.xeri.league.models.league.Player;
-import de.xeri.league.models.match.Playerperformance;
-import de.xeri.league.models.match.PlayerperformanceSummonerspell;
-import de.xeri.league.models.others.Playstyle;
-import de.xeri.league.models.league.Schedule;
-import de.xeri.league.models.match.ScheduledGame;
-import de.xeri.league.models.league.Season;
-import de.xeri.league.models.league.SeasonElo;
-import de.xeri.league.models.league.Stage;
-import de.xeri.league.models.league.Team;
-import de.xeri.league.models.match.Teamperformance;
-import de.xeri.league.models.league.TurnamentMatch;
-import de.xeri.league.models.dynamic.Wincondition;
 import de.xeri.league.models.dynamic.Ability;
 import de.xeri.league.models.dynamic.Abilitystyle;
 import de.xeri.league.models.dynamic.Champion;
-import de.xeri.league.models.match.Gametype;
 import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.models.dynamic.ItemStat;
 import de.xeri.league.models.dynamic.Item_Stat;
@@ -38,8 +17,28 @@ import de.xeri.league.models.dynamic.Resource;
 import de.xeri.league.models.dynamic.Rune;
 import de.xeri.league.models.dynamic.Runetree;
 import de.xeri.league.models.dynamic.Summonerspell;
+import de.xeri.league.models.dynamic.Wincondition;
 import de.xeri.league.models.io.Input;
-import de.xeri.league.models.io.Output;
+import de.xeri.league.models.league.Account;
+import de.xeri.league.models.league.League;
+import de.xeri.league.models.league.Matchday;
+import de.xeri.league.models.league.Matchlog;
+import de.xeri.league.models.league.Player;
+import de.xeri.league.models.league.Schedule;
+import de.xeri.league.models.league.Season;
+import de.xeri.league.models.league.SeasonElo;
+import de.xeri.league.models.league.Stage;
+import de.xeri.league.models.league.Team;
+import de.xeri.league.models.league.TurnamentMatch;
+import de.xeri.league.models.match.ChampionSelection;
+import de.xeri.league.models.match.Game;
+import de.xeri.league.models.match.Gametype;
+import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.PlayerperformanceSummonerspell;
+import de.xeri.league.models.match.ScheduledGame;
+import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.models.others.ChampionRelationship;
+import de.xeri.league.models.others.Playstyle;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -72,7 +71,6 @@ public final class HibernateUtil {
           LeagueMap.class,
           Matchday.class,
           Matchlog.class,
-          Output.class,
           Player.class,
           Playerperformance.class,
           PlayerperformanceSummonerspell.class,

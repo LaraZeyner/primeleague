@@ -1,7 +1,6 @@
 package de.xeri.league.models.match;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -43,7 +42,7 @@ import org.hibernate.annotations.Check;
 public class Playerperformance implements Serializable {
 
   @Transient
-  private static final long serialVersionUID = 8351390618689373240L;
+  private static final long serialVersionUID = 6290895798073708343L;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -112,12 +111,6 @@ public class Playerperformance implements Serializable {
   @Column(name = "damage_shielded", nullable = false)
   private int damageShielded;
 
-  @Column(name = "damage_team_dealed", precision = 9, scale = 8)
-  private BigDecimal damageTeamDealed;
-
-  @Column(name = "damage_team_taken", precision = 9, scale = 8)
-  private BigDecimal damageTeamTaken;
-
   @Column(name = "kills", nullable = false)
   private byte kills;
 
@@ -156,27 +149,30 @@ public class Playerperformance implements Serializable {
   private short timeDead;
 
   @Column(name = "kills_teleport")
-  private byte killsTeleport;
+  private byte teleportKills;
 
   @Column(name = "immobilizations", columnDefinition = "TINYINT UNSIGNED")
   private short immobilizations;
 
   @Column(name = "wards_control", nullable = false)
-  private byte wardsControl;
+  private byte controlWards;
 
   @Column(name = "wards_control_coverage", columnDefinition = "TINYINT UNSIGNED")
-  private short wardsControlCoverage;
+  private short controlWardUptime;
 
   @Column(name = "wards_placed", columnDefinition = "TINYINT UNSIGNED NOT NULL")
   private short wardsPlaced;
 
-  @Column(name = "wards_cleared", columnDefinition = "TINYINT UNSIGNED NIT NULL")
+  @Column(name = "wards_cleared", columnDefinition = "TINYINT UNSIGNED NOT NULL")
   private short wardsCleared;
 
   @Column(name = "wards_guarded")
   private byte wardsGuarded;
 
-  @Column(name = "visionscore_advantage", nullable = false)
+  @Column(name = "visionscore", columnDefinition = "TINYINT UNSIGNED NOT NULL")
+  private short visionScore;
+
+  @Column(name = "visionscore_advantage")
   private byte visionscoreAdvantage;
 
   @Column(name = "objectives_stolen", nullable = false)
@@ -206,7 +202,7 @@ public class Playerperformance implements Serializable {
 
   @Check(constraints = "turrets_splitpushed IS NULL OR turrets_splitpushed <= 11")
   @Column(name = "turrets_splitpushed")
-  private byte turretsSplitpushed;
+  private byte splitpushedTurrets;
 
   @Column(name = "team_invading")
   private byte teamInvading;
@@ -229,6 +225,12 @@ public class Playerperformance implements Serializable {
   @Column(name = "dives_done")
   private byte divesDone;
 
+  @Column(name = "dives_successful")
+  private byte divesSuccessful;
+
+  @Column(name = "dives_gotten")
+  private byte divesGotten;
+
   @Column(name = "dives_protected")
   private byte divesProtected;
 
@@ -236,7 +238,7 @@ public class Playerperformance implements Serializable {
   private short goldTotal;
 
   @Column(name = "gold_bounty")
-  private short goldBounty;
+  private short bountyGold;
 
   @Column(name = "experience_total", nullable = false, columnDefinition = "SMALLINT UNSIGNED")
   private int experienceTotal;
@@ -249,6 +251,9 @@ public class Playerperformance implements Serializable {
 
   @Column(name = "creeps_invade", nullable = false, columnDefinition = "TINYINT UNSIGNED NOT NULL")
   private short creepsInvade;
+
+  @Column(name = "early_lane_lead")
+  private short earlyLaneLead;
 
   @Column(name = "lane_lead")
   private short laneLead;
@@ -266,8 +271,54 @@ public class Playerperformance implements Serializable {
   @Column(name = "mejais_completed")
   private short mejaisCompleted;
 
-  @Column(name = "first_blood")
+  @Column(name = "first_blood", nullable = false)
   private boolean firstBlood;
+
+  @Column(name = "outplayed_opponent")
+  private byte outplayed;
+
+  @Column(name = "turret_takedowns", nullable = false)
+  private byte turretTakedowns;
+
+  @Column(name = "dragon_takedowns")
+  private byte dragonTakedowns;
+
+  @Column(name = "fastest_legendary")
+  private short fastestLegendary;
+
+  @Column(name = "gank_setups")
+  private byte gankSetups;
+
+  @Check(constraints = "initial_buffs BETWEEN 0 and 2")
+  @Column(name = "buffs_initial")
+  private byte initialBuffs;
+
+  @Column(name = "kills_early")
+  private byte earlyKills;
+
+  @Column(name = "objective_junglerkill")
+  private byte junglerKillsAtObjective;
+
+  @Column(name = "ambush_kill")
+  private byte ambush;
+
+  @Column(name = "turrets_early")
+  private byte earlyTurrets;
+
+  @Column(name = "experience_advantage")
+  private byte levelLead;
+
+  @Column(name = "pick_kill")
+  private byte picksMade;
+
+  @Column(name = "assassination")
+  private byte assassinated;
+
+  @Column(name = "guard_ally")
+  private byte savedAlly;
+
+  @Column(name = "survived_close")
+  private byte survivedClose;
 
   @ManyToMany
   @JoinTable(name = "playerperformance_rune",
@@ -295,7 +346,7 @@ public class Playerperformance implements Serializable {
                            byte deaths, byte assists, byte doubleKills, byte tripleKills, byte quadraKills, byte pentaKills,
                            short timeAlive, short timeDead, short wardsPlaced, byte objectivesStolen, int objectivesDamage,
                            byte baronKills, short goldTotal, int experienceTotal, short creepsTotal, short itemsAmount,
-                           boolean firstBlood, byte wardsControl, byte wardsCleared, byte visionScoreAdvantage) {
+                           boolean firstBlood, byte controlWards, byte wardsCleared, short visionScore, byte turretTakedowns) {
     this.lane = lane;
     this.qUsages = qUsages;
     this.wUsages = wUsages;
@@ -326,9 +377,10 @@ public class Playerperformance implements Serializable {
     this.creepsTotal = creepsTotal;
     this.itemsAmount = itemsAmount;
     this.firstBlood = firstBlood;
-    this.wardsControl = wardsControl;
+    this.controlWards = controlWards;
     this.wardsCleared = wardsCleared;
-    this.visionscoreAdvantage = visionScoreAdvantage;
+    this.visionScore = visionScore;
+    this.turretTakedowns = turretTakedowns;
   }
 
   public double timeIngame() {
@@ -381,6 +433,32 @@ public class Playerperformance implements Serializable {
     }
     return 0;
   }
+
+  public double getKDA() {
+    return (kills + assists) * 1d / deaths;
+  }
+
+  public short getAbilityUses() {
+    return (short) (qUsages + wUsages + eUsages + rUsages);
+  }
+
+  public double getDamageShare() {
+    return damageTotal * 1d / teamperformance.getTotalDamage();
+  }
+
+  public double getTankyShare() {
+    return damageTaken * 1d / teamperformance.getTotalDamageTaken();
+  }
+
+  public byte countLegendaryItems() {
+    return (byte) items.stream().filter(item -> item.getItemtype().equals(ItemType.LEGENDARY)).count();
+  }
+
+  public boolean hasMythic() {
+    return getMythic() != null;
+  }
+
+  // TODO: 12.04.2022 Group stats in embeddables
 
   //<editor-fold desc="getter and setter">
   public int getId() {
@@ -543,22 +621,6 @@ public class Playerperformance implements Serializable {
     this.damageShielded = damageShielded;
   }
 
-  public double getDamageTeamDealed() {
-    return damageTeamDealed.doubleValue();
-  }
-
-  public void setDamageTeamDealed(double damageTeamDealed) {
-    this.damageTeamDealed = new BigDecimal(damageTeamDealed);
-  }
-
-  public double getDamageTeamTaken() {
-    return damageTeamTaken.doubleValue();
-  }
-
-  public void setDamageTeamTaken(double damageTeamTaken) {
-    this.damageTeamTaken = new BigDecimal(damageTeamTaken);
-  }
-
   public byte getKills() {
     return kills;
   }
@@ -655,12 +717,12 @@ public class Playerperformance implements Serializable {
     this.timeDead = timeDead;
   }
 
-  public byte getKillsTeleport() {
-    return killsTeleport;
+  public byte getTeleportKills() {
+    return teleportKills;
   }
 
-  public void setKillsTeleport(byte killsTeleport) {
-    this.killsTeleport = killsTeleport;
+  public void setTeleportKills(byte killsTeleport) {
+    this.teleportKills = killsTeleport;
   }
 
   public short getImmobilizations() {
@@ -671,20 +733,20 @@ public class Playerperformance implements Serializable {
     this.immobilizations = immobilizations;
   }
 
-  public byte getWardsControl() {
-    return wardsControl;
+  public byte getControlWards() {
+    return controlWards;
   }
 
-  public void setWardsControl(byte wardsControl) {
-    this.wardsControl = wardsControl;
+  public void setControlWards(byte wardsControl) {
+    this.controlWards = wardsControl;
   }
 
-  public short getWardsControlCoverage() {
-    return wardsControlCoverage;
+  public short getControlWardUptime() {
+    return controlWardUptime;
   }
 
-  public void setWardsControlCoverage(short wardsControlCoverage) {
-    this.wardsControlCoverage = wardsControlCoverage;
+  public void setControlWardUptime(short wardsControlCoverage) {
+    this.controlWardUptime = wardsControlCoverage;
   }
 
   public short getWardsPlaced() {
@@ -709,6 +771,14 @@ public class Playerperformance implements Serializable {
 
   public void setWardsGuarded(byte wardsGuarded) {
     this.wardsGuarded = wardsGuarded;
+  }
+
+  public short getVisionScore() {
+    return visionScore;
+  }
+
+  public void setVisionScore(short visionScore) {
+    this.visionScore = visionScore;
   }
 
   public byte getVisionscoreAdvantage() {
@@ -783,12 +853,12 @@ public class Playerperformance implements Serializable {
     this.scuttlesTotal = scuttlesTotal;
   }
 
-  public byte getTurretsSplitpushed() {
-    return turretsSplitpushed;
+  public byte getSplitpushedTurrets() {
+    return splitpushedTurrets;
   }
 
-  public void setTurretsSplitpushed(byte turretsSplitpushed) {
-    this.turretsSplitpushed = turretsSplitpushed;
+  public void setSplitpushedTurrets(byte turretsSplitpushed) {
+    this.splitpushedTurrets = turretsSplitpushed;
   }
 
   public byte getTeamInvading() {
@@ -847,6 +917,22 @@ public class Playerperformance implements Serializable {
     this.divesDone = divesDone;
   }
 
+  public byte getDivesSuccessful() {
+    return divesSuccessful;
+  }
+
+  public void setDivesSuccessful(byte divesSuccessful) {
+    this.divesSuccessful = divesSuccessful;
+  }
+
+  public byte getDivesGotten() {
+    return divesGotten;
+  }
+
+  public void setDivesGotten(byte divesGotten) {
+    this.divesGotten = divesGotten;
+  }
+
   public byte getDivesProtected() {
     return divesProtected;
   }
@@ -863,12 +949,12 @@ public class Playerperformance implements Serializable {
     this.goldTotal = goldTotal;
   }
 
-  public short getGoldBounty() {
-    return goldBounty;
+  public short getBountyGold() {
+    return bountyGold;
   }
 
-  public void setGoldBounty(short goldBounty) {
-    this.goldBounty = goldBounty;
+  public void setBountyGold(short goldBounty) {
+    this.bountyGold = goldBounty;
   }
 
   public int getExperienceTotal() {
@@ -909,6 +995,14 @@ public class Playerperformance implements Serializable {
 
   public void setLaneLead(short laneLead) {
     this.laneLead = laneLead;
+  }
+
+  public short getEarlyLaneLead() {
+    return earlyLaneLead;
+  }
+
+  public void setEarlyLaneLead(short earlyLaneLead) {
+    this.earlyLaneLead = earlyLaneLead;
   }
 
   public byte getTurretplates() {
@@ -963,28 +1057,144 @@ public class Playerperformance implements Serializable {
     this.firstBlood = firstBlood;
   }
 
+  public byte getOutplayed() {
+    return outplayed;
+  }
+
+  public void setOutplayed(byte outplayed) {
+    this.outplayed = outplayed;
+  }
+
+  public byte getTurretTakedowns() {
+    return turretTakedowns;
+  }
+
+  public void setTurretTakedowns(byte turretTakedowns) {
+    this.turretTakedowns = turretTakedowns;
+  }
+
+  public byte getDragonTakedowns() {
+    return dragonTakedowns;
+  }
+
+  public void setDragonTakedowns(byte dragonTakedowns) {
+    this.dragonTakedowns = dragonTakedowns;
+  }
+
+  public short getFastestLegendary() {
+    return fastestLegendary;
+  }
+
+  public void setFastestLegendary(short fastestLegendary) {
+    this.fastestLegendary = fastestLegendary;
+  }
+
+  public byte getGankSetups() {
+    return gankSetups;
+  }
+
+  public void setGankSetups(byte gankSetups) {
+    this.gankSetups = gankSetups;
+  }
+
+  public byte getInitialBuffs() {
+    return initialBuffs;
+  }
+
+  public void setInitialBuffs(byte initialBuffs) {
+    this.initialBuffs = initialBuffs;
+  }
+
+  public byte getEarlyKills() {
+    return earlyKills;
+  }
+
+  public void setEarlyKills(byte earlyKills) {
+    this.earlyKills = earlyKills;
+  }
+
+  public byte getJunglerKillsAtObjective() {
+    return junglerKillsAtObjective;
+  }
+
+  public void setJunglerKillsAtObjective(byte junglerkillsAtObjective) {
+    this.junglerKillsAtObjective = junglerkillsAtObjective;
+  }
+
+  public byte getAmbush() {
+    return ambush;
+  }
+
+  public void setAmbush(byte ambush) {
+    this.ambush = ambush;
+  }
+
+  public byte getEarlyTurrets() {
+    return earlyTurrets;
+  }
+
+  public void setEarlyTurrets(byte earlyTurrets) {
+    this.earlyTurrets = earlyTurrets;
+  }
+
+  public byte getLevelLead() {
+    return levelLead;
+  }
+
+  public void setLevelLead(byte levelLead) {
+    this.levelLead = levelLead;
+  }
+
+  public byte getPicksMade() {
+    return picksMade;
+  }
+
+  public void setPicksMade(byte picksMade) {
+    this.picksMade = picksMade;
+  }
+
+  public byte getAssassinated() {
+    return assassinated;
+  }
+
+  public void setAssassinated(byte assassinated) {
+    this.assassinated = assassinated;
+  }
+
+  public byte getSavedAlly() {
+    return savedAlly;
+  }
+
+  public void setSavedAlly(byte savedAlly) {
+    this.savedAlly = savedAlly;
+  }
+
+  public byte getSurvivedClose() {
+    return survivedClose;
+  }
+
+  public void setSurvivedClose(byte survivedClose) {
+    this.survivedClose = survivedClose;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Playerperformance)) return false;
-    final Playerperformance playerperformance = (Playerperformance) o;
-    return getId() == playerperformance.getId() && getqUsages() == playerperformance.getqUsages() && getwUsages() == playerperformance.getwUsages() && geteUsages() == playerperformance.geteUsages() && getrUsages() == playerperformance.getrUsages() && getSpellsHit() == playerperformance.getSpellsHit() && getSpellsDodged() == playerperformance.getSpellsDodged() && getQuickDodged() == playerperformance.getQuickDodged() && getDamageMagical() == playerperformance.getDamageMagical() && getDamagePhysical() == playerperformance.getDamagePhysical() && getDamageTotal() == playerperformance.getDamageTotal() && getDamageTaken() == playerperformance.getDamageTaken() && getDamageMitigated() == playerperformance.getDamageMitigated() && getDamageHealed() == playerperformance.getDamageHealed() && getDamageShielded() == playerperformance.getDamageShielded() && Double.compare(playerperformance.getDamageTeamDealed(), getDamageTeamDealed()) == 0 && Double.compare(playerperformance.getDamageTeamTaken(), getDamageTeamTaken()) == 0 && getKills() == playerperformance.getKills() && getDeaths() == playerperformance.getDeaths() && getAssists() == playerperformance.getAssists() && getKillsSolo() == playerperformance.getKillsSolo() && getAllinLevelup() == playerperformance.getAllinLevelup() && getDoubleKills() == playerperformance.getDoubleKills() && getTripleKills() == playerperformance.getTripleKills() && getQuadraKills() == playerperformance.getQuadraKills() && getPentaKills() == playerperformance.getPentaKills() && getFlashAggressive() == playerperformance.getFlashAggressive() && getTimeAlive() == playerperformance.getTimeAlive() && getTimeDead() == playerperformance.getTimeDead() && getKillsTeleport() == playerperformance.getKillsTeleport() && getImmobilizations() == playerperformance.getImmobilizations() && getWardsControl() == playerperformance.getWardsControl() && getWardsControlCoverage() == playerperformance.getWardsControlCoverage() && getWardsPlaced() == playerperformance.getWardsPlaced() && getWardsCleared() == playerperformance.getWardsCleared() && getWardsGuarded() == playerperformance.getWardsGuarded() && Double.compare(playerperformance.getVisionscoreAdvantage(), getVisionscoreAdvantage()) == 0 && getObjectivesStolen() == playerperformance.getObjectivesStolen() && getFirstturretAdvantage() == playerperformance.getFirstturretAdvantage() && getObjectivesDamage() == playerperformance.getObjectivesDamage() && getBaronExecutes() == playerperformance.getBaronExecutes() && getBaronKills() == playerperformance.getBaronKills() && getBuffsStolen() == playerperformance.getBuffsStolen() && getScuttlesInitial() == playerperformance.getScuttlesInitial() && getScuttlesTotal() == playerperformance.getScuttlesTotal() && getTurretsSplitpushed() == playerperformance.getTurretsSplitpushed() && getTeamInvading() == playerperformance.getTeamInvading() && getGanksEarly() == playerperformance.getGanksEarly() && getGanksTotal() == playerperformance.getGanksTotal() && getGanksTop() == playerperformance.getGanksTop() && getGanksMid() == playerperformance.getGanksMid() && getGanksBot() == playerperformance.getGanksBot() && getDivesDone() == playerperformance.getDivesDone() && getDivesProtected() == playerperformance.getDivesProtected() && getGoldTotal() == playerperformance.getGoldTotal() && getGoldBounty() == playerperformance.getGoldBounty() && getExperienceTotal() == playerperformance.getExperienceTotal() && getCreepsTotal() == playerperformance.getCreepsTotal() && getCreepsEarly() == playerperformance.getCreepsEarly() && getCreepsInvade() == playerperformance.getCreepsInvade() && getLaneLead() == playerperformance.getLaneLead() && getTurretplates() == playerperformance.getTurretplates() && getFlamehorizonAdvantage() == playerperformance.getFlamehorizonAdvantage() && getItemsAmount() == playerperformance.getItemsAmount() && getMejaisCompleted() == playerperformance.getMejaisCompleted() && getTeamperformance().equals(playerperformance.getTeamperformance()) && getAccount().equals(playerperformance.getAccount()) && getLane() == playerperformance.getLane() && getChampionOwn().equals(playerperformance.getChampionOwn()) && Objects.equals(getChampionEnemy(), playerperformance.getChampionEnemy()) && getRunes().equals(playerperformance.getRunes()) && getSummonerspells().equals(playerperformance.getSummonerspells()) && getItems().equals(playerperformance.getItems()) && isFirstBlood() == playerperformance.isFirstBlood();
+    final Playerperformance that = (Playerperformance) o;
+    return getId() == that.getId() && getqUsages() == that.getqUsages() && getwUsages() == that.getwUsages() && geteUsages() == that.geteUsages() && getrUsages() == that.getrUsages() && getSpellsHit() == that.getSpellsHit() && getSpellsDodged() == that.getSpellsDodged() && getQuickDodged() == that.getQuickDodged() && getDamageMagical() == that.getDamageMagical() && getDamagePhysical() == that.getDamagePhysical() && getDamageTotal() == that.getDamageTotal() && getDamageTaken() == that.getDamageTaken() && getDamageMitigated() == that.getDamageMitigated() && getDamageHealed() == that.getDamageHealed() && getDamageShielded() == that.getDamageShielded() && getKills() == that.getKills() && getDeaths() == that.getDeaths() && getAssists() == that.getAssists() && getKillsSolo() == that.getKillsSolo() && getAllinLevelup() == that.getAllinLevelup() && getDoubleKills() == that.getDoubleKills() && getTripleKills() == that.getTripleKills() && getQuadraKills() == that.getQuadraKills() && getPentaKills() == that.getPentaKills() && getFlashAggressive() == that.getFlashAggressive() && getTimeAlive() == that.getTimeAlive() && getTimeDead() == that.getTimeDead() && getTeleportKills() == that.getTeleportKills() && getImmobilizations() == that.getImmobilizations() && getControlWards() == that.getControlWards() && getControlWardUptime() == that.getControlWardUptime() && getWardsPlaced() == that.getWardsPlaced() && getWardsCleared() == that.getWardsCleared() && getWardsGuarded() == that.getWardsGuarded() && getVisionScore() == that.getVisionScore() && getVisionscoreAdvantage() == that.getVisionscoreAdvantage() && getObjectivesStolen() == that.getObjectivesStolen() && getFirstturretAdvantage() == that.getFirstturretAdvantage() && getObjectivesDamage() == that.getObjectivesDamage() && getBaronExecutes() == that.getBaronExecutes() && getBaronKills() == that.getBaronKills() && getBuffsStolen() == that.getBuffsStolen() && getScuttlesInitial() == that.getScuttlesInitial() && getScuttlesTotal() == that.getScuttlesTotal() && getSplitpushedTurrets() == that.getSplitpushedTurrets() && getTeamInvading() == that.getTeamInvading() && getGanksEarly() == that.getGanksEarly() && getGanksTotal() == that.getGanksTotal() && getGanksTop() == that.getGanksTop() && getGanksMid() == that.getGanksMid() && getGanksBot() == that.getGanksBot() && getDivesDone() == that.getDivesDone() && getDivesSuccessful() == that.getDivesSuccessful() && getDivesGotten() == that.getDivesGotten() && getDivesProtected() == that.getDivesProtected() && getGoldTotal() == that.getGoldTotal() && getBountyGold() == that.getBountyGold() && getExperienceTotal() == that.getExperienceTotal() && getCreepsTotal() == that.getCreepsTotal() && getCreepsEarly() == that.getCreepsEarly() && getCreepsInvade() == that.getCreepsInvade() && getEarlyLaneLead() == that.getEarlyLaneLead() && getLaneLead() == that.getLaneLead() && getTurretplates() == that.getTurretplates() && getFlamehorizonAdvantage() == that.getFlamehorizonAdvantage() && getItemsAmount() == that.getItemsAmount() && getMejaisCompleted() == that.getMejaisCompleted() && isFirstBlood() == that.isFirstBlood() && getOutplayed() == that.getOutplayed() && getTurretTakedowns() == that.getTurretTakedowns() && getDragonTakedowns() == that.getDragonTakedowns() && getFastestLegendary() == that.getFastestLegendary() && getGankSetups() == that.getGankSetups() && getInitialBuffs() == that.getInitialBuffs() && getEarlyKills() == that.getEarlyKills() && getJunglerKillsAtObjective() == that.getJunglerKillsAtObjective() && getAmbush() == that.getAmbush() && getEarlyTurrets() == that.getEarlyTurrets() && getLevelLead() == that.getLevelLead() && getPicksMade() == that.getPicksMade() && getAssassinated() == that.getAssassinated() && getSavedAlly() == that.getSavedAlly() && getSurvivedClose() == that.getSurvivedClose() && getTeamperformance().equals(that.getTeamperformance()) && getAccount().equals(that.getAccount()) && getLane() == that.getLane() && getChampionOwn().equals(that.getChampionOwn()) && Objects.equals(getChampionEnemy(), that.getChampionEnemy());
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(getId(), getTeamperformance(), getAccount(), getLane(), getChampionOwn(), getChampionEnemy(), getqUsages(),
         getwUsages(), geteUsages(), getrUsages(), getSpellsHit(), getSpellsDodged(), getQuickDodged(), getDamageMagical(),
-        getDamagePhysical(), getDamageTotal(), getDamageTaken(), getDamageMitigated(), getDamageHealed(), getDamageShielded(),
-        getDamageTeamDealed(), getDamageTeamTaken(), getKills(), getDeaths(), getAssists(), getKillsSolo(),
-        getAllinLevelup(), getDoubleKills(), getTripleKills(), getQuadraKills(), getPentaKills(), getFlashAggressive(), getTimeAlive(),
-        getTimeDead(), getKillsTeleport(), getImmobilizations(), getWardsControl(), getWardsControlCoverage(), getWardsPlaced(),
-        getWardsCleared(), getWardsGuarded(), getVisionscoreAdvantage(), getObjectivesStolen(), getFirstturretAdvantage(),
-        getObjectivesDamage(), getBaronExecutes(), getBaronKills(), getBuffsStolen(), getScuttlesInitial(), getScuttlesTotal(),
-        getTurretsSplitpushed(), getTeamInvading(), getGanksEarly(), getGanksTotal(), getGanksTop(), getGanksMid(), getGanksBot(),
-        getDivesDone(), getDivesProtected(), getGoldTotal(), getGoldBounty(), getExperienceTotal(), getCreepsTotal(), getCreepsEarly(),
-        getCreepsInvade(), getLaneLead(), getTurretplates(), getFlamehorizonAdvantage(), getItemsAmount(), getMejaisCompleted(),
-        getRunes(), getSummonerspells(), getItems(), isFirstBlood());
+        getDamagePhysical(), getDamageTotal(), getDamageTaken(), getDamageMitigated(), getDamageHealed(), getDamageShielded(), getKills()
+        , getDeaths(), getAssists(), getKillsSolo(), getAllinLevelup(), getDoubleKills(), getTripleKills(), getQuadraKills(),
+        getPentaKills(), getFlashAggressive(), getTimeAlive(), getTimeDead(), getTeleportKills(), getImmobilizations(), getControlWards()
+        , getControlWardUptime(), getWardsPlaced(), getWardsCleared(), getWardsGuarded(), getVisionScore(), getVisionscoreAdvantage(),
+        getObjectivesStolen(), getFirstturretAdvantage(), getObjectivesDamage(), getBaronExecutes(), getBaronKills(), getBuffsStolen(),
+        getScuttlesInitial(), getScuttlesTotal(), getSplitpushedTurrets(), getTeamInvading(), getGanksEarly(), getGanksTotal(), getGanksTop(), getGanksMid(), getGanksBot(), getDivesDone(), getDivesSuccessful(), getDivesGotten(), getDivesProtected(), getGoldTotal(), getBountyGold(), getExperienceTotal(), getCreepsTotal(), getCreepsEarly(), getCreepsInvade(), getEarlyLaneLead(), getLaneLead(), getTurretplates(), getFlamehorizonAdvantage(), getItemsAmount(), getMejaisCompleted(), isFirstBlood(), getOutplayed(), getTurretTakedowns(), getDragonTakedowns(), getFastestLegendary(), getGankSetups(), getInitialBuffs(), getEarlyKills(), getJunglerKillsAtObjective(), getAmbush(), getEarlyTurrets(), getLevelLead(), getPicksMade(), getAssassinated(), getSavedAlly(), getSurvivedClose());
   }
 
   @Override
@@ -1010,27 +1220,26 @@ public class Playerperformance implements Serializable {
         ", damageMitigated=" + damageMitigated +
         ", damageHealed=" + damageHealed +
         ", damageShielded=" + damageShielded +
-        ", damageTeamDealed=" + damageTeamDealed +
-        ", damageTeamTaken=" + damageTeamTaken +
         ", kills=" + kills +
         ", deaths=" + deaths +
         ", assists=" + assists +
         ", killsSolo=" + killsSolo +
         ", allinLevelup=" + allinLevelup +
-        ", killsMultiDouble=" + doubleKills +
-        ", killsMultiTriple=" + tripleKills +
-        ", killsMultiQuadra=" + quadraKills +
-        ", killsMultiPenta=" + pentaKills +
+        ", doubleKills=" + doubleKills +
+        ", tripleKills=" + tripleKills +
+        ", quadraKills=" + quadraKills +
+        ", pentaKills=" + pentaKills +
         ", flashAggressive=" + flashAggressive +
         ", timeAlive=" + timeAlive +
         ", timeDead=" + timeDead +
-        ", killsTeleport=" + killsTeleport +
+        ", teleportKills=" + teleportKills +
         ", immobilizations=" + immobilizations +
-        ", wardsControl=" + wardsControl +
-        ", wardsControlCoverage=" + wardsControlCoverage +
+        ", controlWards=" + controlWards +
+        ", controlWardUptime=" + controlWardUptime +
         ", wardsPlaced=" + wardsPlaced +
         ", wardsCleared=" + wardsCleared +
         ", wardsGuarded=" + wardsGuarded +
+        ", visionScore=" + visionScore +
         ", visionscoreAdvantage=" + visionscoreAdvantage +
         ", objectivesStolen=" + objectivesStolen +
         ", firstturretAdvantage=" + firstturretAdvantage +
@@ -1040,7 +1249,7 @@ public class Playerperformance implements Serializable {
         ", buffsStolen=" + buffsStolen +
         ", scuttlesInitial=" + scuttlesInitial +
         ", scuttlesTotal=" + scuttlesTotal +
-        ", turretsSplitpushed=" + turretsSplitpushed +
+        ", splitpushedTurrets=" + splitpushedTurrets +
         ", teamInvading=" + teamInvading +
         ", ganksEarly=" + ganksEarly +
         ", ganksTotal=" + ganksTotal +
@@ -1048,19 +1257,40 @@ public class Playerperformance implements Serializable {
         ", ganksMid=" + ganksMid +
         ", ganksBot=" + ganksBot +
         ", divesDone=" + divesDone +
+        ", divesSuccessful=" + divesSuccessful +
+        ", divesGotten=" + divesGotten +
         ", divesProtected=" + divesProtected +
         ", goldTotal=" + goldTotal +
-        ", goldBounty=" + goldBounty +
+        ", bountyGold=" + bountyGold +
         ", experienceTotal=" + experienceTotal +
         ", creepsTotal=" + creepsTotal +
         ", creepsEarly=" + creepsEarly +
         ", creepsInvade=" + creepsInvade +
+        ", earlyLaneLead=" + earlyLaneLead +
         ", laneLead=" + laneLead +
         ", turretplates=" + turretplates +
         ", flamehorizonAdvantage=" + flamehorizonAdvantage +
         ", itemsAmount=" + itemsAmount +
         ", mejaisCompleted=" + mejaisCompleted +
         ", firstBlood=" + firstBlood +
+        ", outplayed=" + outplayed +
+        ", turretTakedowns=" + turretTakedowns +
+        ", dragonTakedowns=" + dragonTakedowns +
+        ", fastestLegendary=" + fastestLegendary +
+        ", gankSetups=" + gankSetups +
+        ", initialBuffs=" + initialBuffs +
+        ", earlyKills=" + earlyKills +
+        ", junglerkillsAtObjective=" + junglerKillsAtObjective +
+        ", ambush=" + ambush +
+        ", earlyTurrets=" + earlyTurrets +
+        ", levelLead=" + levelLead +
+        ", picksMade=" + picksMade +
+        ", assassinated=" + assassinated +
+        ", savedAlly=" + savedAlly +
+        ", survivedClose=" + survivedClose +
+        ", runes=" + runes.size() +
+        ", summonerspells=" + summonerspells.size() +
+        ", items=" + items.size() +
         '}';
   }
   //</editor-fold>

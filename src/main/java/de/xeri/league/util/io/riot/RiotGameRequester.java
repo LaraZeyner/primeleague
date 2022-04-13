@@ -42,13 +42,13 @@ public final class RiotGameRequester {
     return jsonTeams.stream().flatMap(jsonTeam -> jsonTeam.getAllPlayers().stream()).collect(Collectors.toList());
   }
 
-  private static List<JSONPlayer> findJSONPlayersExcept(StoredStat storedStat, String value, JSONPlayer jsonPlayer) {
-    return findJSONPlayersWith(storedStat, value).stream().filter(player -> player.getId() != jsonPlayer.getId())
+  private static List<JSONPlayer> findJSONPlayersExcept(String value, JSONPlayer jsonPlayer) {
+    return findJSONPlayersWith(value).stream().filter(player -> player.getId() != jsonPlayer.getId())
         .collect(Collectors.toList());
   }
 
-  private static List<JSONPlayer> findJSONPlayersWith(StoredStat storedStat, String value) {
-    return getJSONPlayers().stream().filter(player -> player.string(storedStat).equals(value))
+  private static List<JSONPlayer> findJSONPlayersWith(String value) {
+    return getJSONPlayers().stream().filter(player -> player.get(StoredStat.LANE).equals(value))
         .collect(Collectors.toList());
   }
 
@@ -155,7 +155,7 @@ public final class RiotGameRequester {
 
     handleChampionsPicked(player, enemy, playerperformance);
 
-    IntStream.range(1, 8).mapToObj(i -> player.Int(StoredStat.valueOf("ITEM_" + i)))
+    IntStream.range(1, 8).mapToObj(i -> player.getMedium(StoredStat.valueOf("ITEM_" + i)))
         .filter(itemId -> itemId != null && itemId != 0)
         .map(Item::find)
         .filter(Objects::nonNull)
@@ -173,88 +173,129 @@ public final class RiotGameRequester {
   }
 
   private static void handleSummonerspells(JSONPlayer player, Playerperformance playerperformance) {
-    final Summonerspell summonerspell1 = Summonerspell.find(player.Int(StoredStat.SUMMONER1_ID));
-    PlayerperformanceSummonerspell.get(new PlayerperformanceSummonerspell(playerperformance, summonerspell1, player.Byte(StoredStat.SUMMONER1_AMOUNT)));
-    final Summonerspell summonerspell2 = Summonerspell.find(player.Int(StoredStat.SUMMONER2_ID));
+    final Summonerspell summonerspell1 = Summonerspell.find(player.getMedium(StoredStat.SUMMONER1_ID));
+    PlayerperformanceSummonerspell.get(new PlayerperformanceSummonerspell(playerperformance, summonerspell1, player.getTiny(StoredStat.SUMMONER1_AMOUNT)));
+    final Summonerspell summonerspell2 = Summonerspell.find(player.getMedium(StoredStat.SUMMONER2_ID));
     PlayerperformanceSummonerspell.get(new PlayerperformanceSummonerspell(playerperformance, summonerspell2,
-        player.Byte(StoredStat.SUMMONER2_AMOUNT)));
+        player.getTiny(StoredStat.SUMMONER2_AMOUNT)));
   }
 
   /**
-   *   private byte ganksTotal;
-   *   private byte ganksTop;
-   *   private byte ganksMid;
-   *   private byte ganksBot;
-   *
-   *   private short wardsCleared;
-   *   private byte wardsControl;
-   *
-   *   private short immobilizations;
-   *   private byte flashAggressive;
-   *   private short spellsHit;
-   *   private short spellsDodged;
-   *   private short quickDodged;
-   *   private BigDecimal damageTeamDealed;
-   *   private BigDecimal damageTeamTaken;
-   *   private byte killsSolo;
-   *   private byte allinLevelup;
-   *   private byte killsTeleport;
-   *   private short wardsControlCoverage;
-   *   private byte wardsGuarded;
-   *   private short firstturretAdvantage;
-   *   private byte baronExecutes;
-   *   private byte buffsStolen;
-   *   private byte scuttlesInitial;
-   *   private byte scuttlesTotal;
-   *   private byte turretsSplitpushed;
-   *   private byte teamInvading;
-   *   private byte ganksEarly;
-   *   private byte divesDone;
-   *   private byte divesProtected;
-   *   private short goldBounty;
-   *   private short creepsEarly;
-   *   private short creepsInvade;
-   *   private short laneLead;
-   *   private byte turretplates;
-   *   private short flamehorizonAdvantage;
-   *   private short mejaisCompleted;
-   * @param player
-   * @param enemy
-   * @return
+   * Created by Lara on 09.04.2022 for web
+   * <p>
+   * TINYINT(3) : -/.///.///.128 → /.///.///.127 (/.///.///.255)
+   * SMALLINT(5) : -/.///./32.768 → /.///./32.767 (/.///./65.535)
+   * MEDIUMINT(7): -/.//8.388.608 → /.//8.388.607 (/./16.777.215)
+   * INTEGER(10) : -2.147.483.648 → 2.147.483.647 (4.294.967.295)
+   * <p>
+   * Byte:
+   * -TINYINT(3) : -128 → 127
+   * Short:
+   * -TINYINT(3) : (255)
+   * -SMALLINT(5) : -32.768 → 32.767
+   * Int:
+   * -SMALLINT(5) : (/.///./65.535)
+   * -MEDIUMINT(7): -/.//8.388.608 → /.//8.388.607 (/./16.777.215)
+   * -INTEGER(10) : -2.147.483.648 → 2.147.483.647.
    */
-  private static Playerperformance handlePerformance(JSONPlayer player, JSONPlayer enemy) {
-    final int shiedling = player.Int(StoredStat.DAMAGE_TEAM_HEAL) + player.Int(StoredStat.DAMAGE_TEAM_SHIELD);
-    final byte stolen = (byte) (player.Byte(StoredStat.OBJECTIVES_STOLEN) + player.Byte(StoredStat.OBJECTIVES_STOLEN_TAKEDOWNS));
-    final short creeps = (short) (player.Short(StoredStat.CREEP_SCORE_JUNGLE) + player.Short(StoredStat.CREEP_SCORE_MINIONS));
-    final boolean firstBlood = player.Int(StoredStat.FIRST_BLOOD) == 1 || player.Int(StoredStat.FIRST_BLOOD_ASSIST) == 1;
-    final byte visionScore = (byte) (player.Int(StoredStat.VISION_SCORE) - enemy.Int(StoredStat.VISION_SCORE));
-    final Playerperformance playerperformance = new Playerperformance(Lane.valueOf(player.string(StoredStat.LANE)),
-        player.Short(StoredStat.Q_USAGE), player.Short(StoredStat.W_USAGE), player.Short(StoredStat.E_USAGE),
-        player.Short(StoredStat.R_USAGE), player.Int(StoredStat.DAMAGE_MAGICAL), player.Int(StoredStat.DAMAGE_PHYSICAL),
-        player.Int(StoredStat.DAMAGE_TOTAL), player.Int(StoredStat.DAMAGE_TAKEN), player.Int(StoredStat.DAMAGE_MITIGATED),
-        player.Int(StoredStat.DAMAGE_HEALED), shiedling, player.Byte(StoredStat.KILLS), player.Byte(StoredStat.DEATHS),
-        player.Byte(StoredStat.ASSISTS), player.Byte(StoredStat.KILLS_DOUBLE), player.Byte(StoredStat.KILLS_TRIPLE),
-        player.Byte(StoredStat.KILLS_QUADRA), player.Byte(StoredStat.KILLS_PENTA), player.Short(StoredStat.TIME_ALIVE),
-        player.Short(StoredStat.TIME_DEAD), player.Short(StoredStat.WARDS_PLACED), stolen, player.Int(StoredStat.OBJECTIVE_DAMAGE),
-        player.Byte(StoredStat.BARON_KILLS), player.Short(StoredStat.GOLD_TOTAL), player.Int(StoredStat.EXPERIENCE_TOTAL), creeps,
-        player.Short(StoredStat.ITEMS_BOUGHT), firstBlood, player.Byte(StoredStat.CONTROL_WARDS_BOUGHT),
-        player.Byte(StoredStat.WARDS_CLEARED), visionScore);
+  private static Playerperformance handlePerformance(JSONPlayer p, JSONPlayer e) {
+    final int shiedling = p.getMedium(StoredStat.DAMAGE_HEALING_SHIELDING) != null ? p.getMedium(StoredStat.DAMAGE_HEALING_SHIELDING) :
+        p.getMedium(StoredStat.DAMAGE_TEAM_HEAL) + p.getMedium(StoredStat.DAMAGE_TEAM_SHIELD);
+    final byte stolen = (byte) (p.getTiny(StoredStat.OBJECTIVES_STOLEN) + p.getTiny(StoredStat.OBJECTIVES_STOLEN_TAKEDOWNS));
+    final short creeps = (short) (p.getSmall(StoredStat.CREEP_SCORE_JUNGLE) + p.getSmall(StoredStat.CREEP_SCORE_LANE));
+    final boolean firstBlood = p.getBool(StoredStat.FIRST_BLOOD) || p.getBool(StoredStat.FIRST_BLOOD_ASSIST);
+    final Byte visionScore = e != null ? (byte) (p.getSmall(StoredStat.VISION_SCORE) - e.getSmall(StoredStat.VISION_SCORE)) :
+        null;
+    final byte controlWards = p.getTiny(StoredStat.CONTROL_WARDS_PLACED, StoredStat.CONTROL_WARDS_BOUGHT);
+    final byte wardClear = p.getTiny(StoredStat.WARDS_TAKEDOWN, StoredStat.WARDS_CLEARED);
+    final Playerperformance playerperformance = new Playerperformance(Lane.valueOf(p.get(StoredStat.LANE)),
+        p.getSmall(StoredStat.Q_USAGE), p.getSmall(StoredStat.W_USAGE), p.getSmall(StoredStat.E_USAGE),
+        p.getSmall(StoredStat.R_USAGE), p.getMedium(StoredStat.DAMAGE_MAGICAL), p.getMedium(StoredStat.DAMAGE_PHYSICAL),
+        p.getMedium(StoredStat.DAMAGE_TOTAL), p.getMedium(StoredStat.DAMAGE_TAKEN), p.getMedium(StoredStat.DAMAGE_MITIGATED),
+        p.getMedium(StoredStat.DAMAGE_HEALED), shiedling, p.getTiny(StoredStat.KILLS), p.getTiny(StoredStat.DEATHS),
+        p.getTiny(StoredStat.ASSISTS), p.getTiny(StoredStat.KILLS_DOUBLE), p.getTiny(StoredStat.KILLS_TRIPLE),
+        p.getTiny(StoredStat.KILLS_QUADRA), p.getTiny(StoredStat.KILLS_PENTA), p.getSmall(StoredStat.TIME_ALIVE),
+        p.getSmall(StoredStat.TIME_DEAD), p.getSmall(StoredStat.WARDS_PLACED), stolen, p.getMedium(StoredStat.OBJECTIVES_DAMAGE),
+        p.getTiny(StoredStat.BARON_KILLS), p.getSmall(StoredStat.GOLD_TOTAL), p.getMedium(StoredStat.EXPERIENCE_TOTAL), creeps,
+        p.getSmall(StoredStat.ITEMS_BOUGHT), firstBlood, controlWards, wardClear, p.getSmall(StoredStat.VISION_SCORE),
+        p.getTiny(StoredStat.TOWERS_TAKEDOWNS));
+    if (visionScore != null) playerperformance.setVisionscoreAdvantage(visionScore);
+    playerperformance.setSpellsHit(p.getSmall(StoredStat.SPELL_LANDED));
+    playerperformance.setSpellsDodged(p.getSmall(StoredStat.SPELL_DODGE));
+    playerperformance.setQuickDodged(p.getSmall(StoredStat.SPELL_DODGE_QUICK));
+    playerperformance.setKillsSolo(p.getTiny(StoredStat.SOLO_KILLS));
+    playerperformance.setAllinLevelup(p.getTiny(StoredStat.LEVELUP_TAKEDOWNS));
+    playerperformance.setFlashAggressive(p.getTiny(StoredStat.AGGRESSIVE_FLASH));
+    playerperformance.setTeleportKills(p.getTiny(StoredStat.TELEPORT_KILLS));
+    playerperformance.setImmobilizations(p.getSmall(StoredStat.IMMOBILIZATIONS));
+    playerperformance.setControlWardUptime((short) (p.getSmall(StoredStat.CONTROL_WARDS_UPTIME) * 60));
+    playerperformance.setWardsGuarded(p.getTiny(StoredStat.WARDS_GUARDED));
+    if (p.getSmall(StoredStat.FIRST_TOWER_TIME) != null &&
+        (p.getBool(StoredStat.FIRST_TOWER) || p.getBool(StoredStat.FIRST_TOWER_ASSIST))) {
+      playerperformance.setFirstturretAdvantage(p.getSmall(StoredStat.FIRST_TOWER_TIME));
+    } else if (e != null && e.getSmall(StoredStat.FIRST_TOWER_TIME) != null &&
+        (e.getBool(StoredStat.FIRST_TOWER) || e.getBool(StoredStat.FIRST_TOWER_ASSIST))) {
+      playerperformance.setFirstturretAdvantage((short) (e.getSmall(StoredStat.FIRST_TOWER_TIME) * -1));
+    }
+    if (e != null) playerperformance.setBaronExecutes(e.getTiny(StoredStat.BARON_EXECUTES));
+    playerperformance.setBuffsStolen(p.getTiny(StoredStat.BUFFS_STOLEN));
+    playerperformance.setScuttlesInitial(p.getTiny(StoredStat.SCUTTLES_INITIAL));
+    playerperformance.setScuttlesTotal(p.getTiny(StoredStat.SCUTTLES_TOTAL));
+    playerperformance.setSplitpushedTurrets(p.getTiny(StoredStat.TOWERS_SPLITPUSHED));
+    playerperformance.setTeamInvading(p.getTiny(StoredStat.INVADING_KILLS));
+    playerperformance.setGanksEarly(p.getTiny(StoredStat.LANER_ROAMS, StoredStat.JUNGLER_ROAMS));
+    playerperformance.setDivesDone(handleDives(p, e, StoredStat.DIVES_DONE, StoredStat.DIVES_PROTECTED));
+    playerperformance.setDivesSuccessful(p.getTiny(StoredStat.DIVES_DONE));
+    playerperformance.setDivesGotten(handleDives(p, e, StoredStat.DIVES_PROTECTED, StoredStat.DIVES_DONE));
+    playerperformance.setDivesProtected(p.getTiny(StoredStat.DIVES_PROTECTED));
+    playerperformance.setBountyGold((short) (p.getSmall(StoredStat.BOUNTY_GOLD) -
+        (e != null && e.getSmall(StoredStat.BOUNTY_GOLD) == null ? 0 : p.getSmall(StoredStat.BOUNTY_GOLD))));
+    playerperformance.setCreepsEarly(p.getTiny(StoredStat.CREEP_SCORE_LANE_EARLY, StoredStat.CREEP_SCORE_JUNGLE_EARLY));
+    playerperformance.setCreepsInvade(p.getSmall(StoredStat.CREEP_INVADED));
+    playerperformance.setEarlyLaneLead(p.getSmall(StoredStat.LANE_LEAD_EARLY));
+    playerperformance.setLaneLead(p.getSmall(StoredStat.LANE_LEAD));
+    playerperformance.setTurretplates(p.getTiny(StoredStat.TOWERS_PLATES));
+    playerperformance.setFlamehorizonAdvantage(p.getTiny(StoredStat.CREEP_SCORE_ADVANTAGE));
+    final short mejaisCompleted = (short) ((p.getSmall(StoredStat.MEJAIS_TIME) == null ? 0 : p.getSmall(StoredStat.MEJAIS_TIME))
+        - (e != null && e.getSmall(StoredStat.MEJAIS_TIME) != null ? e.getSmall(StoredStat.MEJAIS_TIME) : 0));
+    if (mejaisCompleted != 0) playerperformance.setMejaisCompleted(mejaisCompleted);
+    playerperformance.setOutplayed(p.getTiny(StoredStat.OUTPLAYED));
+    playerperformance.setDragonTakedowns(p.getTiny(StoredStat.DRAGON_TAKEDOWNS));
+    playerperformance.setFastestLegendary(p.getSmall(StoredStat.LEGENDARY_FASTEST));
+    playerperformance.setGankSetups(p.getTiny(StoredStat.GANK_SETUP));
+    playerperformance.setInitialBuffs(p.getTiny(StoredStat.BUFFS_INITIAL));
+    playerperformance.setEarlyKills(p.getTiny(StoredStat.KILLS_EARLY_JUNGLER, StoredStat.KILLS_EARLY_LANER));
+    playerperformance.setJunglerKillsAtObjective(p.getTiny(StoredStat.OBJECTIVES_JUNGLERKILL));
+    playerperformance.setAmbush(p.getTiny(StoredStat.AMBUSH));
+    playerperformance.setEarlyTurrets(p.getTiny(StoredStat.TOWERS_EARLY));
+    playerperformance.setLevelLead(p.getTiny(StoredStat.EXPERIENCE_ADVANTAGE));
+    playerperformance.setPicksMade(p.getTiny(StoredStat.PICK_KILL));
+    playerperformance.setAssassinated(p.getTiny(StoredStat.ASSASSINATION));
+    playerperformance.setSavedAlly(p.getTiny(StoredStat.GUARD_ALLY));
+    playerperformance.setSurvivedClose((byte) (p.getTiny(StoredStat.SURVIVED_CLOSE) +
+        p.getTiny(StoredStat.SURVIVED_HIGH_DAMAGE) + p.getTiny(StoredStat.SURVIVED_HIGH_CROWDCONTROL)));
+
     return playerperformance;
   }
 
+  private static byte handleDives(JSONPlayer player, JSONPlayer enemy, StoredStat divesDone, StoredStat divesProtected) {
+    return (byte) ((player.getTiny(divesDone) == null ? 0 : player.getTiny(divesDone)) +
+        ((enemy != null && enemy.getTiny(divesProtected) != null) ? enemy.getTiny(divesProtected) : 0));
+  }
+
   private static void handleChampionsPicked(JSONPlayer player, JSONPlayer enemy, Playerperformance playerperformance) {
-    final String championOwnName = player.string(StoredStat.CHAMPION);
+    final String championOwnName = player.get(StoredStat.CHAMPION);
     final Champion championOwn = Champion.find(championOwnName);
     championOwn.addPlayerperformance(playerperformance, true);
     if (enemy != null) {
-      final String championEnemyName = enemy.string(StoredStat.CHAMPION);
+      final String championEnemyName = enemy.get(StoredStat.CHAMPION);
       final Champion championEnemy = Champion.find(championEnemyName);
       championEnemy.addPlayerperformance(playerperformance, false);
     }
   }
 
   private static JSONPlayer getEnemyPlayer(JSONPlayer player) {
-    final List<JSONPlayer> jsonPlayers = findJSONPlayersExcept(StoredStat.LANE, player.string(StoredStat.LANE), player);
+    final List<JSONPlayer> jsonPlayers = findJSONPlayersExcept(player.get(StoredStat.LANE), player);
     return jsonPlayers.isEmpty() ? null : jsonPlayers.get(0);
   }
 
@@ -296,22 +337,42 @@ public final class RiotGameRequester {
     final int teamId = jsonObject.getInt("teamId");
     final boolean win = jsonObject.getBoolean("win");
 
-    final int totalGold = jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getJson().getInt("goldEarned")).sum();
-    final int totalCs = jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getJson().getInt("totalMinionsKilled")).sum() +
-        jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getJson().getInt("neutralMinionsKilled")).sum();
+    final int totalDamage = jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getMedium(StoredStat.DAMAGE_TOTAL)).sum();
+    final int damageTaken = jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getMedium(StoredStat.DAMAGE_TAKEN)).sum();
+    final int totalGold = jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getMedium(StoredStat.GOLD_TOTAL)).sum();
+    final int totalCs = jsonTeam.getAllPlayers().stream()
+        .mapToInt(player -> player.getMedium(StoredStat.CREEP_SCORE_LANE) + player.getMedium(StoredStat.CREEP_SCORE_JUNGLE)).sum();
+    final short earliestDragon = (short) jsonTeam.getAllPlayers().stream().mapToInt(p -> p.getSmall(StoredStat.DRAGON_TIME)).min().orElse(-1);
+    final byte atSpawn = (byte) jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getSmall(StoredStat.OBJECTIVES_ON_SPAWN)).sum();
+    final byte nearJgl = (byte) jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getSmall(StoredStat.OBJECTIVES_50_50)).sum();
+    final byte quest = (byte) jsonTeam.getAllPlayers().stream().filter(player -> player.getSmall(StoredStat.QUEST_FAST) == 1).count();
+    final byte herald = (byte) jsonTeam.getAllPlayers().stream().mapToInt(player -> player.getTiny(StoredStat.RIFT_TURRETS_MULTI)).sum();
+    final short acetime = (short) jsonTeam.getAllPlayers().stream().mapToInt(p -> p.getSmall(StoredStat.ACE_TIME)).min().orElse(-1);
+    final byte killDeficit = (byte) jsonTeam.getAllPlayers().stream().mapToInt(p -> p.getTiny(StoredStat.KILLS_DISADVANTAGE)).sum();
 
-    final Teamperformance teamperformance = Teamperformance.get(new Teamperformance(teamId == 100, win, totalGold, totalCs,
-        champion.getInt("kills"), tower.getInt("kills"), dragon.getInt("kills"), inhibitor.getInt("kills"),
+    final Teamperformance teamperformance = Teamperformance.get(new Teamperformance(teamId == 100, win, totalDamage, damageTaken,
+        totalGold, totalCs, champion.getInt("kills"), tower.getInt("kills"), dragon.getInt("kills"), inhibitor.getInt("kills"),
         riftHerald.getInt("kills"), baron.getInt("kills"), tower.getBoolean("first"), dragon.getBoolean("first")), game);
     final JSONPlayer jsonPlayer = jsonTeam.getAllPlayers().get(0);
-    if (jsonPlayer.Int(StoredStat.PERFECT_SOUL) != null)
-      teamperformance.setPerfectSoul(jsonPlayer.Int(StoredStat.PERFECT_SOUL) == 1);
-      teamperformance.setSurrendered(jsonPlayer.Int(StoredStat.SURRENDER) == 1);
-    if (jsonPlayer.Short(StoredStat.RIFT_TURRETS) != null)
-      teamperformance.setRiftTurrets(jsonPlayer.Short(StoredStat.RIFT_TURRETS) / 5d);
-    if (jsonPlayer.Short(StoredStat.ELDER_TIME) != null) teamperformance.setElderTime(jsonPlayer.Short(StoredStat.ELDER_TIME));
-    if (jsonPlayer.Short(StoredStat.BARON_POWERPLAY) != null)
-      teamperformance.setElderTime(jsonPlayer.Short(StoredStat.BARON_POWERPLAY));
+    if (jsonPlayer.getMedium(StoredStat.PERFECT_SOUL) != null)
+      teamperformance.setPerfectSoul(jsonPlayer.getMedium(StoredStat.PERFECT_SOUL) == 1);
+    teamperformance.setSurrendered(jsonPlayer.getMedium(StoredStat.SURRENDER) == 1);
+    if (jsonPlayer.getSmall(StoredStat.RIFT_TURRETS) != null)
+      teamperformance.setRiftTurrets(jsonPlayer.getSmall(StoredStat.RIFT_TURRETS) / 5d);
+    if (jsonPlayer.getSmall(StoredStat.ELDER_TIME) != null) teamperformance.setElderTime(jsonPlayer.getSmall(StoredStat.ELDER_TIME));
+    if (jsonPlayer.getSmall(StoredStat.BARON_POWERPLAY) != null)
+      teamperformance.setElderTime(jsonPlayer.getSmall(StoredStat.BARON_POWERPLAY));
+    teamperformance.setEarlyAces(jsonPlayer.getTiny(StoredStat.ACE_EARLY));
+    teamperformance.setBaronTime(jsonPlayer.getTiny(StoredStat.BARON_TIME));
+    if (earliestDragon != -1) teamperformance.setFirstDragonTime(earliestDragon);
+    teamperformance.setObjectiveAtSpawn(atSpawn);
+    teamperformance.setObjectiveContests(nearJgl);
+    teamperformance.setQuestCompletedFirst(quest > 0);
+    teamperformance.setInhibitorsTime(jsonPlayer.getSmall(StoredStat.INHIBITORS_TAKEN));
+    teamperformance.setFlawlessAce(jsonPlayer.getTiny(StoredStat.ACE_FLAWLESS));
+    teamperformance.setRiftOnMultipleTurrets(herald);
+    if (acetime != -1) teamperformance.setFastestAcetime(acetime);
+    if (killDeficit > 0) teamperformance.setKillDeficit(killDeficit);
 
     return teamperformance;
   }
@@ -326,7 +387,8 @@ public final class RiotGameRequester {
 
   private static void handleTimeline(JSON timeline, QueueType queueType) {
     if (timeline != null && !queueType.equals(QueueType.OTHER)) {
-    // TODO: 11.04.2022 POSITION
+      // TODO: 11.04.2022 POSITION
+      // TODO: 12.04.2022 Ganking
     }
   }
 }

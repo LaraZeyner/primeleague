@@ -224,6 +224,8 @@ CREATE TABLE `teamperformance`
     team               SMALLINT(4)          NULL,                             -- not null = team round (custom, clash as 3+ or others as 5)
     first_pick         BOOLEAN              NOT NULL,
     win                BOOLEAN              NOT NULL,
+    total_damage       INTEGER(6) UNSIGNED  NOT NULL,
+    total_damage_taken INTEGER(6) UNSIGNED  NOT NULL,
     total_gold         INTEGER(6) UNSIGNED  NOT NULL,
     total_cs           SMALLINT(4) UNSIGNED NOT NULL,
     total_kills        TINYINT(3) UNSIGNED  NOT NULL,
@@ -239,6 +241,17 @@ CREATE TABLE `teamperformance`
     elder_time         SMALLINT(4) UNSIGNED NULL,
     baron_powerplay    SMALLINT(4) UNSIGNED NULL,
     surrender          BOOLEAN              NOT NULL,
+    ace_before_15      TINYINT(1)           NULL,
+    baron_time         SMALLINT(4)          NULL,
+    dragon_time        SMALLINT(4)          NULL,
+    objective_onspawn  TINYINT(1)           NULL,
+    objective_contest  TINYINT(1)           NULL,
+    support_quest      BOOLEAN              NULL,
+    inhibitors_time    SMALLINT(4)          NULL,
+    ace_flawless       TINYINT(1) UNSIGNED  NULL,
+    rift_multiturret   TINYINT(1) UNSIGNED  NULL,
+    ace_fastest        SMALLINT(4) UNSIGNED NULL,
+    kills_deficit       TINYINT(3) UNSIGNED  NULL,
     FOREIGN KEY (game) REFERENCES `game` (game_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (team) REFERENCES `team` (team_id)
@@ -377,22 +390,20 @@ CREATE TABLE `playerperformance`
     lane                   VARCHAR(7)           NOT NULL,
     champion_own           SMALLINT(4)          NOT NULL,
     champion_enemy         SMALLINT(4)          NULL,
-    q_usages               SMALLINT(4) UNSIGNED NOT NULL,
-    w_usages               SMALLINT(4) UNSIGNED NOT NULL,
-    e_usages               SMALLINT(4) UNSIGNED NOT NULL,
-    r_usages               SMALLINT(3) UNSIGNED NOT NULL,
-    spells_hit             SMALLINT(4) UNSIGNED NULL,
-    spells_dodged          SMALLINT(4) UNSIGNED NULL,
-    quick_dodged           SMALLINT(4) UNSIGNED NULL,
-    damage_magical         INTEGER(6) UNSIGNED  NOT NULL,
-    damage_physical        INTEGER(6) UNSIGNED  NOT NULL,
-    damage_total           INTEGER(6) UNSIGNED  NOT NULL,
-    damage_taken           INTEGER(6) UNSIGNED  NOT NULL,
+    q_usages               SMALLINT(4) UNSIGNED NOT NULL, -- 1301
+    w_usages               SMALLINT(4) UNSIGNED NOT NULL, -- 545
+    e_usages               SMALLINT(4) UNSIGNED NOT NULL, -- 815
+    r_usages               SMALLINT(3) UNSIGNED NOT NULL, -- 585
+    spells_hit             SMALLINT(4) UNSIGNED NULL,     -- 652
+    spells_dodged          SMALLINT(4) UNSIGNED NULL,     -- 995
+    quick_dodged           SMALLINT(4) UNSIGNED NULL,     -- 796
+    damage_magical         INTEGER(6) UNSIGNED  NOT NULL, -- 134629
+    damage_physical        INTEGER(6) UNSIGNED  NOT NULL, -- 95709
+    damage_total           INTEGER(6) UNSIGNED  NOT NULL, -- 137957
+    damage_taken           INTEGER(6) UNSIGNED  NOT NULL, -- 134720
     damage_mitigated       INTEGER(6) UNSIGNED  NOT NULL,
     damage_healed          INTEGER(6) UNSIGNED  NOT NULL,
     damage_shielded        INTEGER(6) UNSIGNED  NOT NULL,
-    damage_team_dealed     DECIMAL(9, 8)        NULL,
-    damage_team_taken      DECIMAL(9, 8)        NULL,
     kills                  TINYINT(3) UNSIGNED  NOT NULL,
     deaths                 TINYINT(3) UNSIGNED  NOT NULL,
     assists                TINYINT(3) UNSIGNED  NOT NULL,
@@ -412,7 +423,8 @@ CREATE TABLE `playerperformance`
     wards_placed           TINYINT(3) UNSIGNED  NOT NULL,
     wards_cleared          TINYINT(3) UNSIGNED  NOT NULL,
     wards_guarded          TINYINT(2) UNSIGNED  NULL,
-    visionscore_advantage  TINYINT(3)           NOT NULL,
+    visionscore            TINYINT(3) UNSIGNED  NOT NULL,
+    visionscore_advantage  TINYINT(3)           NULL,
     objectives_stolen      TINYINT(1) UNSIGNED  NOT NULL,
     firstturret_advantage  SMALLINT(4)          NULL,
     objectives_damage      INTEGER(6) UNSIGNED  NOT NULL,
@@ -429,6 +441,8 @@ CREATE TABLE `playerperformance`
     ganks_mid              TINYINT(2) UNSIGNED  NOT NULL,
     ganks_bot              TINYINT(2) UNSIGNED  NOT NULL,
     dives_done             TINYINT(2) UNSIGNED  NULL,
+    dives_successful       TINYINT(2) UNSIGNED  NULL,
+    dives_gotten           TINYINT(2) UNSIGNED  NULL,
     dives_protected        TINYINT(2) UNSIGNED  NULL,
     gold_total             SMALLINT(5) UNSIGNED NOT NULL,
     gold_bounty            SMALLINT(4) UNSIGNED NULL,
@@ -436,12 +450,29 @@ CREATE TABLE `playerperformance`
     creeps_total           SMALLINT(4) UNSIGNED NOT NULL,
     creeps_early           TINYINT(3) UNSIGNED  NULL,
     creeps_invade          TINYINT(3) UNSIGNED  NOT NULL,
+    early_lane_lead        SMALLINT(5)          NULL,
     lane_lead              SMALLINT(5)          NULL,
     turretplates           TINYINT(2) UNSIGNED  NULL CHECK ( turretplates <= 15 ),
     flamehorizon_advantage SMALLINT(3)          NULL,
     items_amount           TINYINT(3) UNSIGNED  NOT NULL,
     mejais_completed       SMALLINT(4) UNSIGNED NULL,
     first_blood            BOOLEAN              NOT NULL,
+    outplayed_opponent     TINYINT(2) UNSIGNED  NULL,
+    turret_takedowns       TINYINT(2) UNSIGNED  NOT NULL,
+    dragon_takedowns       TINYINT(1) UNSIGNED  NULL,
+    fastest_legendary      SMALLINT(4) UNSIGNED NULL,
+
+    gank_setups            TINYINT(1) UNSIGNED  NULL,
+    buffs_initial          TINYINT(1) UNSIGNED  NULL CHECK ( buffs_initial BETWEEN 0 AND 2 ),
+    kills_early            TINYINT(2) UNSIGNED  NULL,
+    objective_junglerkill  TINYINT(1) UNSIGNED  NULL,
+    ambush_kill            TINYINT(2) UNSIGNED  NULL,
+    turrets_early          TINYINT(1) UNSIGNED  NULL,
+    experience_advantage   TINYINT(1) UNSIGNED  NULL,
+    pick_kill              TINYINT(2) UNSIGNED  NULL,
+    assassination          TINYINT(2) UNSIGNED  NULL,
+    guard_ally             TINYINT(2) UNSIGNED  NULL,
+    survived_close         TINYINT(2) UNSIGNED  NULL,
     FOREIGN KEY (teamperformance) REFERENCES `teamperformance` (teamperformance_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (account) REFERENCES `account` (puuid)
@@ -508,18 +539,6 @@ CREATE TABLE `champion_class`
     PRIMARY KEY (champion, championclass),
     FOREIGN KEY (champion) REFERENCES `champion` (champion_id)
         ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-
-CREATE TABLE `output`
-(
-    output_category    VARCHAR(25)         NOT NULL,
-    output_subcategory TINYINT(2) UNSIGNED NOT NULL,
-    output_row         TINYINT(2) UNSIGNED NOT NULL,
-    output_column      TINYINT(2) UNSIGNED NOT NULL,
-    value              VARCHAR(100)        NULL,
-    updated            BOOLEAN             NOT NULL DEFAULT false,
-    PRIMARY KEY (output_category, output_subcategory, output_row, output_column)
 );
 
 CREATE TABLE `input`

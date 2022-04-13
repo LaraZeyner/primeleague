@@ -17,11 +17,9 @@
         <class>de.xeri.league.models.dynamic.Summonerspell</class>
         <class>de.xeri.league.models.dynamic.Wincondition</class>
         <class>de.xeri.league.models.ids.ChampionRelationshipId</class>
-        <class>de.xeri.league.models.ids.OutputId</class>
         <class>de.xeri.league.models.ids.PlaystyleId</class>
         <class>de.xeri.league.models.ids.WinconditionId</class>
         <class>de.xeri.league.models.io.Input</class>
-        <class>de.xeri.league.models.io.Output</class>
         <class>de.xeri.league.models.league.Account</class>
         <class>de.xeri.league.models.league.League</class>
         <class>de.xeri.league.models.league.Matchday</class>
