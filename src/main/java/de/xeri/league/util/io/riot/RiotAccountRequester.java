@@ -35,12 +35,23 @@ public final class RiotAccountRequester {
    * }
    */
 
+  public static Account getAccountFromPuuid(String puuid) {
+    final JSON json = Data.getInstance().getRequester()
+        .requestRiotJSON("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/" + puuid + Const.API_KEY);
+    if (json == null) return null;
+    return getAccountFromRiot(puuid, json.getJSONObject());
+  }
+
   public static Account getAccountFromName(String name) {
     final JSON json = Data.getInstance().getRequester()
         .requestRiotJSON("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + name + Const.API_KEY);
     if (json == null) return null;
     final JSONObject summoner = json.getJSONObject();
     final String puuid = summoner.getString("puuid");
+    return getAccountFromRiot(puuid, summoner);
+  }
+
+  private static Account getAccountFromRiot(String puuid, JSONObject summoner) {
     final String id = summoner.getString("id");
     final String summonerName = summoner.getString("name");
     final short iconId = (short) summoner.getInt("profileIconId");

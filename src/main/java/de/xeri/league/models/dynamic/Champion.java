@@ -202,11 +202,6 @@ public class Champion implements Serializable {
     return ability;
   }
 
-  public void addChampionSelection(ChampionSelection selection) {
-    this.championSelections.add(selection);
-    selection.setChampion(this);
-  }
-
   public void addPlaystyle(Playstyle playstyle) {
     this.playstyles.add(playstyle);
     playstyle.setChampion(this);
@@ -434,7 +429,7 @@ public class Champion implements Serializable {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Champion)) return false;
-    Champion champion = (Champion) o;
+    final Champion champion = (Champion) o;
     return this.getId() == champion.getId() && this.getAttack() == champion.getAttack() && this.getDefense() == champion.getDefense() && this.getSpell() == champion.getSpell() && this.getHealth() == champion.getHealth() && this.getSecondary() == champion.getSecondary() && this.getMoveSpeed() == champion.getMoveSpeed() && Double.compare(champion.getResist(), this.getResist()) == 0 && this.getAttackRange() == champion.getAttackRange() && Double.compare(champion.getHealthRegen(), this.getHealthRegen()) == 0 && Double.compare(champion.getSpellRegen(), this.getSpellRegen()) == 0 && this.getDamage() == champion.getDamage() && Double.compare(champion.getAttackSpeed(), this.getAttackSpeed()) == 0 && this.getName().equals(champion.getName()) && this.getTitle().equals(champion.getTitle()) && this.getSubclass() == champion.getSubclass() && this.getResource().equals(champion.getResource()) && this.getFightType() == champion.getFightType() && this.getFightStyle() == champion.getFightStyle() && this.getChampionRelationshipsFrom().equals(champion.getChampionRelationshipsFrom()) && this.getChampionRelationshipsTo().equals(champion.getChampionRelationshipsTo()) && this.getWinconditions().equals(champion.getWinconditions()) && this.getPlayerperformancesOwn().equals(champion.getPlayerperformancesOwn()) && this.getPlayerperformancesEnemy().equals(champion.getPlayerperformancesEnemy()) && this.getPlaystyles().equals(champion.getPlaystyles()) && this.getChampionSelections().equals(champion.getChampionSelections()) && this.getAbilities().equals(champion.getAbilities()) && this.getClasses().equals(champion.getClasses());
   }
 

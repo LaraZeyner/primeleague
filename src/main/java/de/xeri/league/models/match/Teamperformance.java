@@ -9,6 +9,8 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,6 +22,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.DragonSoul;
+import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
@@ -47,9 +51,17 @@ public class Teamperformance implements Serializable {
     return data;
   }
 
-  public static Teamperformance get(Teamperformance neu, Game game) {
+  public static Teamperformance get(Teamperformance neu, Game game, Team team) {
     get();
-    if (find(game, neu.isFirstPick()) == null) data.add(neu);
+    if (find(game, neu.isFirstPick()) == null) {
+      game.getTeamperformances().add(neu);
+      neu.setGame(game);
+      if (team != null) {
+        team.getTeamperformances().add(neu);
+        neu.setTeam(team);
+      }
+      data.add(neu);
+    }
     return find(game, neu.isFirstPick());
   }
 
@@ -164,10 +176,17 @@ public class Teamperformance implements Serializable {
   @Column(name = "kills_deficit")
   private byte killDeficit;
 
+  @Column(name = "dragon_soul")
+  @Enumerated(EnumType.STRING)
+  private DragonSoul soul;
 
   @OneToMany(mappedBy = "teamperformance")
   private final Set<Playerperformance> playerperformances = new LinkedHashSet<>();
 
+  @OneToMany(mappedBy = "teamperformance")
+  private final Set<TeamperformanceBounty> bounties = new LinkedHashSet<>();
+
+  // TODO: 14.04.2022 Determine deprecated attributes + remove
   // default constructor
   public Teamperformance() {
   }
@@ -190,9 +209,12 @@ public class Teamperformance implements Serializable {
     this.firstDrake = firstDrake;
   }
 
-  public void addPlayerperformance(Playerperformance playerperformance) {
-    playerperformances.add(playerperformance);
-    playerperformance.setTeamperformance(this);
+  public Playerperformance addPlayerperformance(Playerperformance playerperformance, Account account) {
+    return Playerperformance.get(playerperformance, this, account);
+  }
+
+  public TeamperformanceBounty addBounty(TeamperformanceBounty bounty) {
+    return TeamperformanceBounty.get(bounty,this);
   }
 
   public byte getInvadingKills() {
@@ -488,6 +510,18 @@ public class Teamperformance implements Serializable {
 
   public void setKillDeficit(byte killDeficit) {
     this.killDeficit = killDeficit;
+  }
+
+  public DragonSoul getSoul() {
+    return soul;
+  }
+
+  public void setSoul(DragonSoul soul) {
+    this.soul = soul;
+  }
+
+  public Set<TeamperformanceBounty> getBounties() {
+    return bounties;
   }
 
   @Override

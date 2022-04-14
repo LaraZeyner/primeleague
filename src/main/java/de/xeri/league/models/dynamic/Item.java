@@ -21,7 +21,7 @@ import javax.persistence.Transient;
 
 import de.xeri.league.loader.ItemLoader;
 import de.xeri.league.models.enums.ItemType;
-import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.PlayerperformanceItem;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
 
@@ -80,8 +80,8 @@ public class Item implements Serializable {
       inverseJoinColumns = @JoinColumn(name = "itemstyle"))
   private final Set<Itemstyle> itemstyles = new LinkedHashSet<>();
 
-  @ManyToMany(mappedBy = "items")
-  private final Set<Playerperformance> playerperformances = new LinkedHashSet<>();
+  @OneToMany(mappedBy = "item")
+  private final Set<PlayerperformanceItem> playerperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "item")
   private final Set<Item_Stat> itemStats = new LinkedHashSet<>();
@@ -118,7 +118,7 @@ public class Item implements Serializable {
     return itemStats;
   }
 
-  public Set<Playerperformance> getPlayerperformances() {
+  public Set<PlayerperformanceItem> getPlayerperformances() {
     return playerperformances;
   }
 

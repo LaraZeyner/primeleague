@@ -108,11 +108,6 @@ public class Team implements Serializable {
     this.teamAbbr = teamAbbr;
   }
 
-  public void addTeamperformance(Teamperformance teamperformance) {
-    teamperformances.add(teamperformance);
-    teamperformance.setTeam(this);
-  }
-
   public void addSchedule(Schedule schedule) {
     schedules.add(schedule);
     schedule.setEnemyTeam(this);

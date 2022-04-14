@@ -39,6 +39,14 @@
         <class>de.xeri.league.models.match.Teamperformance</class>
         <class>de.xeri.league.models.others.ChampionRelationship</class>
         <class>de.xeri.league.models.others.Playstyle</class>
+        <class>de.xeri.league.models.ids.PlayerperformanceInfoId</class>
+        <class>de.xeri.league.models.match.PlayerperformanceInfo</class>
+        <class>de.xeri.league.models.match.PlayerperformanceKill</class>
+        <class>de.xeri.league.models.match.PlayerperformanceObjective</class>
+        <class>de.xeri.league.models.ids.PlayerperformanceLevelId</class>
+        <class>de.xeri.league.models.match.PlayerperformanceLevel</class>
+        <class>de.xeri.league.models.match.TeamperformanceBounty</class>
+        <class>de.xeri.league.models.match.GamePause</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test?serverTimezone=UTC" />

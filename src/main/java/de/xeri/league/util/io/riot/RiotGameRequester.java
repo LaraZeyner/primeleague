@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -13,7 +14,12 @@ import de.xeri.league.models.dynamic.Champion;
 import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.models.dynamic.Rune;
 import de.xeri.league.models.dynamic.Summonerspell;
+import de.xeri.league.models.enums.DragonSoul;
+import de.xeri.league.models.enums.EventTypes;
+import de.xeri.league.models.enums.KillRole;
+import de.xeri.league.models.enums.KillType;
 import de.xeri.league.models.enums.Lane;
+import de.xeri.league.models.enums.ObjectiveSubtype;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.enums.SelectionType;
 import de.xeri.league.models.enums.StoredStat;
@@ -21,11 +27,17 @@ import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.match.ChampionSelection;
 import de.xeri.league.models.match.Game;
+import de.xeri.league.models.match.GamePause;
 import de.xeri.league.models.match.Gametype;
 import de.xeri.league.models.match.Playerperformance;
-import de.xeri.league.models.match.PlayerperformanceSummonerspell;
+import de.xeri.league.models.match.PlayerperformanceInfo;
+import de.xeri.league.models.match.PlayerperformanceKill;
+import de.xeri.league.models.match.PlayerperformanceLevel;
+import de.xeri.league.models.match.PlayerperformanceObjective;
+import de.xeri.league.models.match.Position;
 import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.models.match.TeamperformanceBounty;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.io.json.JSON;
 import org.json.JSONArray;
@@ -35,7 +47,6 @@ import org.json.JSONObject;
  * Created by Lara on 08.04.2022 for web
  */
 public final class RiotGameRequester {
-
   private static List<JSONTeam> jsonTeams;
 
   private static List<JSONPlayer> getJSONPlayers() {
@@ -66,41 +77,43 @@ public final class RiotGameRequester {
 
   private static void loadGame(ScheduledGame scheduledGame, QueueType queueType) {
     final JSON game = RiotURLGenerator.getMatch().getMatch(scheduledGame.getId());
-    if (game != null && isValidGame(game, queueType) && queueType != QueueType.OTHER) {
-      final JSON timeline = RiotURLGenerator.getMatch().getTimeline(scheduledGame.getId());
-      handleTimeline(timeline, queueType);
-    }
-    ScheduledGame.get().remove(scheduledGame);
+    final JSON timeline = RiotURLGenerator.getMatch().getTimeline(scheduledGame.getId());
+    if (isValidGame(game, timeline, queueType))
+      ScheduledGame.get().remove(scheduledGame);
     Data.getInstance().getSession().remove(scheduledGame);
   }
 
-  private static boolean isValidGame(JSON gameJson, QueueType queueType) {
+  private static boolean isValidGame(JSON gameJson, JSON timelineJson, QueueType queueType) {
     final JSONObject gameData = gameJson.getJSONObject();
-    final JSONObject metadata = gameData.getJSONObject("metadata");
-    final String gameId = metadata.getString("matchId");
     final JSONObject info = gameData.getJSONObject("info");
     final int queueId = info.getInt("queueId");
     final JSONArray participants = info.getJSONArray("participants");
     if ((queueId == 0 || queueId == 400 || queueId == 410 || queueId == 420 || queueId == 430 || queueId == 700) && participants.length() == 10) {
-      final Game game = handleGame(info, gameId);
-      final Gametype gametype = Gametype.find(queueId);
-      gametype.addGame(game);
+
+      final JSONObject metadata = gameData.getJSONObject("metadata");
+      final String gameId = metadata.getString("matchId");
+      final List<JSONObject> events = new ArrayList<>();
+      final Map<Integer, JSONObject> playerInfo = new HashMap<>();
+      if (timelineJson.getJSONObject() != null) {
+        loadTimeline(events, playerInfo, timelineJson.getJSONObject());
+      }
+      final Gametype gametype = (info.has("tournamentCode") && !info.isNull("tournamentCode")) ? Gametype.find(-1) : Gametype.find(queueId);
+      final Game game = handleGame(info, gameId, gametype);
+      gametype.addGame(game, gametype);
+      handleGameEvents(events, game);
 
       jsonTeams = getJsonTeams(participants);
-
       for (int i = 0; i < jsonTeams.size(); i++) {
         final JSONTeam jsonTeam = jsonTeams.get(i);
         final JSONArray teams = info.getJSONArray("teams");
         if (jsonTeam.doesExist()) {
-          final Teamperformance teamperformance = handleTeam(jsonTeam, teams.getJSONObject(i), game);
+          final Teamperformance teamperformance = handleTeam(jsonTeam, teams.getJSONObject(i));
           final Team team = jsonTeam.getMostUsedTeam(queueType);
-          team.addTeamperformance(teamperformance);
-          game.addTeamperformance(teamperformance);
+          game.addTeamperformance(teamperformance, team);
+          handleTeamEvents(events, teamperformance);
 
           final List<JSONPlayer> players = determinePlayers(queueType, jsonTeam);
-          final List<Playerperformance> playerperformances = handlePlayers(players);
-
-          playerperformances.forEach(teamperformance::addPlayerperformance);
+          players.forEach(player -> handlePlayer(player, teamperformance, events, playerInfo));
         }
         determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
       }
@@ -119,9 +132,7 @@ public final class RiotGameRequester {
       final Champion champion = Champion.find(championId);
       final int pickTurn = selectionObject.getInt("pickTurn");
       pickTurns.add(pickTurn);
-      final ChampionSelection ban = ChampionSelection.get(new ChampionSelection(SelectionType.BAN, (byte) (j + 1 + id * 5)), game);
-      game.addChampionSelection(ban);
-      champion.addChampionSelection(ban);
+      game.addChampionSelection(new ChampionSelection(SelectionType.BAN, (byte) (j + 1 + id * 5)), champion);
     }
 
     final List<Integer> indexes = new ArrayList<>();
@@ -133,51 +144,36 @@ public final class RiotGameRequester {
       iterator++;
     }
     for (int i : indexes) {
-      final ChampionSelection pick = ChampionSelection.get(new ChampionSelection(SelectionType.PICK, (byte) (i + id * 5)), game);
-      game.addChampionSelection(pick);
       final String championName = participants.getJSONObject(i).getString("championName");
       final Champion champion = Champion.find(championName);
-      champion.addChampionSelection(pick);
+      game.addChampionSelection(new ChampionSelection(SelectionType.PICK, (byte) (i + 1 + id * 5)), champion);
     }
   }
 
-  private static List<Playerperformance> handlePlayers(List<JSONPlayer> players) {
-    return players.stream().map(RiotGameRequester::handlePlayer).collect(Collectors.toList());
-  }
-
-  private static Playerperformance handlePlayer(JSONPlayer player) {
+  private static void handlePlayer(JSONPlayer player, Teamperformance teamperformance, List<JSONObject> events,
+                                   Map<Integer, JSONObject> playerInfo) {
     final JSONPlayer enemy = getEnemyPlayer(player);
-    final Playerperformance playerperformance = handlePerformance(player, enemy);
-    player.getAccount().addPlayerperformance(playerperformance);
+    final Playerperformance performance = handlePerformance(player, enemy);
+    final Account account = (player.isListed()) ? player.getAccount() :
+        Account.get(RiotAccountRequester.getAccountFromPuuid(player.get(StoredStat.PUUID)));
+    if (account != null) {
+      final Playerperformance playerperformance = teamperformance.addPlayerperformance(performance, account);
+      handleSummonerspells(player, playerperformance);
+      handleChampionsPicked(player, enemy, playerperformance);
+
+      final JSONArray styles = player.object(StoredStat.RUNES).getJSONArray("styles");
+      final int bound = styles.length();
+      IntStream.range(0, bound).mapToObj(styles::getJSONObject)
+          .map(substyle -> substyle.getJSONArray("selections"))
+          .forEach(runes -> IntStream.range(0, runes.length()).mapToObj(runes::getJSONObject)
+              .map(runeObject -> Rune.find((short) runeObject.getInt("perk")))
+              .forEach(playerperformance::addRune));
 
 
-    handleSummonerspells(player, playerperformance);
+      handlePlayerEvents(events, player, playerperformance);
+      handlePlayerInfo(playerInfo, player, playerperformance);
 
-    handleChampionsPicked(player, enemy, playerperformance);
-
-    IntStream.range(1, 8).mapToObj(i -> player.getMedium(StoredStat.valueOf("ITEM_" + i)))
-        .filter(itemId -> itemId != null && itemId != 0)
-        .map(Item::find)
-        .filter(Objects::nonNull)
-        .forEach(playerperformance::addItem);
-
-    final JSONArray styles = player.object(StoredStat.RUNES).getJSONArray("styles");
-    IntStream.range(0, styles.length()).mapToObj(styles::getJSONObject)
-        .map(substyle -> substyle.getJSONArray("selections"))
-        .forEach(runes -> IntStream.range(0, runes.length()).mapToObj(runes::getJSONObject)
-            .map(runeObject -> Rune.find((short) runeObject.getInt("perk")))
-            .forEach(playerperformance::addRune)
-        );
-
-    return playerperformance;
-  }
-
-  private static void handleSummonerspells(JSONPlayer player, Playerperformance playerperformance) {
-    final Summonerspell summonerspell1 = Summonerspell.find(player.getMedium(StoredStat.SUMMONER1_ID));
-    PlayerperformanceSummonerspell.get(new PlayerperformanceSummonerspell(playerperformance, summonerspell1, player.getTiny(StoredStat.SUMMONER1_AMOUNT)));
-    final Summonerspell summonerspell2 = Summonerspell.find(player.getMedium(StoredStat.SUMMONER2_ID));
-    PlayerperformanceSummonerspell.get(new PlayerperformanceSummonerspell(playerperformance, summonerspell2,
-        player.getTiny(StoredStat.SUMMONER2_AMOUNT)));
+    }
   }
 
   /**
@@ -216,7 +212,7 @@ public final class RiotGameRequester {
         p.getTiny(StoredStat.ASSISTS), p.getTiny(StoredStat.KILLS_DOUBLE), p.getTiny(StoredStat.KILLS_TRIPLE),
         p.getTiny(StoredStat.KILLS_QUADRA), p.getTiny(StoredStat.KILLS_PENTA), p.getSmall(StoredStat.TIME_ALIVE),
         p.getSmall(StoredStat.TIME_DEAD), p.getSmall(StoredStat.WARDS_PLACED), stolen, p.getMedium(StoredStat.OBJECTIVES_DAMAGE),
-        p.getTiny(StoredStat.BARON_KILLS), p.getSmall(StoredStat.GOLD_TOTAL), p.getMedium(StoredStat.EXPERIENCE_TOTAL), creeps,
+        p.getTiny(StoredStat.BARON_KILLS), p.getMedium(StoredStat.GOLD_TOTAL), p.getMedium(StoredStat.EXPERIENCE_TOTAL), creeps,
         p.getSmall(StoredStat.ITEMS_BOUGHT), firstBlood, controlWards, wardClear, p.getSmall(StoredStat.VISION_SCORE),
         p.getTiny(StoredStat.TOWERS_TAKEDOWNS));
     if (visionScore != null) playerperformance.setVisionscoreAdvantage(visionScore);
@@ -274,7 +270,6 @@ public final class RiotGameRequester {
     playerperformance.setSavedAlly(p.getTiny(StoredStat.GUARD_ALLY));
     playerperformance.setSurvivedClose((byte) (p.getTiny(StoredStat.SURVIVED_CLOSE) +
         p.getTiny(StoredStat.SURVIVED_HIGH_DAMAGE) + p.getTiny(StoredStat.SURVIVED_HIGH_CROWDCONTROL)));
-
     return playerperformance;
   }
 
@@ -326,7 +321,7 @@ public final class RiotGameRequester {
     return jsonTeams;
   }
 
-  private static Teamperformance handleTeam(JSONTeam jsonTeam, JSONObject jsonObject, Game game) {
+  private static Teamperformance handleTeam(JSONTeam jsonTeam, JSONObject jsonObject) {
     final JSONObject objectives = jsonObject.getJSONObject("objectives");
     final JSONObject champion = objectives.getJSONObject("champion");
     final JSONObject tower = objectives.getJSONObject("tower");
@@ -350,9 +345,9 @@ public final class RiotGameRequester {
     final short acetime = (short) jsonTeam.getAllPlayers().stream().mapToInt(p -> p.getSmall(StoredStat.ACE_TIME)).min().orElse(-1);
     final byte killDeficit = (byte) jsonTeam.getAllPlayers().stream().mapToInt(p -> p.getTiny(StoredStat.KILLS_DISADVANTAGE)).sum();
 
-    final Teamperformance teamperformance = Teamperformance.get(new Teamperformance(teamId == 100, win, totalDamage, damageTaken,
+    final Teamperformance teamperformance = new Teamperformance(teamId == 100, win, totalDamage, damageTaken,
         totalGold, totalCs, champion.getInt("kills"), tower.getInt("kills"), dragon.getInt("kills"), inhibitor.getInt("kills"),
-        riftHerald.getInt("kills"), baron.getInt("kills"), tower.getBoolean("first"), dragon.getBoolean("first")), game);
+        riftHerald.getInt("kills"), baron.getInt("kills"), tower.getBoolean("first"), dragon.getBoolean("first"));
     final JSONPlayer jsonPlayer = jsonTeam.getAllPlayers().get(0);
     if (jsonPlayer.getMedium(StoredStat.PERFECT_SOUL) != null)
       teamperformance.setPerfectSoul(jsonPlayer.getMedium(StoredStat.PERFECT_SOUL) == 1);
@@ -377,18 +372,168 @@ public final class RiotGameRequester {
     return teamperformance;
   }
 
-  private static Game handleGame(JSONObject info, String gameId) {
+  private static Game handleGame(JSONObject info, String gameId, Gametype gametype) {
     final long startMillis = info.getLong("gameStartTimestamp");
     final Date start = new Date(startMillis);
     final long endMillis = info.getLong("gameStartTimestamp");
     final short duration = (short) (endMillis - startMillis / 1000);
-    return Game.get(new Game(gameId, start, duration));
+    return Game.get(new Game(gameId, start, duration), gametype);
   }
 
-  private static void handleTimeline(JSON timeline, QueueType queueType) {
-    if (timeline != null && !queueType.equals(QueueType.OTHER)) {
-      // TODO: 11.04.2022 POSITION
-      // TODO: 12.04.2022 Ganking
+  private static void loadTimeline(List<JSONObject> events, Map<Integer, JSONObject> playerInfo, JSONObject timeLineObject) {
+    final JSONObject timelineInfo = timeLineObject.getJSONObject("info");
+    final JSONArray timelineFrames = timelineInfo.getJSONArray("frames");
+    for (int i = 0; i < timelineFrames.length(); i++) {
+      final JSONObject frameObject = timelineFrames.getJSONObject(i);
+      final JSONArray eventArray = frameObject.getJSONArray("events");
+      final JSONObject event = timelineFrames.getJSONObject(0);
+      if (Arrays.stream(EventTypes.values()).anyMatch(type2 -> type2.name().equals(event.getString("type")))) {
+        IntStream.range(0, eventArray.length()).mapToObj(eventArray::getJSONObject).forEach(events::add);
+      }
+      if (frameObject.has("participantFrames") && !frameObject.isNull("participantFrames")) {
+        playerInfo.put(frameObject.getInt("timestamp"), frameObject.getJSONObject("participantFrames"));
+      }
     }
+  }
+
+  private static void handleGameEvents(List<JSONObject> events, Game game) {
+    for (JSONObject event : events) {
+      final EventTypes type = EventTypes.valueOf(event.getString("type"));
+      final int timestamp = event.getInt("timestamp");
+      if (type.equals(EventTypes.PAUSE_START)) {
+        handlePauseStart(timestamp, game);
+      } else if (type.equals(EventTypes.PAUSE_END)) {
+        handlePauseEnd(timestamp, game);
+      }
+    }
+  }
+
+  private static void handlePauseStart(int timestamp, Game game) {
+    if (GamePause.getNotOpened().isEmpty()) {
+      game.addPause(new GamePause(timestamp, 0));
+    } else {
+      GamePause.getNotOpened().get(0).setStart(timestamp);
+    }
+  }
+
+  private static void handlePauseEnd(int timestamp, Game game) {
+    if (GamePause.getNotClosed().isEmpty()) {
+      game.addPause(new GamePause(0, timestamp));
+    } else {
+      GamePause.getNotClosed().get(0).setEnd(timestamp);
+    }
+  }
+
+  private static void handleTeamEvents(List<JSONObject> events, Teamperformance teamperformance) {
+    for (JSONObject event : events) {
+      final EventTypes type = EventTypes.valueOf(event.getString("type"));
+      final int timestamp = event.getInt("timestamp");
+      if (type.equals(EventTypes.OBJECTIVE_BOUNTY_PRESTART)) {
+        handleBountyStart(timestamp, teamperformance);
+      } else if (type.equals(EventTypes.OBJECTIVE_BOUNTY_FINISH)) {
+        handleBountyEnd(timestamp, teamperformance);
+      } else if (type.equals(EventTypes.DRAGON_SOUL_GIVEN)) {
+        teamperformance.setSoul(DragonSoul.valueOf(event.getString("name").toUpperCase()));
+      }
+    }
+  }
+
+  private static void handleBountyStart(int timestamp, Teamperformance teamperformance) {
+    if (TeamperformanceBounty.getNotOpened().isEmpty()) {
+      teamperformance.addBounty(new TeamperformanceBounty(timestamp, 0));
+    } else {
+      TeamperformanceBounty.getNotOpened().get(0).setStart(timestamp);
+    }
+  }
+
+  private static void handleBountyEnd(int timestamp, Teamperformance teamperformance) {
+    if (TeamperformanceBounty.getNotClosed().isEmpty()) {
+      teamperformance.addBounty(new TeamperformanceBounty(0, timestamp));
+    } else {
+      TeamperformanceBounty.getNotClosed().get(0).setEnd(timestamp);
+    }
+  }
+
+  private static void handlePlayerEvents(List<JSONObject> events, JSONPlayer player, Playerperformance playerperformance) {
+    final List<Integer> items = IntStream.range(1, 8).mapToObj(i -> player.getMedium(StoredStat.valueOf("ITEM_" + i)))
+        .filter(itemId -> itemId != null && itemId != 0).collect(Collectors.toList());
+    for (JSONObject event : events) {
+      final EventTypes type = EventTypes.valueOf(event.getString("type"));
+      final int timestamp = event.getInt("timestamp");
+      final int playerId = event.has("killerId") ? event.getInt("killerId") : event.getInt("participantId");
+      final List<Integer> participatingIds = event.has("assistingParticipantIds") ?
+          event.getJSONArray("assistingParticipantIds").toList().stream()
+              .map(assistingParticipantIds -> (Integer) assistingParticipantIds).collect(Collectors.toList()) : new ArrayList<>();
+      final int victimId = event.has("victimId") ? event.getInt("victimId") : 0;
+      KillRole role = null;
+      if (playerId == player.getId() + 1) {
+        role = KillRole.KILL;
+      } else if (participatingIds.contains(playerId + 1)) {
+        role = KillRole.ASSIST;
+      } else if (victimId == player.getId() + 1) {
+        role = KillRole.VICTIM;
+      }
+
+      if (role != null) {
+        if (type.equals(EventTypes.LEVEL_UP)) {
+          playerperformance.addLevelup(new PlayerperformanceLevel((byte) event.getInt("level"), timestamp));
+        } else if (type.equals(EventTypes.ITEM_PURCHASED)) {
+          final int itemId = event.getInt("itemId");
+          playerperformance.addItem(Item.find(itemId), items.contains(itemId), timestamp);
+        } else if (type.equals(EventTypes.CHAMPION_SPECIAL_KILL) || type.equals(EventTypes.CHAMPION_KILL)) {
+          handleChampionKills(playerperformance, event, type, timestamp, role);
+        } else if (type.equals(EventTypes.TURRET_PLATE_DESTROYED) || type.equals(EventTypes.BUILDING_KILL) ||
+            type.equals(EventTypes.ELITE_MONSTER_KILL)) {
+          handleObjectives(playerperformance, event, type, timestamp, role);
+        }
+      }
+    }
+  }
+
+  private static void handleChampionKills(Playerperformance playerperformance, JSONObject event, EventTypes type, int timestamp, KillRole role) {
+    if (type.equals(EventTypes.CHAMPION_SPECIAL_KILL)) {
+      final PlayerperformanceKill kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
+      kill.setType(KillType.valueOf(event.getString("killType").replace("KILL_", "")));
+    } else {
+      final JSONObject positionObject = event.getJSONObject("position");
+      final Position position = new Position((short) positionObject.getInt("x"), (short) positionObject.getInt("y"));
+      final PlayerperformanceKill kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
+      final int killId = kill == null ? PlayerperformanceKill.lastId() + 1 : kill.getId();
+      playerperformance.addKill(new PlayerperformanceKill(killId, timestamp, position, (short) event.getInt("bounty"), role,
+          KillType.NORMAL, (byte) event.getInt("killStreakLength")));
+    }
+  }
+
+  private static void handleObjectives(Playerperformance playerperformance, JSONObject event, EventTypes type, int timestamp, KillRole role) {
+    final Lane lane = event.has("laneType") ? Lane.findLane(event.getString("laneType")) : null;
+    if (type.equals(EventTypes.TURRET_PLATE_DESTROYED)) {
+      playerperformance.addObjective(new PlayerperformanceObjective(timestamp, ObjectiveSubtype.OUTER_TURRET, lane,
+          (short) 160, role));
+    } else {
+      final String query = type.equals(EventTypes.BUILDING_KILL) ? (event.has("towerType") ? "towerType" : "buildingType") :
+          (event.has("monsterSubType") ? "monsterSubType" : "monsterType");
+      final ObjectiveSubtype objectiveType = ObjectiveSubtype.valueOf(event.getString(query).replace("_BUILDING", ""));
+      final short bounty = (short) event.getInt("bounty");
+      playerperformance.addObjective(new PlayerperformanceObjective(timestamp, objectiveType, lane, bounty, role));
+    }
+  }
+
+  private static void handlePlayerInfo(Map<Integer, JSONObject> infos, JSONPlayer player, Playerperformance playerperformance) {
+    for (int timestamp : infos.keySet()) {
+      final JSONObject frame = infos.get(timestamp);
+      final JSONObject stats = frame.getJSONObject(String.valueOf(player.getId() + 1));
+      final JSONObject positionObject = stats.getJSONObject("position");
+      final Position position = new Position((short) positionObject.getInt("x"), (short) positionObject.getInt("y"));
+      final short creepScore = (short) (stats.getInt("minionsKilled") + stats.getInt("jungleMinionsKilled"));
+      final PlayerperformanceInfo info = new PlayerperformanceInfo((short) (timestamp / 60000), stats.getInt("totalGold"),
+          (short) stats.getInt("currentGold"), (short) stats.getInt("timeEnemySpentControlled"), position, stats.getInt("xp"),
+          creepScore, stats.getJSONObject("damageStats").getInt("totalDamageDoneToChampions"));
+      playerperformance.addInfo(info);
+    }
+  }
+
+  private static void handleSummonerspells(JSONPlayer player, Playerperformance performance) {
+    performance.addSummonerspell(Summonerspell.find(player.getMedium(StoredStat.SUMMONER1_ID)), player.getTiny(StoredStat.SUMMONER1_AMOUNT));
+    performance.addSummonerspell(Summonerspell.find(player.getMedium(StoredStat.SUMMONER2_ID)), player.getTiny(StoredStat.SUMMONER2_AMOUNT));
   }
 }

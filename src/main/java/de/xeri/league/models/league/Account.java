@@ -118,11 +118,6 @@ public class Account implements Serializable {
     seasonElo.setAccount(this);
   }
 
-  public void addPlayerperformance(Playerperformance playerperformance) {
-    playerperformances.add(playerperformance);
-    playerperformance.setAccount(this);
-  }
-
   public List<Team> getTeams() {
     final Map<Team, Integer> teamsPlayedFor = new HashMap<>();
     final List<Team> teamList = new ArrayList<>();

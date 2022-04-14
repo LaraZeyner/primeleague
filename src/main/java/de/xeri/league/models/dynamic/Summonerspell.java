@@ -56,7 +56,7 @@ public class Summonerspell implements Serializable {
   private String name;
 
   @OneToMany(mappedBy = "summonerspell")
-  private final Set<PlayerperformanceSummonerspell> playerperformanceSummonerspells = new LinkedHashSet<>();
+  private final Set<PlayerperformanceSummonerspell> summonerspells = new LinkedHashSet<>();
 
   // default constructor
   public Summonerspell() {
@@ -68,8 +68,8 @@ public class Summonerspell implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public Set<PlayerperformanceSummonerspell> getPlayerperformanceSummonerspells() {
-    return playerperformanceSummonerspells;
+  public Set<PlayerperformanceSummonerspell> getPlayerperformances() {
+    return summonerspells;
   }
 
   public byte getId() {
@@ -93,7 +93,7 @@ public class Summonerspell implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Summonerspell)) return false;
     final Summonerspell summonerspell = (Summonerspell) o;
-    return getId() == summonerspell.getId() && getName().equals(summonerspell.getName()) && getPlayerperformanceSummonerspells().equals(summonerspell.getPlayerperformanceSummonerspells());
+    return getId() == summonerspell.getId() && getName().equals(summonerspell.getName()) && getPlayerperformances().equals(summonerspell.getPlayerperformances());
   }
 
   @Override

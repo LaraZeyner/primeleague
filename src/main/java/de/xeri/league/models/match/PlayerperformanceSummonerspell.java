@@ -46,7 +46,7 @@ public class PlayerperformanceSummonerspell implements Serializable {
     get();
     if (find(neu.getPlayerperformance(), neu.getSummonerspell()) == null) {
       neu.getPlayerperformance().getSummonerspells().add(neu);
-      neu.getSummonerspell().getPlayerperformanceSummonerspells().add(neu);
+      neu.getSummonerspell().getPlayerperformances().add(neu);
       data.add(neu);
     }
     return find(neu.getPlayerperformance(), neu.getSummonerspell());

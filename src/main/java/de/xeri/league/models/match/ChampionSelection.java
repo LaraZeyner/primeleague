@@ -45,10 +45,16 @@ public class ChampionSelection implements Serializable {
     return data;
   }
 
-  public static ChampionSelection get(ChampionSelection neu, Game game) {
+  public static ChampionSelection get(ChampionSelection neu, Game game, Champion champion) {
     get();
     final ChampionSelection entry = find(game, neu.getSelectionType(), neu.getSelectionOrder());
-    if (entry == null) data.add(neu);
+    if (entry == null) {
+      game.getChampionSelections().add(neu);
+      neu.setGame(game);
+      champion.getChampionSelections().add(neu);
+      neu.setChampion(champion);
+      data.add(neu);
+    }
     return find(game, neu.getSelectionType(), neu.getSelectionOrder());
   }
 

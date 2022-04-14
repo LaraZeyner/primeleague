@@ -92,6 +92,7 @@ public enum StoredStat {
   QUEST_FAST("fasterSupportQuestCompletion", true),
   PERFECT_SOUL("perfectDragonSoulsTaken", true),
   PICK_KILL("pickKillWithAlly", true),
+  PUUID("puuid", false),
   R_USAGE("spell4Casts", false),
   RUNES("perks", false),
   RIFT_TURRETS("turretsTakenWithRiftHerald", true),

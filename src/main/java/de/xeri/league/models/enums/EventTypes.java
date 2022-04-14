@@ -1,0 +1,19 @@
+package de.xeri.league.models.enums;
+
+/**
+ * Created by Lara on 13.04.2022 for web
+ */
+public enum EventTypes {
+  BUILDING_KILL,
+  CHAMPION_KILL,
+  CHAMPION_SPECIAL_KILL,
+  DRAGON_SOUL_GIVEN,
+  ELITE_MONSTER_KILL,
+  ITEM_PURCHASED,
+  LEVEL_UP,
+  OBJECTIVE_BOUNTY_FINISH,
+  OBJECTIVE_BOUNTY_PRESTART,
+  PAUSE_END,
+  PAUSE_START,
+  TURRET_PLATE_DESTROYED
+}

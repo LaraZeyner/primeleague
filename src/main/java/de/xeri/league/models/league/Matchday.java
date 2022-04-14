@@ -54,7 +54,8 @@ public class Matchday implements Serializable {
     get();
     final Matchday entry = find(neu.getMatchdayType(), stage.getId());
     if (entry == null) {
-      stage.addMatchday(neu);
+      stage.getMatchdays().add(neu);
+      neu.setStage(stage);
       data.add(neu);
     }
     return find(neu.getMatchdayType(), stage.getId());

@@ -32,11 +32,18 @@ import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.models.match.ChampionSelection;
 import de.xeri.league.models.match.Game;
+import de.xeri.league.models.match.GamePause;
 import de.xeri.league.models.match.Gametype;
 import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.PlayerperformanceInfo;
+import de.xeri.league.models.match.PlayerperformanceItem;
+import de.xeri.league.models.match.PlayerperformanceKill;
+import de.xeri.league.models.match.PlayerperformanceLevel;
+import de.xeri.league.models.match.PlayerperformanceObjective;
 import de.xeri.league.models.match.PlayerperformanceSummonerspell;
 import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.models.match.TeamperformanceBounty;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
 import org.hibernate.SessionFactory;
@@ -61,6 +68,7 @@ public final class HibernateUtil {
           ChampionRelationship.class,
           ChampionSelection.class,
           Game.class,
+          GamePause.class,
           Gametype.class,
           Input.class,
           Item.class,
@@ -73,6 +81,11 @@ public final class HibernateUtil {
           Matchlog.class,
           Player.class,
           Playerperformance.class,
+          PlayerperformanceInfo.class,
+          PlayerperformanceItem.class,
+          PlayerperformanceKill.class,
+          PlayerperformanceLevel.class,
+          PlayerperformanceObjective.class,
           PlayerperformanceSummonerspell.class,
           Playstyle.class,
           Resource.class,
@@ -86,6 +99,7 @@ public final class HibernateUtil {
           Summonerspell.class,
           Team.class,
           Teamperformance.class,
+          TeamperformanceBounty.class,
           TurnamentMatch.class,
           Wincondition.class));
       final Properties properties = configuration.getProperties();

@@ -1,10 +1,7 @@
 package de.xeri.league;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by Lara on 06.04.2022 for web
@@ -12,11 +9,50 @@ import java.util.Map;
 public class Test {
 
   public static void main(String[] args) {
-    Map<Integer, List<Integer>> map = new HashMap<>();
-    map.put(1, new ArrayList<>(Arrays.asList(1, 2)));
-    final List<Integer> integers = map.get(1);
-    integers.add(2);
-    System.out.println("A");
+    final List<String> matches = Arrays.asList(
+        "EUW1_5816706347",
+        "EUW1_5816705941",
+        "EUW1_5802242076",
+        "EUW1_5800022870",
+        "EUW1_5794851729",
+        "EUW1_5794582038",
+        "EUW1_5785699668",
+        "EUW1_5774415640",
+        "EUW1_5774385613",
+        "EUW1_5769179131",
+        "EUW1_5769256005",
+        "EUW1_5761145009",
+        "EUW1_5761144679",
+        "EUW1_5758359322",
+        "EUW1_5758738737",
+        "EUW1_5750487736",
+        "EUW1_5741110740",
+        "EUW1_5738767467",
+        "EUW1_5736609729",
+        "EUW1_5736369848",
+        "EUW1_5733620006",
+        "EUW1_5733592466",
+        "EUW1_5723865958",
+        "EUW1_5723825584",
+        "EUW1_5700743567",
+        "EUW1_5701371279",
+        "EUW1_5701121168",
+        "EUW1_5698310332",
+        "EUW1_5698055260",
+        "EUW1_5698054494",
+        "EUW1_5698053887",
+        "EUW1_5698112953",
+        "EUW1_5553100026",
+        "EUW1_5553119228",
+        "EUW1_5531204880",
+        "EUW1_5530925017",
+        "EUW1_5517224365",
+        "EUW1_5517293939",
+        "EUW1_5508044404",
+        "EUW1_5508214070",
+        "EUW1_5493727992",
+        "EUW1_5493727590",
+        "EUW1_5483639859",
+        "EUW1_5483639551");
   }
-
 }

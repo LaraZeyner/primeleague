@@ -74,9 +74,8 @@ public class Gametype implements Serializable {
     this.name = name;
   }
 
-  public void addGame(Game game) {
-    games.add(game);
-    game.setGametype(this);
+  public Game addGame(Game game, Gametype type) {
+    return Game.get(game, type);
   }
 
   //<editor-fold desc="getter and setter">

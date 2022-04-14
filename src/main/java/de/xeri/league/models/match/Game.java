@@ -21,6 +21,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.dynamic.Champion;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.util.Data;
@@ -34,6 +35,7 @@ public class Game implements Serializable {
   @Transient
   private static final long serialVersionUID = 4639052028429524051L;
 
+  //<editor-fold desc="Queries">
   private static Set<Game> data;
 
   public static void save() {
@@ -45,10 +47,14 @@ public class Game implements Serializable {
     return data;
   }
 
-  public static Game get(Game neu) {
+  public static Game get(Game neu, Gametype type) {
     get();
     final Game entry = find(neu.getId());
-    if (entry == null) data.add(neu);
+    if (entry == null) {
+      type.getGames().add(neu);
+      neu.setGametype(type);
+      data.add(neu);
+    }
     return find(neu.getId());
   }
 
@@ -56,6 +62,7 @@ public class Game implements Serializable {
     get();
     return data.stream().filter(entry -> entry.getId().equals(id)).findFirst().orElse(null);
   }
+  //</editor-fold>
 
   @Id
   @Check(constraints = "game_id REGEXP ('^EUW')")
@@ -83,6 +90,10 @@ public class Game implements Serializable {
   @OneToMany(mappedBy = "game")
   private final Set<ChampionSelection> championSelections = new LinkedHashSet<>();
 
+  @OneToMany(mappedBy = "game")
+  private final Set<GamePause> pauses = new LinkedHashSet<>();
+
+
   // default constructor
   public Game() {
   }
@@ -93,14 +104,16 @@ public class Game implements Serializable {
     this.duration = duration;
   }
 
-  public void addTeamperformance(Teamperformance teamperformance) {
-    teamperformances.add(teamperformance);
-    teamperformance.setGame(this);
+  public Teamperformance addTeamperformance(Teamperformance teamperformance, Team team) {
+    return Teamperformance.get(teamperformance, this, team);
   }
 
-  public void addChampionSelection(ChampionSelection selection) {
-    championSelections.add(selection);
-    selection.setGame(this);
+  public ChampionSelection addChampionSelection(ChampionSelection selection, Champion champion) {
+    return ChampionSelection.get(selection, this, champion);
+  }
+
+  public GamePause addPause(GamePause pause) {
+    return GamePause.get(pause, this);
   }
 
   public List<Team> getTeams() {
@@ -154,6 +167,10 @@ public class Game implements Serializable {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public Set<GamePause> getPauses() {
+    return pauses;
   }
 
   @Override

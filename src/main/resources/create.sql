@@ -141,7 +141,6 @@ CREATE TABLE `game`
         ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
-
 CREATE TABLE `abilitystyle`
 (
     style_name VARCHAR(30) PRIMARY KEY
@@ -219,7 +218,7 @@ CREATE TABLE `champion_selection`
 
 CREATE TABLE `teamperformance`
 (
-    teamperformance_id INTEGER(6) AUTO_INCREMENT PRIMARY KEY,
+    teamperformance_id INTEGER(7) AUTO_INCREMENT PRIMARY KEY,
     game               VARCHAR(16)          NOT NULL,
     team               SMALLINT(4)          NULL,                             -- not null = team round (custom, clash as 3+ or others as 5)
     first_pick         BOOLEAN              NOT NULL,
@@ -241,17 +240,18 @@ CREATE TABLE `teamperformance`
     elder_time         SMALLINT(4) UNSIGNED NULL,
     baron_powerplay    SMALLINT(4) UNSIGNED NULL,
     surrender          BOOLEAN              NOT NULL,
-    ace_before_15      TINYINT(1)           NULL,
+    ace_before_15      TINYINT(2)           NULL,
     baron_time         SMALLINT(4)          NULL,
     dragon_time        SMALLINT(4)          NULL,
-    objective_onspawn  TINYINT(1)           NULL,
-    objective_contest  TINYINT(1)           NULL,
+    objective_onspawn  TINYINT(2)           NULL,
+    objective_contest  TINYINT(2)           NULL,
     support_quest      BOOLEAN              NULL,
     inhibitors_time    SMALLINT(4)          NULL,
     ace_flawless       TINYINT(1) UNSIGNED  NULL,
     rift_multiturret   TINYINT(1) UNSIGNED  NULL,
     ace_fastest        SMALLINT(4) UNSIGNED NULL,
-    kills_deficit       TINYINT(3) UNSIGNED  NULL,
+    kills_deficit      TINYINT(3) UNSIGNED  NULL,
+    dragon_soul        VARCHAR(8)           NULL,
     FOREIGN KEY (game) REFERENCES `game` (game_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (team) REFERENCES `team` (team_id)
@@ -384,7 +384,7 @@ CREATE TABLE `item_style`
 
 CREATE TABLE `playerperformance`
 (
-    playerperformance_id   INTEGER(7) AUTO_INCREMENT PRIMARY KEY,
+    playerperformance_id   INTEGER(8) AUTO_INCREMENT PRIMARY KEY,
     teamperformance        INTEGER(6)           NOT NULL,
     account                VARCHAR(78)          NOT NULL,
     lane                   VARCHAR(7)           NOT NULL,
@@ -461,7 +461,6 @@ CREATE TABLE `playerperformance`
     turret_takedowns       TINYINT(2) UNSIGNED  NOT NULL,
     dragon_takedowns       TINYINT(1) UNSIGNED  NULL,
     fastest_legendary      SMALLINT(4) UNSIGNED NULL,
-
     gank_setups            TINYINT(1) UNSIGNED  NULL,
     buffs_initial          TINYINT(1) UNSIGNED  NULL CHECK ( buffs_initial BETWEEN 0 AND 2 ),
     kills_early            TINYINT(2) UNSIGNED  NULL,
@@ -493,9 +492,11 @@ CREATE TABLE `playerperformance`
 
 CREATE TABLE `playerperformance_item`
 (
-    playerperformance INTEGER(7)           NOT NULL,
-    item              SMALLINT(4) UNSIGNED NOT NULL,
-    PRIMARY KEY (playerperformance, item),
+    playerperformance_item_id INTEGER(7) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    playerperformance         INTEGER(7)           NOT NULL,
+    buy_timestamp             SMALLINT(4) UNSIGNED NOT NULL,
+    item                      SMALLINT(4) UNSIGNED NOT NULL,
+    item_remains              BOOLEAN              NOT NULL,
     FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (item) REFERENCES `item` (item_id)
@@ -532,6 +533,8 @@ CREATE TABLE `playerperformance_summonerspell`
         ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+
+
 CREATE TABLE `champion_class`
 (
     champion      SMALLINT(4) NOT NULL,
@@ -561,7 +564,7 @@ CREATE TABLE `input`
 
 CREATE TABLE `schedule`
 (
-    schedule_id  SMALLINT(4) AUTO_INCREMENT PRIMARY KEY,
+    schedule_id  SMALLINT(4) PRIMARY KEY AUTO_INCREMENT,
     type         VARCHAR(20)  NOT NULL,
     start_time   TIMESTAMP    NOT NULL,
     end_time     TIMESTAMP    NULL,
@@ -572,6 +575,82 @@ CREATE TABLE `schedule`
     CHECK ( LENGTH(title) <= 20 AND small_title IS NULL OR small_title IS NOT NULL),
     FOREIGN KEY (enemy_team) REFERENCES `team` (team_id)
         ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE `game_pause`
+(
+    pause_id    INTEGER(6) PRIMARY KEY AUTO_INCREMENT,
+    game        VARCHAR(16)         NOT NULL,
+    pause_start BIGINT(13) UNSIGNED NOT NULL,
+    pause_end   BIGINT(13) UNSIGNED NOT NULL,
+    FOREIGN KEY (game) REFERENCES `game` (game_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE `teamperformance_bounty`
+(
+    bounty_id       INTEGER(6) PRIMARY KEY AUTO_INCREMENT,
+    teamperformance INTEGER(6)          NOT NULL,
+    bounty_start    INTEGER(7) UNSIGNED NOT NULL,
+    bounty_end      INTEGER(7) UNSIGNED NOT NULL,
+    FOREIGN KEY (teamperformance) REFERENCES `teamperformance` (teamperformance_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE `playerperformance_level`
+(
+    playerperformance INTEGER(7)          NOT NULL,
+    level_number      TINYINT(2) UNSIGNED NOT NULL,
+    levelup_time      INTEGER(7) UNSIGNED NOT NULL,
+    PRIMARY KEY (playerperformance, level_number),
+    FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE `playerperformance_objective`
+(
+    objective_id      INTEGER(8) PRIMARY KEY AUTO_INCREMENT,
+    playerperformance INTEGER(7)           NOT NULL,
+    objective_time    INTEGER(7) UNSIGNED  NOT NULL,
+    objective_type    VARCHAR(15)          NOT NULL,
+    objective_lane    VARCHAR(6)           NULL,
+    objective_bounty  SMALLINT(4) UNSIGNED NOT NULL,
+    objective_role    VARCHAR(6)           NOT NULL,
+    FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE `playerperformance_kill`
+(
+    kill_id           INTEGER(8) UNSIGNED  NOT NULL,
+    playerperformance INTEGER(7)           NOT NULL,
+    kill_time         INTEGER(7) UNSIGNED  NOT NULL,
+    position_x        SMALLINT(5) UNSIGNED NOT NULL,
+    position_y        SMALLINT(5) UNSIGNED NOT NULL,
+    kill_bounty       SMALLINT(4) UNSIGNED NOT NULL,
+    kill_role         VARCHAR(6)           NOT NULL,
+    kill_type         VARCHAR(11)          NOT NULL,
+    kill_streak       TINYINT(2) UNSIGNED  NOT NULL DEFAULT 0,
+    PRIMARY KEY (kill_id, playerperformance),
+    FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE `playerperformance_info`
+(
+    playerperformance INTEGER(7)           NOT NULL,
+    info_minute       TINYINT(3) UNSIGNED  NOT NULL,
+    info_gold_total   SMALLINT(5) UNSIGNED NOT NULL,
+    info_gold_current SMALLINT(5) UNSIGNED NOT NULL,
+    enemy_controlled  SMALLINT(4) UNSIGNED NOT NULL,
+    position_x        SMALLINT(5) UNSIGNED NOT NULL,
+    position_y        SMALLINT(5) UNSIGNED NOT NULL,
+    info_experience   SMALLINT(5) UNSIGNED NOT NULL,
+    info_creep_score  SMALLINT(4) UNSIGNED NOT NULL,
+    info_damage_total INTEGER(6) UNSIGNED  NOT NULL,
+    PRIMARY KEY (playerperformance, info_minute),
+    FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 INSERT INTO input (input_category)

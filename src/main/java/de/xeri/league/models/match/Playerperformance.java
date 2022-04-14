@@ -2,6 +2,7 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -29,6 +30,8 @@ import de.xeri.league.models.dynamic.Summonerspell;
 import de.xeri.league.models.enums.ItemType;
 import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.league.Account;
+import de.xeri.league.util.Data;
+import de.xeri.league.util.Util;
 import org.hibernate.annotations.Check;
 
 @Entity(name = "Playerperformance")
@@ -43,6 +46,37 @@ public class Playerperformance implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 6290895798073708343L;
+
+  //<editor-fold desc="Queries">
+  private static Set<Playerperformance> data;
+
+  public static void save() {
+    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
+  }
+
+  public static Set<Playerperformance> get() {
+    if (data == null)
+      data = new LinkedHashSet<>((List<Playerperformance>) Util.query("Playerperformance"));
+    return data;
+  }
+
+  static Playerperformance get(Playerperformance neu, Teamperformance performance, Account account) {
+    get();
+    if (find(performance, account) == null) {
+      account.getPlayerperformances().add(neu);
+      performance.getPlayerperformances().add(neu);
+      neu.setTeamperformance(performance);
+      neu.setAccount(account);
+      data.add(neu);
+    }
+    return find(performance, neu.getAccount());
+  }
+
+  public static Playerperformance find(Teamperformance teamperformance, Account account) {
+    return data.stream().filter(entry -> entry.getTeamperformance().equals(teamperformance) && entry.getAccount() == account)
+        .findFirst().orElse(null);
+  }
+  //</editor-fold>
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -234,14 +268,14 @@ public class Playerperformance implements Serializable {
   @Column(name = "dives_protected")
   private byte divesProtected;
 
-  @Column(name = "gold_total", nullable = false)
-  private short goldTotal;
+  @Column(name = "gold_total", columnDefinition = "SMALLINT UNSIGNED NOT NULL")
+  private int goldTotal;
 
   @Column(name = "gold_bounty")
   private short bountyGold;
 
-  @Column(name = "experience_total", nullable = false, columnDefinition = "SMALLINT UNSIGNED")
-  private int experienceTotal;
+  @Column(name = "experience_total", columnDefinition = "SMALLINT UNSIGNED NOT NULL")
+  private int experience;
 
   @Column(name = "creeps_total", nullable = false)
   private short creepsTotal;
@@ -249,7 +283,7 @@ public class Playerperformance implements Serializable {
   @Column(name = "creeps_early", columnDefinition = "TINYINT UNSIGNED")
   private short creepsEarly;
 
-  @Column(name = "creeps_invade", nullable = false, columnDefinition = "TINYINT UNSIGNED NOT NULL")
+  @Column(name = "creeps_invade", columnDefinition = "TINYINT UNSIGNED NOT NULL")
   private short creepsInvade;
 
   @Column(name = "early_lane_lead")
@@ -330,12 +364,20 @@ public class Playerperformance implements Serializable {
   @OneToMany(mappedBy = "playerperformance")
   private final Set<PlayerperformanceSummonerspell> summonerspells = new LinkedHashSet<>();
 
-  @ManyToMany
-  @JoinTable(name = "playerperformance_item",
-      joinColumns = @JoinColumn(name = "playerperformance"),
-      inverseJoinColumns = @JoinColumn(name = "item"),
-      indexes = @Index(name = "idx_performanceitem", columnList = "playerperformance, item", unique = true))
-  private final Set<Item> items = new LinkedHashSet<>();
+  @OneToMany(mappedBy = "playerperformance")
+  private final Set<PlayerperformanceItem> items = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "playerperformance")
+  private final Set<PlayerperformanceInfo> infos = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "playerperformance")
+  private final Set<PlayerperformanceKill> killEvents = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "playerperformance")
+  private final Set<PlayerperformanceObjective> objectives = new LinkedHashSet<>();
+
+  @OneToMany(mappedBy = "playerperformance")
+  private final Set<PlayerperformanceLevel> levelups = new LinkedHashSet<>();
 
   // default constructor
   public Playerperformance() {
@@ -345,7 +387,7 @@ public class Playerperformance implements Serializable {
                            int damageTotal, int damageTaken, int damageMitigated, int damageHealed, int damageShielded, byte kills,
                            byte deaths, byte assists, byte doubleKills, byte tripleKills, byte quadraKills, byte pentaKills,
                            short timeAlive, short timeDead, short wardsPlaced, byte objectivesStolen, int objectivesDamage,
-                           byte baronKills, short goldTotal, int experienceTotal, short creepsTotal, short itemsAmount,
+                           byte baronKills, int goldTotal, int experience, short creepsTotal, short itemsAmount,
                            boolean firstBlood, byte controlWards, byte wardsCleared, short visionScore, byte turretTakedowns) {
     this.lane = lane;
     this.qUsages = qUsages;
@@ -373,7 +415,7 @@ public class Playerperformance implements Serializable {
     this.objectivesDamage = objectivesDamage;
     this.baronKills = baronKills;
     this.goldTotal = goldTotal;
-    this.experienceTotal = experienceTotal;
+    this.experience = experience;
     this.creepsTotal = creepsTotal;
     this.itemsAmount = itemsAmount;
     this.firstBlood = firstBlood;
@@ -387,28 +429,43 @@ public class Playerperformance implements Serializable {
     return timeDead / (teamperformance.getGame().getDuration() + 0.0);
   }
 
-  public void addItem(Item item) {
-    items.add(item);
-    item.getPlayerperformances().add(this);
+  public PlayerperformanceItem addItem(Item item, boolean remains, int buyTime) {
+    final PlayerperformanceItem playerperformanceItem = new PlayerperformanceItem(this, item, remains);
+    playerperformanceItem.setBuyTime(buyTime);
+    return PlayerperformanceItem.get(playerperformanceItem);
   }
 
-  public void addRune(Rune rune) {
-    runes.add(rune);
-    rune.getPlayerperformances().add(this);
+  public Rune addRune(Rune rune) {
+    return Rune.get(rune, this);
   }
 
-  public void addSummonerspell(Summonerspell summonerspell, byte amount) {
-    final PlayerperformanceSummonerspell spell = PlayerperformanceSummonerspell.get(new PlayerperformanceSummonerspell(this, summonerspell, amount));
+  public PlayerperformanceSummonerspell addSummonerspell(Summonerspell summonerspell, byte amount) {
+    final PlayerperformanceSummonerspell performanceSpell = new PlayerperformanceSummonerspell(this, summonerspell, amount);
+    return PlayerperformanceSummonerspell.get(performanceSpell);
   }
 
-  public Item getMythic() {
-    return items.stream().filter(item -> item.getItemtype().equals(ItemType.MYTHIC))
-        .findFirst().orElse(null);
+  public PlayerperformanceInfo addInfo(PlayerperformanceInfo info) {
+    return PlayerperformanceInfo.get(info, this);
   }
 
-  public Item getTrinket() {
-    return items.stream().filter(item -> item.getItemtype().equals(ItemType.TRINKET))
-        .findFirst().orElse(null);
+  public PlayerperformanceKill addKill(PlayerperformanceKill kill) {
+    return PlayerperformanceKill.get(kill, this);
+  }
+
+  public PlayerperformanceObjective addObjective(PlayerperformanceObjective objective) {
+    return PlayerperformanceObjective.get(objective, this);
+  }
+
+  public PlayerperformanceLevel addLevelup(PlayerperformanceLevel levelup) {
+    return PlayerperformanceLevel.get(levelup, this);
+  }
+
+  public PlayerperformanceItem getMythic() {
+    return items.stream().filter(item -> item.getItem().getItemtype().equals(ItemType.MYTHIC)).findFirst().orElse(null);
+  }
+
+  public PlayerperformanceItem getTrinket() {
+    return items.stream().filter(item -> item.getItem().getItemtype().equals(ItemType.TRINKET)).findFirst().orElse(null);
   }
 
   public Rune getKeystone() {
@@ -451,7 +508,7 @@ public class Playerperformance implements Serializable {
   }
 
   public byte countLegendaryItems() {
-    return (byte) items.stream().filter(item -> item.getItemtype().equals(ItemType.LEGENDARY)).count();
+    return (byte) items.stream().filter(item -> item.getItem().getItemtype().equals(ItemType.LEGENDARY)).count();
   }
 
   public boolean hasMythic() {
@@ -941,11 +998,11 @@ public class Playerperformance implements Serializable {
     this.divesProtected = divesProtected;
   }
 
-  public short getGoldTotal() {
+  public int getGoldTotal() {
     return goldTotal;
   }
 
-  public void setGoldTotal(short goldTotal) {
+  public void setGoldTotal(int goldTotal) {
     this.goldTotal = goldTotal;
   }
 
@@ -957,12 +1014,12 @@ public class Playerperformance implements Serializable {
     this.bountyGold = goldBounty;
   }
 
-  public int getExperienceTotal() {
-    return experienceTotal;
+  public int getExperience() {
+    return experience;
   }
 
-  public void setExperienceTotal(int experienceTotal) {
-    this.experienceTotal = experienceTotal;
+  public void setExperience(int experience) {
+    this.experience = experience;
   }
 
   public short getCreepsTotal() {
@@ -1045,7 +1102,7 @@ public class Playerperformance implements Serializable {
     return summonerspells;
   }
 
-  public Set<Item> getItems() {
+  public Set<PlayerperformanceItem> getItems() {
     return items;
   }
 
@@ -1177,12 +1234,28 @@ public class Playerperformance implements Serializable {
     this.survivedClose = survivedClose;
   }
 
+  public Set<PlayerperformanceInfo> getInfos() {
+    return infos;
+  }
+
+  public Set<PlayerperformanceKill> getKillEvents() {
+    return killEvents;
+  }
+
+  public Set<PlayerperformanceObjective> getObjectives() {
+    return objectives;
+  }
+
+  public Set<PlayerperformanceLevel> getLevelups() {
+    return levelups;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Playerperformance)) return false;
     final Playerperformance that = (Playerperformance) o;
-    return getId() == that.getId() && getqUsages() == that.getqUsages() && getwUsages() == that.getwUsages() && geteUsages() == that.geteUsages() && getrUsages() == that.getrUsages() && getSpellsHit() == that.getSpellsHit() && getSpellsDodged() == that.getSpellsDodged() && getQuickDodged() == that.getQuickDodged() && getDamageMagical() == that.getDamageMagical() && getDamagePhysical() == that.getDamagePhysical() && getDamageTotal() == that.getDamageTotal() && getDamageTaken() == that.getDamageTaken() && getDamageMitigated() == that.getDamageMitigated() && getDamageHealed() == that.getDamageHealed() && getDamageShielded() == that.getDamageShielded() && getKills() == that.getKills() && getDeaths() == that.getDeaths() && getAssists() == that.getAssists() && getKillsSolo() == that.getKillsSolo() && getAllinLevelup() == that.getAllinLevelup() && getDoubleKills() == that.getDoubleKills() && getTripleKills() == that.getTripleKills() && getQuadraKills() == that.getQuadraKills() && getPentaKills() == that.getPentaKills() && getFlashAggressive() == that.getFlashAggressive() && getTimeAlive() == that.getTimeAlive() && getTimeDead() == that.getTimeDead() && getTeleportKills() == that.getTeleportKills() && getImmobilizations() == that.getImmobilizations() && getControlWards() == that.getControlWards() && getControlWardUptime() == that.getControlWardUptime() && getWardsPlaced() == that.getWardsPlaced() && getWardsCleared() == that.getWardsCleared() && getWardsGuarded() == that.getWardsGuarded() && getVisionScore() == that.getVisionScore() && getVisionscoreAdvantage() == that.getVisionscoreAdvantage() && getObjectivesStolen() == that.getObjectivesStolen() && getFirstturretAdvantage() == that.getFirstturretAdvantage() && getObjectivesDamage() == that.getObjectivesDamage() && getBaronExecutes() == that.getBaronExecutes() && getBaronKills() == that.getBaronKills() && getBuffsStolen() == that.getBuffsStolen() && getScuttlesInitial() == that.getScuttlesInitial() && getScuttlesTotal() == that.getScuttlesTotal() && getSplitpushedTurrets() == that.getSplitpushedTurrets() && getTeamInvading() == that.getTeamInvading() && getGanksEarly() == that.getGanksEarly() && getGanksTotal() == that.getGanksTotal() && getGanksTop() == that.getGanksTop() && getGanksMid() == that.getGanksMid() && getGanksBot() == that.getGanksBot() && getDivesDone() == that.getDivesDone() && getDivesSuccessful() == that.getDivesSuccessful() && getDivesGotten() == that.getDivesGotten() && getDivesProtected() == that.getDivesProtected() && getGoldTotal() == that.getGoldTotal() && getBountyGold() == that.getBountyGold() && getExperienceTotal() == that.getExperienceTotal() && getCreepsTotal() == that.getCreepsTotal() && getCreepsEarly() == that.getCreepsEarly() && getCreepsInvade() == that.getCreepsInvade() && getEarlyLaneLead() == that.getEarlyLaneLead() && getLaneLead() == that.getLaneLead() && getTurretplates() == that.getTurretplates() && getFlamehorizonAdvantage() == that.getFlamehorizonAdvantage() && getItemsAmount() == that.getItemsAmount() && getMejaisCompleted() == that.getMejaisCompleted() && isFirstBlood() == that.isFirstBlood() && getOutplayed() == that.getOutplayed() && getTurretTakedowns() == that.getTurretTakedowns() && getDragonTakedowns() == that.getDragonTakedowns() && getFastestLegendary() == that.getFastestLegendary() && getGankSetups() == that.getGankSetups() && getInitialBuffs() == that.getInitialBuffs() && getEarlyKills() == that.getEarlyKills() && getJunglerKillsAtObjective() == that.getJunglerKillsAtObjective() && getAmbush() == that.getAmbush() && getEarlyTurrets() == that.getEarlyTurrets() && getLevelLead() == that.getLevelLead() && getPicksMade() == that.getPicksMade() && getAssassinated() == that.getAssassinated() && getSavedAlly() == that.getSavedAlly() && getSurvivedClose() == that.getSurvivedClose() && getTeamperformance().equals(that.getTeamperformance()) && getAccount().equals(that.getAccount()) && getLane() == that.getLane() && getChampionOwn().equals(that.getChampionOwn()) && Objects.equals(getChampionEnemy(), that.getChampionEnemy());
+    return getId() == that.getId() && getqUsages() == that.getqUsages() && getwUsages() == that.getwUsages() && geteUsages() == that.geteUsages() && getrUsages() == that.getrUsages() && getSpellsHit() == that.getSpellsHit() && getSpellsDodged() == that.getSpellsDodged() && getQuickDodged() == that.getQuickDodged() && getDamageMagical() == that.getDamageMagical() && getDamagePhysical() == that.getDamagePhysical() && getDamageTotal() == that.getDamageTotal() && getDamageTaken() == that.getDamageTaken() && getDamageMitigated() == that.getDamageMitigated() && getDamageHealed() == that.getDamageHealed() && getDamageShielded() == that.getDamageShielded() && getKills() == that.getKills() && getDeaths() == that.getDeaths() && getAssists() == that.getAssists() && getKillsSolo() == that.getKillsSolo() && getAllinLevelup() == that.getAllinLevelup() && getDoubleKills() == that.getDoubleKills() && getTripleKills() == that.getTripleKills() && getQuadraKills() == that.getQuadraKills() && getPentaKills() == that.getPentaKills() && getFlashAggressive() == that.getFlashAggressive() && getTimeAlive() == that.getTimeAlive() && getTimeDead() == that.getTimeDead() && getTeleportKills() == that.getTeleportKills() && getImmobilizations() == that.getImmobilizations() && getControlWards() == that.getControlWards() && getControlWardUptime() == that.getControlWardUptime() && getWardsPlaced() == that.getWardsPlaced() && getWardsCleared() == that.getWardsCleared() && getWardsGuarded() == that.getWardsGuarded() && getVisionScore() == that.getVisionScore() && getVisionscoreAdvantage() == that.getVisionscoreAdvantage() && getObjectivesStolen() == that.getObjectivesStolen() && getFirstturretAdvantage() == that.getFirstturretAdvantage() && getObjectivesDamage() == that.getObjectivesDamage() && getBaronExecutes() == that.getBaronExecutes() && getBaronKills() == that.getBaronKills() && getBuffsStolen() == that.getBuffsStolen() && getScuttlesInitial() == that.getScuttlesInitial() && getScuttlesTotal() == that.getScuttlesTotal() && getSplitpushedTurrets() == that.getSplitpushedTurrets() && getTeamInvading() == that.getTeamInvading() && getGanksEarly() == that.getGanksEarly() && getGanksTotal() == that.getGanksTotal() && getGanksTop() == that.getGanksTop() && getGanksMid() == that.getGanksMid() && getGanksBot() == that.getGanksBot() && getDivesDone() == that.getDivesDone() && getDivesSuccessful() == that.getDivesSuccessful() && getDivesGotten() == that.getDivesGotten() && getDivesProtected() == that.getDivesProtected() && getGoldTotal() == that.getGoldTotal() && getBountyGold() == that.getBountyGold() && getExperience() == that.getExperience() && getCreepsTotal() == that.getCreepsTotal() && getCreepsEarly() == that.getCreepsEarly() && getCreepsInvade() == that.getCreepsInvade() && getEarlyLaneLead() == that.getEarlyLaneLead() && getLaneLead() == that.getLaneLead() && getTurretplates() == that.getTurretplates() && getFlamehorizonAdvantage() == that.getFlamehorizonAdvantage() && getItemsAmount() == that.getItemsAmount() && getMejaisCompleted() == that.getMejaisCompleted() && isFirstBlood() == that.isFirstBlood() && getOutplayed() == that.getOutplayed() && getTurretTakedowns() == that.getTurretTakedowns() && getDragonTakedowns() == that.getDragonTakedowns() && getFastestLegendary() == that.getFastestLegendary() && getGankSetups() == that.getGankSetups() && getInitialBuffs() == that.getInitialBuffs() && getEarlyKills() == that.getEarlyKills() && getJunglerKillsAtObjective() == that.getJunglerKillsAtObjective() && getAmbush() == that.getAmbush() && getEarlyTurrets() == that.getEarlyTurrets() && getLevelLead() == that.getLevelLead() && getPicksMade() == that.getPicksMade() && getAssassinated() == that.getAssassinated() && getSavedAlly() == that.getSavedAlly() && getSurvivedClose() == that.getSurvivedClose() && getTeamperformance().equals(that.getTeamperformance()) && getAccount().equals(that.getAccount()) && getLane() == that.getLane() && getChampionOwn().equals(that.getChampionOwn()) && Objects.equals(getChampionEnemy(), that.getChampionEnemy());
   }
 
   @Override
@@ -1194,7 +1267,7 @@ public class Playerperformance implements Serializable {
         getPentaKills(), getFlashAggressive(), getTimeAlive(), getTimeDead(), getTeleportKills(), getImmobilizations(), getControlWards()
         , getControlWardUptime(), getWardsPlaced(), getWardsCleared(), getWardsGuarded(), getVisionScore(), getVisionscoreAdvantage(),
         getObjectivesStolen(), getFirstturretAdvantage(), getObjectivesDamage(), getBaronExecutes(), getBaronKills(), getBuffsStolen(),
-        getScuttlesInitial(), getScuttlesTotal(), getSplitpushedTurrets(), getTeamInvading(), getGanksEarly(), getGanksTotal(), getGanksTop(), getGanksMid(), getGanksBot(), getDivesDone(), getDivesSuccessful(), getDivesGotten(), getDivesProtected(), getGoldTotal(), getBountyGold(), getExperienceTotal(), getCreepsTotal(), getCreepsEarly(), getCreepsInvade(), getEarlyLaneLead(), getLaneLead(), getTurretplates(), getFlamehorizonAdvantage(), getItemsAmount(), getMejaisCompleted(), isFirstBlood(), getOutplayed(), getTurretTakedowns(), getDragonTakedowns(), getFastestLegendary(), getGankSetups(), getInitialBuffs(), getEarlyKills(), getJunglerKillsAtObjective(), getAmbush(), getEarlyTurrets(), getLevelLead(), getPicksMade(), getAssassinated(), getSavedAlly(), getSurvivedClose());
+        getScuttlesInitial(), getScuttlesTotal(), getSplitpushedTurrets(), getTeamInvading(), getGanksEarly(), getGanksTotal(), getGanksTop(), getGanksMid(), getGanksBot(), getDivesDone(), getDivesSuccessful(), getDivesGotten(), getDivesProtected(), getGoldTotal(), getBountyGold(), getExperience(), getCreepsTotal(), getCreepsEarly(), getCreepsInvade(), getEarlyLaneLead(), getLaneLead(), getTurretplates(), getFlamehorizonAdvantage(), getItemsAmount(), getMejaisCompleted(), isFirstBlood(), getOutplayed(), getTurretTakedowns(), getDragonTakedowns(), getFastestLegendary(), getGankSetups(), getInitialBuffs(), getEarlyKills(), getJunglerKillsAtObjective(), getAmbush(), getEarlyTurrets(), getLevelLead(), getPicksMade(), getAssassinated(), getSavedAlly(), getSurvivedClose());
   }
 
   @Override
@@ -1262,7 +1335,7 @@ public class Playerperformance implements Serializable {
         ", divesProtected=" + divesProtected +
         ", goldTotal=" + goldTotal +
         ", bountyGold=" + bountyGold +
-        ", experienceTotal=" + experienceTotal +
+        ", experienceTotal=" + experience +
         ", creepsTotal=" + creepsTotal +
         ", creepsEarly=" + creepsEarly +
         ", creepsInvade=" + creepsInvade +

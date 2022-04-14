@@ -101,9 +101,8 @@ public class Stage implements Serializable {
     this.stageEnd = stageEnd;
   }
 
-  public void addMatchday(Matchday matchday) {
-    matchdays.add(matchday);
-    matchday.setStage(this);
+  public Matchday addMatchday(Matchday matchday) {
+    return Matchday.get(matchday, this);
   }
 
   public void addLeague(League league) {

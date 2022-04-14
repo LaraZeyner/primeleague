@@ -40,10 +40,14 @@ public class Rune implements Serializable {
     return data;
   }
 
-  public static Rune get(Rune neu) {
+  public static Rune get(Rune neu, Playerperformance performance) {
     get();
     final Rune entry = find(neu.getId());
-    if (entry == null) data.add(neu);
+    if (entry == null) {
+      performance.getRunes().add(neu);
+      neu.getPlayerperformances().add(performance);
+      data.add(neu);
+    }
     return find(neu.getId());
   }
 
