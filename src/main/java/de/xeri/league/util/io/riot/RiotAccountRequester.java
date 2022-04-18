@@ -56,18 +56,14 @@ public final class RiotAccountRequester {
     final String summonerName = summoner.getString("name");
     final short iconId = (short) summoner.getInt("profileIconId");
     final short level = (short) summoner.getInt("summonerLevel");
-    final Account account = Account.get(new Account(puuid, id, summonerName, iconId, level));
-    return Account.get(account);
+    return Account.get(new Account(puuid, id, summonerName, iconId, level));
   }
-
-  // TODO: 07.04.2022 INACTIVE IF CLASH/TURNEY > 180 TAGE
-
 
   public static void loadElo(Account account) {
     for (Season season : Season.get()) {
       if (season.getSeasonStart().getTime().getTime() <= new Date().getTime() && season.getSeasonEnd().getTime().getTime() >= new Date().getTime()) {
         final JSON json = Data.getInstance().getRequester().requestRiotJSON(
-            "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/" + account.getAccountId() + Const.API_KEY);
+            "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/" + account.getSummonerId() + Const.API_KEY);
         if (json != null) {
           final JSONArray rankedLeagues = json.getJSONArray();
           final Map<String, SeasonElo> elos = new HashMap<>();
@@ -115,12 +111,16 @@ public final class RiotAccountRequester {
     loadCompetitive(account);
     load(QueueType.OTHER, account);
     account.setLastUpdate(new Date());
+    final Date lastCompetitiveGame = account.getLastCompetitiveGame();
+    account.setActive(lastCompetitiveGame == null ||
+        !lastCompetitiveGame.before(new Date(System.currentTimeMillis() - Const.ACTIVE_UNTIL * 86_400_000L)));
   }
 
 
   public static void loadCompetitive(Account account) {
     load(QueueType.TOURNEY, account);
-    load(QueueType.CLASH, account);
+    //load(QueueType.CLASH, account);
+    // TODO: 15.04.2022 Only if not to much
   }
 
 

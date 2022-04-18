@@ -22,7 +22,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.league.models.enums.MatchdayType;
 import de.xeri.league.models.enums.Matchstate;
 import de.xeri.league.models.enums.ScheduleType;
 import de.xeri.league.models.enums.StageType;
@@ -133,12 +132,12 @@ public class TurnamentMatch implements Serializable {
   }
 
   public int getGameAmount() {
-    if (matchday.getMatchdayType().equals(MatchdayType.TIEBREAKER) ||
-        matchday.getStage().getStageType().equals(StageType.KALIBRIERUNGSPHASE)) {
+    final StageType stageType = matchday.getStage().getStageType();
+    if (matchday.getType().equals("Spieltag 8") || stageType.equals(StageType.KALIBRIERUNGSPHASE)) {
       return 1;
-    } else if (matchday.getStage().getStageType().equals(StageType.GRUPPENPHASE)) {
+    } else if (stageType.equals(StageType.GRUPPENPHASE)) {
       return 2;
-    } else if (matchday.getStage().getStageType().equals(StageType.PLAYOFFS)) {
+    } else if (stageType.equals(StageType.PLAYOFFS)) {
       return 3;
     }
     return 10;
@@ -148,12 +147,16 @@ public class TurnamentMatch implements Serializable {
     return getGameAmount() != games.size();
   }
 
+  public boolean isNotClosed() {
+    return !state.equals(Matchstate.CLOSED);
+  }
+
   public Team getOtherTeam(Team team) {
     return team.equals(homeTeam) ? guestTeam : team.equals(guestTeam) ? homeTeam : null;
   }
 
   public ScheduleType getScheduleType() {
-    final String s = matchday.getMatchdayType().name().split("_")[1];
+    final String s = matchday.getType().split(" ")[1];
     if (matchday.getStage().getStageType().equals(StageType.GRUPPENPHASE)) {
       return s.equals("8") && !league.getName().contains("Starter") ? ScheduleType.TIEBREAKER : ScheduleType.valueOf("SPIELTAG_" + s);
     } else if (matchday.getStage().getStageType().equals(StageType.PLAYOFFS)) {

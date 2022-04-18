@@ -6,14 +6,14 @@ import java.util.Objects;
 public class SeasonEloId implements Serializable {
   private static final long serialVersionUID = 8396135638998617448L;
 
-  private String account;
+  private short account;
   private short season;
 
   // default constructor
   public SeasonEloId() {
   }
 
-  public SeasonEloId(String account, short season) {
+  public SeasonEloId(short account, short season) {
     this.account = account;
     this.season = season;
   }
@@ -27,11 +27,11 @@ public class SeasonEloId implements Serializable {
     this.season = season;
   }
 
-  public String getAccount() {
+  public short getAccount() {
     return account;
   }
 
-  public void setAccount(String account) {
+  public void setAccount(short account) {
     this.account = account;
   }
 
@@ -40,7 +40,7 @@ public class SeasonEloId implements Serializable {
     if (this == o) return true;
     if (!(o instanceof SeasonEloId)) return false;
     final SeasonEloId seasonEloId = (SeasonEloId) o;
-    return getSeason() == seasonEloId.getSeason() && getAccount().equals(seasonEloId.getAccount());
+    return getSeason() == seasonEloId.getSeason() && getAccount() == seasonEloId.getAccount();
   }
 
   @Override

@@ -96,7 +96,7 @@ public enum StoredStat {
   R_USAGE("spell4Casts", false),
   RUNES("perks", false),
   RIFT_TURRETS("turretsTakenWithRiftHerald", true),
-  RIFT_TURRETS_MULTI("'multiTurretRiftHeraldCount", true), // TODO RIFT HERALD USAGE
+  RIFT_TURRETS_MULTI("multiTurretRiftHeraldCount", true),
   SCUTTLES_INITIAL("initialCrabCount", true),
   SCUTTLES_TOTAL("scuttleCrabKills", true),
   SPELL_DODGE("skillshotsDodged", true),

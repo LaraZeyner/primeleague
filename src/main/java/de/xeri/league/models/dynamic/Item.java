@@ -176,8 +176,8 @@ public class Item implements Serializable {
         ", itemDescription='" + itemDescription + '\'' +
         ", shortDescription='" + shortDescription + '\'' +
         ", cost=" + cost +
-        ", itemstyles=" + itemstyles +
-        ", playerperformances=" + playerperformances +
+        ", itemstyles=" + itemstyles.size() +
+        ", playerperformances=" + playerperformances.size() +
         '}';
   }
   //</editor-fold>

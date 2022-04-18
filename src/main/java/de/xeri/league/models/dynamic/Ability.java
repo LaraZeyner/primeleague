@@ -153,7 +153,7 @@ public class Ability implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getChampion(), getAbilityType(), getCooldown(), getResourceCost(), getAbilityRange(), getValue(), getAbilitystyles());
+    return Objects.hash(getId(), getChampion(), getAbilityType(), getCooldown(), getResourceCost(), getAbilityRange(), getValue());
   }
 
   @Override
@@ -166,7 +166,7 @@ public class Ability implements Serializable {
         ", resourceCost='" + resourceCost + '\'' +
         ", abilityRange='" + abilityRange + '\'' +
         ", value='" + value + '\'' +
-        ", abilitystyles=" + abilitystyles +
+        ", abilitystyles=" + abilitystyles.size() +
         '}';
   }
   //</editor-fold>

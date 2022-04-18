@@ -96,5 +96,6 @@
     <orderEntry type="library" name="Maven: org.codehaus.mojo:animal-sniffer-annotations:1.17" level="project" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains:annotations:23.0.0" level="project" />
+    <orderEntry type="library" name="Maven: org.primefaces:primefaces:11.0.0" level="project" />
   </component>
 </module>

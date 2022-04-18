@@ -8,6 +8,7 @@ import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.ScheduledGame;
+import de.xeri.league.util.Data;
 import de.xeri.league.util.io.riot.RiotGameRequester;
 
 /**
@@ -20,6 +21,7 @@ public final class GameLoader {
     gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.TOURNEY)).forEach(RiotGameRequester::loadCompetitive);
     mergeTurnamentMatch();
     gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.CLASH)).forEach(RiotGameRequester::loadClashGame);
+    Data.getInstance().save();
     gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.OTHER)).forEach(RiotGameRequester::loadMatchmade);
   }
 

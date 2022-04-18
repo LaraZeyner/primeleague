@@ -8,8 +8,6 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -62,7 +60,7 @@ public class Itemstyle implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getName(), getItems());
+    return Objects.hash(getName());
   }
 
   @Override

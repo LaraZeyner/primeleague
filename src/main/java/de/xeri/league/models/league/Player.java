@@ -41,11 +41,22 @@ public class Player implements Serializable {
     return data;
   }
 
-  public static Player get(Player neu) {
+  public static Player get(Player neu, Team team) {
     get();
     final Player entry = find(neu.getId());
-    if (entry == null) data.add(neu);
-    return find(neu.getId());
+    if (entry == null) {
+      team.getPlayers().add(neu);
+      neu.setTeam(team);
+      data.add(neu);
+    }
+    final Player player = find(neu.getId());
+    player.setRole(neu.getRole());
+    if (!player.getTeam().equals(team)) {
+      player.getTeam().getPlayers().remove(player);
+      team.getPlayers().add(player);
+      player.setTeam(team);
+    }
+    return player;
   }
 
   public static Player find(int id) {
@@ -122,6 +133,10 @@ public class Player implements Serializable {
 
   public Teamrole getRole() {
     return role;
+  }
+
+  public void setRole(Teamrole role) {
+    this.role = role;
   }
 
   public Team getTeam() {

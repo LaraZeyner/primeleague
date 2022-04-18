@@ -91,12 +91,12 @@ public class Schedule implements Serializable {
   public Schedule() {
   }
 
-  // TODO: 10.04.2022 DetermineEndtime
   public Schedule(ScheduleType type, Date startTime, String title, String smallTitle) {
     this.type = type;
     this.startTime = startTime;
     this.title = title;
     this.smallTitle = smallTitle;
+    this.endTime = new Date(type.getDuration() + startTime.getTime());
   }
 
   //<editor-fold desc="getter and setter">

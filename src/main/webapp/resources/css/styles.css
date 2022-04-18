@@ -21,7 +21,7 @@
 
 .side {
     height: 100%;
-    width: 425px;
+    width: 500px;
     padding: 5px;
     background-color: #fff;
     z-index: 1;
@@ -81,11 +81,11 @@
 }
 
 .col1 {
-    width: 70px;
+    width: 150px;
 }
 
 .col2 {
-    width: 150px;
+    width: 170px;
 }
 
 .col3{

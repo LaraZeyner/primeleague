@@ -12,6 +12,8 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -38,10 +40,14 @@ public class League implements Serializable {
     return data;
   }
 
-  public static League get(League neu) {
+  public static League get(League neu, Stage stage) {
     get();
     final League entry = find(neu.getId());
-    if (entry == null) data.add(neu);
+    if (entry == null) {
+      stage.getLeagues().add(neu);
+      neu.setStage(stage);
+      data.add(neu);
+    }
     return find(neu.getId());
   }
 
@@ -61,7 +67,10 @@ public class League implements Serializable {
   @Column(name = "league_name", nullable = false, length = 13)
   private String name;
 
-  @OneToMany(mappedBy = "league")
+  @ManyToMany
+  @JoinTable(name = "league_team",
+      joinColumns = @JoinColumn(name = "league"),
+      inverseJoinColumns = @JoinColumn(name = "team"))
   private final Set<Team> teams = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "league")
@@ -78,7 +87,7 @@ public class League implements Serializable {
 
   public void addTeam(Team team) {
     teams.add(team);
-    team.setLeague(this);
+    team.getLeagues().add(this);
   }
 
   public void addMatch(TurnamentMatch match) {

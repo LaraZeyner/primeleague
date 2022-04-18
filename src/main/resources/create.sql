@@ -48,14 +48,22 @@ CREATE TABLE `matchday`
 CREATE TABLE `team`
 (
     team_id     SMALLINT(4) AUTO_INCREMENT PRIMARY KEY,
-    team_tId    INTEGER(6) UNSIGNED  NULL UNIQUE,
-    team_name   VARCHAR(100)         NOT NULL UNIQUE,
-    team_abbr   VARCHAR(10)          NOT NULL UNIQUE,
-    league      SMALLINT(5) UNSIGNED NULL,
-    team_result VARCHAR(30)          NULL,
-    scrims      BOOLEAN              NULL,
+    team_tId    INTEGER(6) UNSIGNED NULL UNIQUE,
+    team_name   VARCHAR(100)        NOT NULL UNIQUE,
+    team_abbr   VARCHAR(10)         NOT NULL UNIQUE,
+    team_result VARCHAR(30)         NULL,
+    scrims      BOOLEAN             NULL
+);
+
+CREATE TABLE `league_team`
+(
+    league SMALLINT(5) UNSIGNED NOT NULL,
+    team   SMALLINT(4)          NOT NULL,
+    PRIMARY KEY (league, team),
     FOREIGN KEY (league) REFERENCES `league` (league_id)
-        ON DELETE SET NULL ON UPDATE CASCADE
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (team) REFERENCES `team` (team_id)
+        ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
 CREATE TABLE `resource`
@@ -290,27 +298,28 @@ CREATE TABLE `matchlog`
 
 CREATE TABLE `account`
 (
-    puuid          VARCHAR(78) PRIMARY KEY,
-    account_id     VARCHAR(47)          NOT NULL UNIQUE,
+    account_id     SMALLINT(5) UNSIGNED PRIMARY KEY,
+    puuid          VARCHAR(78)          NULL UNIQUE,
+    summoner_id    VARCHAR(47)          NULL UNIQUE,
     account_name   VARCHAR(16)          NOT NULL UNIQUE,
     player         INTEGER(7) UNSIGNED  NULL,
-    icon           SMALLINT(5)          NOT NULL,
-    account_level  SMALLINT(4) UNSIGNED NOT NULL,
-    account_active BOOLEAN              NOT NULL,
-    last_update    TIMESTAMP            NOT NULL,
+    icon           SMALLINT(5)          NULL,
+    account_level  SMALLINT(4) UNSIGNED NULL,
+    account_active BOOLEAN              NULL,
+    last_update    TIMESTAMP            NULL,
     FOREIGN KEY (player) REFERENCES `player` (player_id)
         ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE `season_elo`
 (
-    account VARCHAR(78)          NOT NULL,
+    account SMALLINT(5) UNSIGNED NOT NULL,
     season  SMALLINT(5) UNSIGNED NOT NULL,
     mmr     SMALLINT(4) UNSIGNED NOT NULL DEFAULT 25,
     wins    SMALLINT(4) UNSIGNED NOT NULL,
     losses  SMALLINT(4) UNSIGNED NOT NULL,
     PRIMARY KEY (account, season),
-    FOREIGN KEY (account) REFERENCES `account` (puuid)
+    FOREIGN KEY (account) REFERENCES `account` (account_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (season) REFERENCES `season` (season_id)
         ON DELETE CASCADE ON UPDATE CASCADE
@@ -386,7 +395,7 @@ CREATE TABLE `playerperformance`
 (
     playerperformance_id   INTEGER(8) AUTO_INCREMENT PRIMARY KEY,
     teamperformance        INTEGER(6)           NOT NULL,
-    account                VARCHAR(78)          NOT NULL,
+    account                SMALLINT(5) UNSIGNED NOT NULL,
     lane                   VARCHAR(7)           NOT NULL,
     champion_own           SMALLINT(4)          NOT NULL,
     champion_enemy         SMALLINT(4)          NULL,
@@ -474,7 +483,7 @@ CREATE TABLE `playerperformance`
     survived_close         TINYINT(2) UNSIGNED  NULL,
     FOREIGN KEY (teamperformance) REFERENCES `teamperformance` (teamperformance_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
-    FOREIGN KEY (account) REFERENCES `account` (puuid)
+    FOREIGN KEY (account) REFERENCES `account` (account_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (champion_own) REFERENCES `champion` (champion_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -491,10 +500,10 @@ CREATE TABLE `playerperformance`
 );
 
 CREATE TABLE `playerperformance_item`
-(
+(/**/
     playerperformance_item_id INTEGER(7) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     playerperformance         INTEGER(7)           NOT NULL,
-    buy_timestamp             SMALLINT(4) UNSIGNED NOT NULL,
+    buy_timestamp             INTEGER(7) UNSIGNED  NOT NULL,
     item                      SMALLINT(4) UNSIGNED NOT NULL,
     item_remains              BOOLEAN              NOT NULL,
     FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)

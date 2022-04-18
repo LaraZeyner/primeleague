@@ -1,7 +1,11 @@
-package de.xeri.league.servlet.teams;
+package de.xeri.league.servlet.controller;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+
+import de.xeri.league.servlet.teams.TeamBean;
+import de.xeri.league.servlet.teams.TeamEntry;
+import de.xeri.league.util.Const;
 
 /**
  * Created by Lara on 04.04.2022 for web
@@ -21,6 +25,12 @@ public class TeamController {
 
   public String doLookup(int id) {
     teamEntry = new TeamBean().getTeamEntries().stream().filter(team -> id == team.getId())
+        .findFirst().orElse(null);
+    return "team";
+  }
+
+  public String doLookup() {
+    teamEntry = new TeamBean().getTeamEntries().stream().filter(team -> Const.TEAMID == team.getId())
         .findFirst().orElse(null);
     return "team";
   }

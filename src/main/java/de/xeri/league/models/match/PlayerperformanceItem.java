@@ -22,7 +22,6 @@ import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
 
-
 @Entity(name = "Playerperformance_Item")
 @Table(name = "playerperformance_item")
 public class PlayerperformanceItem implements Serializable {

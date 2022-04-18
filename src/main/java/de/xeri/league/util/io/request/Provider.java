@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import de.xeri.league.util.BreakManager;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.json.JSON;
@@ -68,9 +69,13 @@ public class Provider {
           requests.remove(0);
         } else {
           final long half = requests.get(range / 2 - 1);
-          final long waitingTime = timeframe - (current + 1000 - half) / 1000;
-          System.out.println(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "s)");
-          TimeUnit.SECONDS.sleep(waitingTime);
+          final long waitingTime = timeframe - (current + 1000 - half);
+          System.out.println(Const.TIMEOUT_MESSAGE + "(" + (waitingTime / 1000) + "s)");
+          final long until = waitingTime + System.currentTimeMillis();
+          while (System.currentTimeMillis() <= until) {
+            System.out.println(BreakManager.loop());
+          }
+          TimeUnit.SECONDS.sleep(waitingTime / 1000);
           requests = requests.subList(range / 2, requests.size() - 1);
         }
       }

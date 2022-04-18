@@ -96,14 +96,18 @@ public class Season implements Serializable {
     this.seasonEnd = seasonEnd;
   }
 
-  public void addStage(Stage stage) {
-    stages.add(stage);
-    stage.setSeason(this);
+  public Stage addStage(Stage stage) {
+    return Stage.get(stage, this);
   }
 
   public void addSeaonElo(SeasonElo seasonElo) {
     seasonElos.add(seasonElo);
     seasonElo.setSeason(this);
+  }
+
+  public boolean isCurrent() {
+    final Calendar now = Calendar.getInstance();
+    return seasonStart.after(now) && seasonEnd.before(now);
   }
 
   //<editor-fold desc="getter and setter">

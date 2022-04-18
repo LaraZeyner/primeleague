@@ -3,6 +3,7 @@ package de.xeri.league;
 import java.util.Date;
 import java.util.logging.Logger;
 
+import de.xeri.league.loader.AccountLoader;
 import de.xeri.league.loader.ChampionLoader;
 import de.xeri.league.loader.GameLoader;
 import de.xeri.league.loader.GametypeLoader;
@@ -32,16 +33,25 @@ public final class Main {
     data.save();
     transaction.commit();
     System.out.println((System.currentTimeMillis() - date.getTime())/1000.0 + " sec");
+    System.out.println("TRUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUE");
   }
 
   private static void loadGames() {
     GameLoader.load();
+    System.out.println("Games loaded");
   }
 
   private static void loadPrimeLeague() {
+    // Search for players of Team without account
+    AccountLoader.load();
+    // Search for players of Team with accountchange
+    AccountLoader.updateTeams();
+    Data.getInstance().save();
+
     SeasonLoader.load();
     TeamLoader.handleTeam(Const.TEAMID);
     ScheduleLoader.load();
+    System.out.println("PRM LOADED");
   }
 
   private static void loadRiotObjects() {
@@ -50,5 +60,7 @@ public final class Main {
     ItemLoader.createItems();
     SpellLoader.createItems();
     ChampionLoader.createChampions();
+    Data.getInstance().save();
+    System.out.println("RIOT LOADED");
   }
 }

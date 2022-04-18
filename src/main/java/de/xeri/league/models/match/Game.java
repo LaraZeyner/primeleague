@@ -183,7 +183,7 @@ public class Game implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getTurnamentmatch(), getGameStart(), getDuration(), getGametype(), getTeamperformances(), getChampionSelections());
+    return Objects.hash(getId(), getTurnamentmatch(), getGameStart(), getDuration(), getGametype());
   }
 
   @Override

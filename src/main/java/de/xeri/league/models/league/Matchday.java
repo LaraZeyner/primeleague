@@ -9,8 +9,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -24,7 +22,6 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.league.models.enums.MatchdayType;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
 
@@ -52,18 +49,18 @@ public class Matchday implements Serializable {
 
   public static Matchday get(Matchday neu, Stage stage) {
     get();
-    final Matchday entry = find(neu.getMatchdayType(), stage.getId());
+    final Matchday entry = find(neu.getType(), stage.getId());
     if (entry == null) {
       stage.getMatchdays().add(neu);
       neu.setStage(stage);
       data.add(neu);
     }
-    return find(neu.getMatchdayType(), stage.getId());
+    return find(neu.getType(), stage.getId());
   }
 
-  public static Matchday find(MatchdayType type, short stageId) {
+  public static Matchday find(String type, short stageId) {
     get();
-    return data.stream().filter(entry -> entry.getMatchdayType().equals(type) && entry.getStage().getId() == stageId)
+    return data.stream().filter(entry -> entry.getType().equals(type) && entry.getStage().getId() == stageId)
         .findFirst().orElse(null);
   }
 
@@ -76,17 +73,16 @@ public class Matchday implements Serializable {
   @JoinColumn(name = "stage")
   private Stage stage;
 
-  @Enumerated(EnumType.STRING)
   @Column(name = "matchday_type", nullable = false, length = 11)
-  private MatchdayType matchdayType;
+  private String type;
 
   @Temporal(TemporalType.TIMESTAMP)
   @Column(name = "matchday_start", nullable = false)
-  private Date matchdayStart;
+  private Date start;
 
   @Temporal(TemporalType.TIMESTAMP)
   @Column(name = "matchday_end", nullable = false)
-  private Date matchdayEnd;
+  private Date end;
 
   @OneToMany(mappedBy = "matchday")
   private final Set<TurnamentMatch> matches = new LinkedHashSet<>();
@@ -95,10 +91,10 @@ public class Matchday implements Serializable {
   public Matchday() {
   }
 
-  public Matchday(MatchdayType matchdayType, Date matchdayStart, Date matchdayEnd) {
-    this.matchdayType = matchdayType;
-    this.matchdayStart = matchdayStart;
-    this.matchdayEnd = matchdayEnd;
+  public Matchday(String type, Date start, Date end) {
+    this.type = type;
+    this.start = start;
+    this.end = end;
   }
 
   public void addMatch(TurnamentMatch match) {
@@ -111,28 +107,28 @@ public class Matchday implements Serializable {
     return matches;
   }
 
-  public Date getMatchdayEnd() {
-    return matchdayEnd;
+  public Date getEnd() {
+    return end;
   }
 
-  public void setMatchdayEnd(Date matchdayEnd) {
-    this.matchdayEnd = matchdayEnd;
+  public void setEnd(Date end) {
+    this.end = end;
   }
 
-  public Date getMatchdayStart() {
-    return matchdayStart;
+  public Date getStart() {
+    return start;
   }
 
-  public void setMatchdayStart(Date matchdayStart) {
-    this.matchdayStart = matchdayStart;
+  public void setStart(Date start) {
+    this.start = start;
   }
 
-  public MatchdayType getMatchdayType() {
-    return matchdayType;
+  public String getType() {
+    return type;
   }
 
-  public void setMatchdayType(MatchdayType matchdayType) {
-    this.matchdayType = matchdayType;
+  public void setType(String type) {
+    this.type = type;
   }
 
   public Stage getStage() {
@@ -156,21 +152,21 @@ public class Matchday implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Matchday)) return false;
     final Matchday matchday = (Matchday) o;
-    return getId() == matchday.getId() && getStage().equals(matchday.getStage()) && getMatchdayType() == matchday.getMatchdayType() && getMatchdayStart().equals(matchday.getMatchdayStart()) && getMatchdayEnd().equals(matchday.getMatchdayEnd()) && getMatches().equals(matchday.getMatches());
+    return getId() == matchday.getId() && getStage().equals(matchday.getStage()) && getType() == matchday.getType() && getStart().equals(matchday.getStart()) && getEnd().equals(matchday.getEnd()) && getMatches().equals(matchday.getMatches());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getMatchdayType(), getMatchdayStart(), getMatchdayEnd());
+    return Objects.hash(getId(), getType(), getStart(), getEnd());
   }
 
   @Override
   public String toString() {
     return "Matchday{" +
         "id=" + id +
-        ", matchdayType=" + matchdayType +
-        ", matchdayStart=" + matchdayStart +
-        ", matchdayEnd=" + matchdayEnd +
+        ", type=" + type +
+        ", start=" + start +
+        ", end=" + end +
         ", matches=" + matches.size() +
         '}';
   }

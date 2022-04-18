@@ -34,6 +34,6 @@ public class RiotMatchURLGenerator {
 
   public JSON getTimeline(String matchid) {
     return Data.getInstance().getRequester()
-        .requestRiotJSON("https://europe.api.riotgames.com/lol/match/v5/matches/" + matchid + "/timeline" + Const.API_KEY);
+        .requestRiotJSON("https://europe.api.riotgames.com/lol/match/v5/matches/" + matchid + "/timeline" + Const.API_KEY2);
   }
 }

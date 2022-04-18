@@ -39,8 +39,6 @@ public class RequestManager {
         return handleJSONString(urlString.replace(" ", "%20"));
       } catch (FileNotFoundException ex) {
         logger.warning(logName.equals("Account-Request") ? "Name wurde geändert" : logName.split("-")[0] + " nicht gefunden");
-
-        // TODO: 10.04.2022  Check for namechange
       } catch (IOException ex) {
         if (ex.getMessage().contains("Server returned HTTP response code: 429 for URL")) {
           logger.severe("Rate limit exceeded");

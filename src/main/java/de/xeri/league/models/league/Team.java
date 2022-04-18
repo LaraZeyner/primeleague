@@ -1,6 +1,7 @@
 package de.xeri.league.models.league;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -8,13 +9,11 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -47,7 +46,13 @@ public class Team implements Serializable {
 
   public static Team get(Team neu) {
     get();
-    if (find(neu.getTeamTid()) == null) data.add(neu);
+    final Team team = find(neu.getTeamTid());
+    if (team == null) {
+      data.add(neu);
+    } else {
+      team.setTeamAbbr(neu.teamAbbr);
+      team.setTeamName(neu.teamName);
+    }
     return find(neu.getTeamTid());
   }
 
@@ -70,9 +75,8 @@ public class Team implements Serializable {
   @Column(name = "team_abbr", nullable = false, length = 10)
   private String teamAbbr;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "league")
-  private League league;
+  @ManyToMany(mappedBy = "teams")
+  private final Set<League> leagues = new LinkedHashSet<>();
 
   @Column(name = "team_result", length = 15)
   private String teamResult;
@@ -123,9 +127,8 @@ public class Team implements Serializable {
     }
   }
 
-  public void addPlayer(Player player) {
-    players.add(player);
-    player.setTeam(this);
+  public Player addPlayer(Player player) {
+    return Player.get(player, this);
   }
 
   public void addLogEntry(Matchlog entry) {
@@ -133,12 +136,17 @@ public class Team implements Serializable {
     entry.setTeam(this);
   }
 
+  public League getLastLeague() {
+    final Date date = leagues.stream().map(league -> league.getStage().getStageStart().getTime()).max(Date::compareTo).orElse(null);
+    return leagues.stream().filter(league -> league.getStage().getStageStart().getTime().equals(date)).findFirst().orElse(null);
+  }
+
   public boolean isValueable() {
-    return league != null && league.getId() == find(142116).getLeague().getId() || scrims;
+    return getLastLeague() != null && getLastLeague().getId() == find(142116).getLastLeague().getId() || scrims;
   }
 
   public String getLogoUrl() {
-    return "https://cdn0.gamesports.net/league_team_logos/" + teamTid/1000  + "000/" + teamTid + ".jpg";
+    return "https://cdn0.gamesports.net/league_team_logos/" + teamTid / 1000 + "000/" + teamTid + ".jpg";
   }
 
   public Set<TurnamentMatch> getTurnamentMatches() {
@@ -180,12 +188,8 @@ public class Team implements Serializable {
     this.teamResult = teamResult;
   }
 
-  public League getLeague() {
-    return league;
-  }
-
-  void setLeague(League teamGroup) {
-    this.league = teamGroup;
+  public Set<League> getLeagues() {
+    return leagues;
   }
 
   public String getTeamAbbr() {
@@ -233,12 +237,12 @@ public class Team implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Team)) return false;
     final Team team = (Team) o;
-    return getId() == team.getId() && getTeamTid() == team.getTeamTid() && getTeamName().equals(team.getTeamName()) && getTeamAbbr().equals(team.getTeamAbbr()) && Objects.equals(getLeague(), team.getLeague()) && Objects.equals(getTeamResult(), team.getTeamResult()) && getTeamperformances().equals(team.getTeamperformances()) && getSchedules().equals(team.getSchedules()) && getMatchesHome().equals(team.getMatchesHome()) && getMatchesGuest().equals(team.getMatchesGuest()) && getPlayers().equals(team.getPlayers());
+    return getId() == team.getId() && getTeamTid() == team.getTeamTid() && getTeamName().equals(team.getTeamName()) && getTeamAbbr().equals(team.getTeamAbbr()) && Objects.equals(getLeagues(), team.getLeagues()) && Objects.equals(getTeamResult(), team.getTeamResult()) && getTeamperformances().equals(team.getTeamperformances()) && getSchedules().equals(team.getSchedules()) && getMatchesHome().equals(team.getMatchesHome()) && getMatchesGuest().equals(team.getMatchesGuest()) && getPlayers().equals(team.getPlayers());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getTeamTid(), getTeamName(), getTeamAbbr(), getLeague(), getTeamResult(), getTeamperformances(), getSchedules());
+    return Objects.hash(getId(), getTeamTid(), getTeamName(), getTeamAbbr(), getLeagues(), getTeamResult());
   }
 
   @Override
@@ -248,7 +252,7 @@ public class Team implements Serializable {
         ", teamTid=" + teamTid +
         ", teamName='" + teamName + '\'' +
         ", teamAbbr='" + teamAbbr + '\'' +
-        ", league='" + league + '\'' +
+        ", leagues='" + leagues.size() + '\'' +
         ", teamResult='" + teamResult + '\'' +
         '}';
   }

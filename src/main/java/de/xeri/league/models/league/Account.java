@@ -2,6 +2,7 @@ package de.xeri.league.models.league;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -15,6 +16,8 @@ import java.util.stream.Collectors;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
@@ -25,6 +28,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
@@ -55,6 +60,9 @@ public class Account implements Serializable {
     get();
     final Account entry = find(neu.getPuuid());
     if (entry == null) data.add(neu);
+    entry.setIcon(neu.getIcon());
+    entry.setLevel(neu.getLevel());
+    entry.setName(neu.getName());
     return find(neu.getPuuid());
   }
 
@@ -62,13 +70,16 @@ public class Account implements Serializable {
     get();
     return data.stream().filter(entry -> entry.getPuuid().equals(puuid)).findFirst().orElse(null);
   }
-
   @Id
-  @Column(name = "puuid", nullable = false, length = 78)
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "account_id", nullable = false, columnDefinition = "SMALLINT UNSIGNED NOT NULL")
+  private int id;
+
+  @Column(name = "puuid", length = 78)
   private String puuid;
 
-  @Column(name = "account_id", nullable = false, length = 47)
-  private String accountId;
+  @Column(name = "summoner_id", length = 47)
+  private String summonerId;
 
   @Column(name = "account_name", nullable = false, length = 16)
   private String name;
@@ -77,40 +88,59 @@ public class Account implements Serializable {
   @JoinColumn(name = "player")
   private Player player;
 
-  @Column(name = "icon", nullable = false)
+  @Column(name = "icon")
   private short icon;
 
-  @Column(name = "account_level", nullable = false)
+  @Column(name = "account_level")
   private short level;
 
   @Column(name = "account_active", nullable = false)
-  private boolean active = true;
+  private boolean active;
 
   @Temporal(TemporalType.TIMESTAMP)
   @Column(name = "last_update")
   private Date lastUpdate;
 
   @OneToMany(mappedBy = "account")
-  private Set<Playerperformance> playerperformances = new LinkedHashSet<>();
+  private final Set<Playerperformance> playerperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "account")
-  private Set<SeasonElo> seasonElos = new LinkedHashSet<>();
+  private final Set<SeasonElo> seasonElos = new LinkedHashSet<>();
 
   // default constructor
   public Account() {
   }
 
-  public Account(String puuid, String accountId, String name, short icon, short level) {
+  public Account(String name) {
+    this.name = name;
+    this.active = false;
+  }
+
+  public Account(String puuid, String summonerId, String name, short icon, short level) {
     this.puuid = puuid;
-    this.accountId = accountId;
+    this.summonerId = summonerId;
     this.name = name;
     this.icon = icon;
     this.level = level;
+    this.active = true;
     this.lastUpdate = new Date(System.currentTimeMillis() - 15_552_000_000L);
   }
 
   public boolean isValueable() {
     return player != null && player.getTeam() != null && player.getTeam().isValueable();
+  }
+
+  public List<Game> getGames() {
+    return playerperformances.stream().map(playerperformance -> playerperformance.getTeamperformance().getGame()).collect(Collectors.toList());
+  }
+
+  public List<Game> getCompetitiveGames() {
+    final List<Short> ids = Arrays.asList((short) -1, (short) QueueType.TOURNEY.getQueueId(), (short) QueueType.CLASH.getQueueId());
+    return getGames().stream().filter(game -> ids.contains(game.getGametype().getId())).collect(Collectors.toList());
+  }
+
+  public Date getLastCompetitiveGame() {
+    return getCompetitiveGames().stream().map(Game::getGameStart).max(Date::compareTo).orElse(null);
   }
 
   public void addSeasonElo(SeasonElo seasonElo) {
@@ -148,16 +178,8 @@ public class Account implements Serializable {
     return seasonElos;
   }
 
-  public void setSeasonElos(Set<SeasonElo> seasonElos) {
-    this.seasonElos = seasonElos;
-  }
-
   public Set<Playerperformance> getPlayerperformances() {
     return playerperformances;
-  }
-
-  public void setPlayerperformances(Set<Playerperformance> playerperformances) {
-    this.playerperformances = playerperformances;
   }
 
   public boolean isActive() {
@@ -184,12 +206,12 @@ public class Account implements Serializable {
     this.name = accountName;
   }
 
-  public String getAccountId() {
-    return accountId;
+  public String getSummonerId() {
+    return summonerId;
   }
 
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
+  public void setSummonerId(String accountId) {
+    this.summonerId = accountId;
   }
 
   public String getPuuid() {
@@ -229,27 +251,27 @@ public class Account implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Account)) return false;
     final Account account = (Account) o;
-    return getIcon() == account.getIcon() && getLevel() == account.getLevel() && isActive() == account.isActive() && getPuuid().equals(account.getPuuid()) && getAccountId().equals(account.getAccountId()) && Objects.equals(getName(), account.getName()) && Objects.equals(getPlayer(), account.getPlayer()) && getLastUpdate().equals(account.getLastUpdate()) && getPlayerperformances().equals(account.getPlayerperformances()) && getSeasonElos().equals(account.getSeasonElos());
+    return getIcon() == account.getIcon() && getLevel() == account.getLevel() && isActive() == account.isActive() && getPuuid().equals(account.getPuuid()) && getSummonerId().equals(account.getSummonerId()) && Objects.equals(getName(), account.getName()) && Objects.equals(getPlayer(), account.getPlayer()) && getLastUpdate().equals(account.getLastUpdate()) && getPlayerperformances().equals(account.getPlayerperformances()) && getSeasonElos().equals(account.getSeasonElos());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getPuuid(), getAccountId(), getName(), getPlayer(), getIcon(), getLevel(), getLastUpdate(), isActive(), getPlayerperformances(), getSeasonElos());
+    return Objects.hash(getPuuid(), getSummonerId(), getName(), getPlayer(), getIcon(), getLevel(), getLastUpdate(), isActive());
   }
 
   @Override
   public String toString() {
     return "Account{" +
         "puuid='" + puuid + '\'' +
-        ", accountId='" + accountId + '\'' +
+        ", summonerId='" + summonerId + '\'' +
         ", name='" + name + '\'' +
         ", player=" + player +
         ", icon=" + icon +
         ", level=" + level +
         ", lastUpdate=" + lastUpdate +
         ", active=" + active +
-        ", playerperformances=" + playerperformances +
-        ", seasonElos=" + seasonElos +
+        ", playerperformances=" + playerperformances.size() +
+        ", seasonElos=" + seasonElos.size() +
         '}';
   }
   //</editor-fold>

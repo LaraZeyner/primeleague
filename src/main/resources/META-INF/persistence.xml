@@ -47,6 +47,8 @@
         <class>de.xeri.league.models.match.PlayerperformanceLevel</class>
         <class>de.xeri.league.models.match.TeamperformanceBounty</class>
         <class>de.xeri.league.models.match.GamePause</class>
+        <class>de.xeri.league.models.league.LeagueTeamId</class>
+        <class>de.xeri.league.models.league.LeagueTeam</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test?serverTimezone=UTC" />

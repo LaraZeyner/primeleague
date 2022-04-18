@@ -89,7 +89,7 @@ public class Runetree implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getName(), getIconURL(), getRunes());
+    return Objects.hash(getId(), getName(), getIconURL());
   }
 
   @Override
@@ -98,7 +98,7 @@ public class Runetree implements Serializable {
         "id=" + id +
         ", name='" + name + '\'' +
         ", iconURL='" + iconURL + '\'' +
-        ", runes=" + runes +
+        ", runes=" + runes.size() +
         '}';
   }
   //</editor-fold>

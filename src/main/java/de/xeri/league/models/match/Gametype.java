@@ -117,7 +117,7 @@ public class Gametype implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getName(), getMap(), getGames());
+    return Objects.hash(getId(), getName(), getMap());
   }
 
   @Override
@@ -126,7 +126,7 @@ public class Gametype implements Serializable {
         "id=" + id +
         ", name='" + name + '\'' +
         ", map=" + leagueMap +
-        ", games=" + games +
+        ", games=" + games.size() +
         '}';
   }
   //</editor-fold>

@@ -2,176 +2,392 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:b="http://bootsfaces.net/ui"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 <body>
 <ui:composition>
     <ui:fragment>
-        <b:container styleClass="w3-light-grey" fluid="true">
-            <b:row>
-                <b:column span="4">
-                    <b:dropMenu styleClass="h1" icon="logo.jpg" value="TRUE Esports">
-                        <b:navLink value="Startseite" href="index.xhtml"/>
-                        <b:navLink value="Prime League" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Team"/>
-                        <b:navLink value="Teamprofil" href="#"/>
-                        <b:navLink value="Ergebnisse Spring" href="#"/>
-                        <b:navLink value="Teamstats" href="#"/>
-                        <b:navLink value="Historie" href="#"/>
-                    </b:dropMenu>
-                </b:column>
-                <b:column span="2">
-                    <b:dropMenu value="Match gegen BooM">
-                        <b:navLink header="Spiel beendet 0:2"/>
-                        <b:navLink value="Übersicht und Livespiel" href="#"/>
-                        <b:navLink value="Matchinfos" href="#"/>
-                        <b:navLink value="Ereignisse" href="#"/>
-                        <b:navLink value="Die Spieler" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Planung"/>
-                        <b:navLink value="Scounting" href="#"/>
-                        <b:navLink value="Teamkomposition" href="#"/>
-                        <b:navLink value="Terminplanung" href="#"/>
-                    </b:dropMenu>
-                </b:column>
-                <b:column span="2">
-                    <b:dropMenu value="Turniere">
-                        <b:navLink header="Liga: Division 7.14"/>
-                        <b:navLink value="Spielplan und Tabelle" href="#"/>
-                        <b:navLink value="Teams" href="#"/>
-                        <b:navLink value="Ligaspiele" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Winter 2021"/>
-                        <b:navLink value="Übersicht" href="#"/>
-                        <b:navLink value="Prime League" href="#"/>
-                        <b:navLink value="Clash Turnier" href="#"/>
-                        <b:navLink value="Scrimmages" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Summer 2021"/>
-                        <b:navLink value="Übersicht" href="#"/>
-                        <b:navLink value="Prime League" href="#"/>
-                        <b:navLink value="Clash Turnier" href="#"/>
-                        <b:navLink value="Scrimmages" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Spring 2021"/>
-                        <b:navLink value="Übersicht" href="#"/>
-                        <b:navLink value="Prime League" href="#"/>
-                        <b:navLink value="Clash Turnier" href="#"/>
-                        <b:navLink value="Scrimmages" href="#"/>
-                    </b:dropMenu>
-                </b:column>
-                <b:column span="2">
-                    <b:dropMenu value="Auswertung">
-                        <b:navLink header="Ergebnisse"/>
-                        <b:navLink value="Teamresultate" href="#"/>
-                        <b:navLink value="Spielerresultate" href="#"/>
-                        <b:navLink value="Rekorde" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Datenbank"/>
-                        <b:navLink value="Champions" href="#"/>
-                        <b:navLink value="Items" href="#"/>
-                        <b:navLink value="Runen" href="#"/>
-                    </b:dropMenu>
-                </b:column>
-                <b:column span="2">
-                    <b:dropMenu value="Einstellungen" iconAwesome="gear">
-                        <b:navLink header="Einstellungen"/>
-                        <b:navLink value="Anzeigeeinstellungen" href="#"/>
-                        <b:navLink value="Championeinstellungen" href="#"/>
-                        <b:navLink value="Matcheinstellungen" href="#"/>
-                        <b:navLink/>
-                        <b:navLink header="Eintragen"/>
-                        <b:navLink value="Championplaystyle" href="#"/>
-                        <b:navLink value="Spieleraccounts" href="#"/>
-                        <b:navLink value="Scrimpartner" href="#"/>
-                    </b:dropMenu>
-                </b:column>
+        <h:form>
+            <p:growl id="navigation"/>
+            <p:menubar>
+                <p:submenu label="Technical Really Unique Esports" icon="pi pi-fw pi-file" url="index.xhtml">
+                    <p:menuitem value="Startseite" icon="pi pi-fw pi-external-link" url="index.xhtml"/>
+                    <p:menuitem value="PRM" icon="pi pi-fw pi-external-link"
+                                url="https://www.primeleague.gg/leagues/teams/142116"/>
+                    <p:divider/>
+                    <p:menuitem value="Teamprofil" action="#{teamController.doLookup}"/>
+                    <p:submenu label="Spieler">
+                        <p:menuitem value="ThorDerBabo" action="#{playerController.doLookup(1)}"/>
+                        <p:menuitem value="TRUE OppaiDragon" action="#{playerController.doLookup(2)}"/>
+                        <p:menuitem value="TRUE Seven" action="#{playerController.doLookup(3)}"/>
+                        <p:menuitem value="TRUE Whitelizard" action="#{playerController.doLookup(4)}"/>
+                        <p:menuitem value="TRUE Xeri" action="#{playerController.doLookup(5)}"/>
+                        <p:divider/>
+                        <p:menuitem value="Obligion" action="#{playerController.doLookup(6)}"/>
+                        <p:menuitem value="Saaaalzig" action="#{playerController.doLookup(7)}"/>
+                        <p:menuitem value="Sajury" action="#{playerController.doLookup(8)}"/>
+                        <p:menuitem value="Yuumí Chan" action="#{playerController.doLookup(9)}"/>
+                        <p:divider/>
+                        <p:menuitem value="Fervor of Dark" action="#{playerController.doLookup(10)}"/>
+                        <p:menuitem value="LES Ryspex" action="#{playerController.doLookup(11)}"/>
+                        <p:menuitem value="LES Fineshirts" action="#{playerController.doLookup(12)}"/>
+                        <p:menuitem value="PeacefulPánda x3" action="#{playerController.doLookup(13)}"/>
+                        <p:menuitem value="Stealth Timeeeee" action="#{playerController.doLookup(14)}"/>
+                    </p:submenu>
+                    <p:submenu label="Ergebnisse">
+                        <p:menuitem value="Alle Ergebnisse" action="#{gamelistController.doLookup}"/>
+                        <p:menuitem value="Prime League" action="#{gamelistController.doLookup('prm')}"/>
+                        <p:menuitem value="Clash und Scrimmages" action="#{gamelistController.doLookup('clash')}"/>
+                        <p:menuitem value="Hinzufügen" url="gameadd.xhtml"/>
+                        <p:submenu label="Bearbeiten">
+                            <p:menuitem value="Match 1 am 12.12.2012" action="#{gameeditController.doLookup('1')}"/>
+                            <p:menuitem value="Match 2 am 13.13.2013" action="#{gameeditController.doLookup('2')}"/>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Historie">
+                        <p:menuitem value="Spiele" action="#{gamelistController.doLookup('all')}"/>
+                        <p:menuitem value="Champions" action="#{championplayedlistController.doLookup('competitive')}"/>
+                    </p:submenu>
+                </p:submenu>
 
+                <p:submenu label="1:1 vs LESEV SB (vor 6 Tagen)">
+                    <p:menuitem value="Übersicht und Livespiel" action="#{matchController.doLookup('live')}"/>
+                    <p:menuitem value="PRM" url="https://www.primeleague.gg/leagues/matches/894271"/>
+                    <p:menuitem value="Matchinfos" action="#{matchdetailsController.doLookup('live')}"/>
+                    <p:submenu label="Ereignisse">
+                        <p:menuitem value="Übersicht" action="#{matcheventsController.doLookup('live', 'all')}"/>
+                        <p:menuitem value="Nur Kills und Objectives" action="#{matcheventsController.doLookup('live',
+                         'important')}"/>
+                    </p:submenu>
+                    <p:submenu label="Die Spieler">
+                        <p:menuitem value="Lineups einstellen" url="lineups.xhtml"/>
+                        <p:menuitem value="Übersicht" action="#{matchlineupsController.doLookup('live')}"/>
+                        <p:menuitem value="Stealth Timeeeee (Nasus) vs. LES Fineshirts (Vayne)"
+                                    action="#{matchlineupsController.doLookup('live', 'TOP')}"/>
+                        <p:menuitem value="ThorDerBabo (Lillia) vs. LES Ryspex (Nocturne)"
+                                    action="#{matchlineupsController.doLookup('live', 'JUNGLE')}"/>
+                        <p:menuitem value="TRUE OppaiDeagon (Ahri) vs. LES Ξł Ikàrus (Lux)"
+                                    action="#{matchlineupsController.doLookup('live', 'MIDDLE')}"/>
+                        <p:menuitem value="TRUE Xeri (Xayah) vs. LES Stephfu (Ezreal)"
+                                    action="#{matchlineupsController.doLookup('live', 'BOTTOM')}"/>
+                        <p:menuitem value="TRUE Whitelizard (Morgana) vs. PeacefulPánda x3 (Leona)"
+                                    action="#{matchlineupsController.doLookup('live', 'UTILITY')}"/>
+                    </p:submenu>
+                    <p:divider/>
+                    <p:submenu label="Scouting">
+                        <p:menuitem value="Spieler" action="#{scoutingController.doLookupPlayer('live')}"/>
+                        <p:menuitem value="Champions" action="#{scoutingController.doLookupChampions('live')}"/>
+                        <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('prm', 'live')}"/>
+                        <p:menuitem value="Teamkomposition" action="#{scoutingController.doLookupComposition('live')}"/>
+                    </p:submenu>
+                </p:submenu>
+                <p:submenu label="Liga: Division 7.14">
+                    <p:submenu label="Liga">
+                        <p:menuitem value="Übersicht" action="#{leagueController.doLookupOverview}"/>
+                        <p:menuitem value="Tabelle" action="#{leagueController.doLookupTable}"/>
+                        <p:menuitem value="Partien" action="#{leagueController.doLookupMatches}"/>
+                    </p:submenu>
+                    <p:submenu label="Teams">
+                        <p:menuitem value="Übersicht" action="#{leagueController.doLookupTeams}"/>
+                        <p:submenu label="Antimates">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(1)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 1)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="ATM Cogendi" action="#{playerController.doLookup(15)}"/>
+                                <p:menuitem value="ATM Teddiursa" action="#{playerController.doLookup(16)}"/>
+                                <p:menuitem value="ATM Lokire" action="#{playerController.doLookup(17)}"/>
+                                <p:menuitem value="Spionkuh008" action="#{playerController.doLookup(18)}"/>
+                                <p:menuitem value="Quezelport" action="#{playerController.doLookup(19)}"/>
+                                <p:menuitem value="ATN willywombat" action="#{playerController.doLookup(20)}"/>
+                                <p:menuitem value="ATM RampageV" action="#{playerController.doLookup(21)}"/>
+                                <p:menuitem value="ATM PandSkin" action="#{playerController.doLookup(22)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                        <p:submenu label="Arktis Gaming">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(2)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 2)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="AKS Eisbär" action="#{playerController.doLookup(23)}"/>
+                                <p:menuitem value="AKS Pinguin" action="#{playerController.doLookup(24)}"/>
+                                <p:menuitem value="AKS Ringelrobbe" action="#{playerController.doLookup(25)}"/>
+                                <p:menuitem value="Lost Spargel" action="#{playerController.doLookup(26)}"/>
+                                <p:menuitem value="AKS Polarwolf" action="#{playerController.doLookup(27)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                        <p:submenu label="BoomWADUPSRO">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(3)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 3)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="Reflexzi" action="#{playerController.doLookup(28)}"/>
+                                <p:menuitem value="XxBeatZx" action="#{playerController.doLookup(29)}"/>
+                                <p:menuitem value="dicker CBA angle" action="#{playerController.doLookup(30)}"/>
+                                <p:menuitem value="Serghei" action="#{playerController.doLookup(31)}"/>
+                                <p:menuitem value="beatmeattillyeet" action="#{playerController.doLookup(32)}"/>
+                                <p:menuitem value="burgerflipper95" action="#{playerController.doLookup(33)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                        <p:submenu label="Gigachad Gaming">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(4)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 4)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="DELETED"/>
+                            </p:submenu>
+                        </p:submenu>
+                        <p:submenu label="Horny Klufters">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(5)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 5)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="xF3L1Xx" action="#{playerController.doLookup(34)}"/>
+                                <p:menuitem value="ClemensMitDemenz" action="#{playerController.doLookup(35)}"/>
+                                <p:menuitem value="Fabooo420" action="#{playerController.doLookup(36)}"/>
+                                <p:menuitem value="Nutellabeere" action="#{playerController.doLookup(37)}"/>
+                                <p:menuitem value="yLeon00" action="#{playerController.doLookup(38)}"/>
+                                <p:menuitem value="PrettyPixel" action="#{playerController.doLookup(39)}"/>
+                                <p:menuitem value="HeanXYZ" action="#{playerController.doLookup(40)}"/>
+                                <p:menuitem value="BeniLRF" action="#{playerController.doLookup(41)}"/>
+                                <p:menuitem value="lLikeKatal" action="#{playerController.doLookup(42)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                        <p:submenu label="IQ Gaming">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(6)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 6)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="AtomicSalad37" action="#{playerController.doLookup(43)}"/>
+                                <p:menuitem value="T4rrow" action="#{playerController.doLookup(44)}"/>
+                                <p:menuitem value="IQ Shoke" action="#{playerController.doLookup(45)}"/>
+                                <p:menuitem value="BVGFahrer" action="#{playerController.doLookup(46)}"/>
+                                <p:menuitem value="IAmMrFahrenheit" action="#{playerController.doLookup(47)}"/>
+                                <p:menuitem value="hi im Flob" action="#{playerController.doLookup(48)}"/>
+                                <p:menuitem value="IAmMrBombastic" action="#{playerController.doLookup(49)}"/>
+                                <p:menuitem value="SchattenAs" action="#{playerController.doLookup(50)}"/>
+                                <p:menuitem value="Fery Senpai" action="#{playerController.doLookup(51)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                        <p:submenu label="Olympus Germany">
+                            <p:menuitem value="Teamübersicht" action="#{teamController.doLookup(7)}"/>
+                            <p:menuitem value="letzte Spiele" action="#{gamelistController.doLookup('team', 7)}"/>
+                            <p:submenu label="Spieler">
+                                <p:menuitem value="Luksss17" action="#{playerController.doLookup(52)}"/>
+                                <p:menuitem value="EnatsuEcho" action="#{playerController.doLookup(53)}"/>
+                                <p:menuitem value="Phântox" action="#{playerController.doLookup(54)}"/>
+                                <p:menuitem value="Emokeks" action="#{playerController.doLookup(55)}"/>
+                                <p:menuitem value="PureRassurKAPPA" action="#{playerController.doLookup(56)}"/>
+                                <p:menuitem value="Zeltplatz Main" action="#{playerController.doLookup(57)}"/>
+                                <p:menuitem value="OLG Demonsword" action="#{playerController.doLookup(58)}"/>
+                                <p:menuitem value="nanami úwù" action="#{playerController.doLookup(59)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                </p:submenu>
 
-                <!--<b:column span="10">
-                    <b:navBar styleClass="w3-light-grey" fluid="false">
-                        <b:navbarLinks styleClass="hidden-xs">
-                            <b:navLink value="Technically Really Unique Esports" styleClass="h1" href="index.xhtml"/>
-                        </b:navbarLinks>
-                        Following line is needed for TBS 3.0.1 (panel content overflow issue)
-                        <b:navbarLinks pull="right" styleClass="hidden-xs">
-                            <b:dropMenu value="TRUE Esports">
-                                <b:navLink value="Startseite" href="index.xhtml"/>
-                                <b:navLink value="Prime League" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Team"/>
-                                <b:navLink value="Teamprofil" href="#"/>
-                                <b:navLink value="Ergebnisse Spring" href="#"/>
-                                <b:navLink value="Teamstats" href="#"/>
-                                <b:navLink value="Historie" href="#"/>
-                            </b:dropMenu>
-                            <b:dropMenu value="Match gegen BooM">
-                                <b:navLink header="Spiel beendet 0:2"/>
-                                <b:navLink value="Übersicht und Livespiel" href="#"/>
-                                <b:navLink value="Matchinfos" href="#"/>
-                                <b:navLink value="Ereignisse" href="#"/>
-                                <b:navLink value="Die Spieler" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Planung"/>
-                                <b:navLink value="Scounting" href="#"/>
-                                <b:navLink value="Teamkomposition" href="#"/>
-                                <b:navLink value="Terminplanung" href="#"/>
-                            </b:dropMenu>
-                            <b:dropMenu value="Turniere">
-                                <b:navLink header="Liga: Division 7.14"/>
-                                <b:navLink value="Spielplan und Tabelle" href="#"/>
-                                <b:navLink value="Teams" href="#"/>
-                                <b:navLink value="Ligaspiele" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Winter 2021"/>
-                                <b:navLink value="Übersicht" href="#"/>
-                                <b:navLink value="Prime League" href="#"/>
-                                <b:navLink value="Clash Turnier" href="#"/>
-                                <b:navLink value="Scrimmages" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Summer 2021"/>
-                                <b:navLink value="Übersicht" href="#"/>
-                                <b:navLink value="Prime League" href="#"/>
-                                <b:navLink value="Clash Turnier" href="#"/>
-                                <b:navLink value="Scrimmages" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Spring 2021"/>
-                                <b:navLink value="Übersicht" href="#"/>
-                                <b:navLink value="Prime League" href="#"/>
-                                <b:navLink value="Clash Turnier" href="#"/>
-                                <b:navLink value="Scrimmages" href="#"/>
-                            </b:dropMenu>
-                            <b:dropMenu value="Auswertung">
-                                <b:navLink header="Ergebnisse"/>
-                                <b:navLink value="Teamresultate" href="#"/>
-                                <b:navLink value="Spielerresultate" href="#"/>
-                                <b:navLink value="Rekorde" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Datenbank"/>
-                                <b:navLink value="Champions" href="#"/>
-                                <b:navLink value="Items" href="#"/>
-                                <b:navLink value="Runen" href="#"/>
-                            </b:dropMenu>
-                            <b:dropMenu value="Einstellungen" iconAwesome="gear">
-                                <b:navLink header="Einstellungen"/>
-                                <b:navLink value="Anzeigeeinstellungen" href="#"/>
-                                <b:navLink value="Championeinstellungen" href="#"/>
-                                <b:navLink value="Matcheinstellungen" href="#"/>
-                                <b:navLink/>
-                                <b:navLink header="Eintragen"/>
-                                <b:navLink value="Championplaystyle" href="#"/>
-                                <b:navLink value="Spieleraccounts" href="#"/>
-                                <b:navLink value="Scrimpartner" href="#"/>
-                            </b:dropMenu>
-                        </b:navbarLinks>
-                    </b:navBar>
-                </b:column>-->
-            </b:row>
+                <p:submenu label="Planung" icon="pi pi-fw pi-calendar">
+                    <p:submenu label="Kalender" icon="pi pi-fw pi-pencil">
+                        <p:menuitem value="Ansicht" icon="pi pi-fw pi-calendar-plus" url="calendar.xhtml"/>
+                        <p:menuitem value="Bearbeiten" icon="pi pi-fw pi-calendar-minus" url="calendaredit.xhtml"/>
+                    </p:submenu>
+                    <p:submenu label="Scheduling" icon="pi pi-fw pi-calendar-times">
+                        <p:menuitem value="Prime League" icon="pi pi-fw pi-calendar-minus"/>
+                        <p:submenu label="Scrimpartner" icon="pi pi-fw pi-calendar-minus">
+                            <p:menuitem value="Ansicht" url="scrimpartner.xhtml"/>
+                            <p:menuitem value="Bearbeiten" url="scrimpartneredit.xhtml"/>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:menuitem value="Championpool" url="championpool.xhtml"/>
+                </p:submenu>
 
-        </b:container>
+                <p:submenu label="Turniere">
+                    <p:submenu label="Winter '21: Division 6.11">
+                        <p:menuitem value="Übersicht" action="#{leagueController.doLookupOverview(1)}"/>
+                        <p:menuitem value="Alle Ergebnisse" action="#{gamelistController.doLookup(1)}"/>
+                        <p:menuitem value="Prime League" action="#{gamelistController.doLookup('prm', 1)}"/>
+                        <p:menuitem value="Clash und Scrimmages" action="#{gamelistController.doLookup('clash', 1)}"/>
+                    </p:submenu>
+                    <p:submenu label="Summer '21: Division 6.14">
+                        <p:menuitem value="Übersicht" action="#{leagueController.doLookupOverview(2)}"/>
+                        <p:menuitem value="Alle Ergebnisse" action="#{gamelistController.doLookup(2)}"/>
+                        <p:menuitem value="Prime League" action="#{gamelistController.doLookup('prm', 2)}"/>
+                        <p:menuitem value="Clash und Scrimmages" action="#{gamelistController.doLookup('clash', 2)}"/>
+                    </p:submenu>
+                </p:submenu>
+
+                <p:submenu label="Auswertung">
+                    <p:menuitem value="Globale Suche" icon="pi pi-fw pi-user" url="searchall.xhtml"/>
+                    <p:submenu label="Division" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" action="#{divisionController.doLookup}"/>
+                        <p:submenu label="Filter" icon="pi pi-fw pi-filter">
+                            <p:submenu label="Divison" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Division 3" action="#{divisionController.doLookup(3)}"/>
+                                <p:menuitem value="Division 4" action="#{divisionController.doLookup(4)}"/>
+                                <p:menuitem value="Division 5" action="#{divisionController.doLookup(5)}"/>
+                                <p:menuitem value="Division 6" action="#{divisionController.doLookup(6)}"/>
+                                <p:menuitem value="Division 7" action="#{divisionController.doLookup(7)}"/>
+                                <p:menuitem value="Division 8" action="#{divisionController.doLookup(8)}"/>
+                                <p:menuitem value="Swiss Starter" action="#{divisionController.doLookup(2)}"/>
+                                <p:menuitem value="Kalibrierung" action="#{divisionController.doLookup(1)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Spiele" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" action="#{matchlistController.doLookup}"/>
+                        <p:submenu label="Filter" icon="pi pi-fw pi-filter">
+                            <p:submenu label="Spieltage" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Kalbrierung" action="#{matchlistController.doLookup(0)}"/>
+                                <p:menuitem value="Spieltag 1" action="#{matchlistController.doLookup(1)}"/>
+                                <p:menuitem value="Spieltag 2" action="#{matchlistController.doLookup(2)}"/>
+                                <p:menuitem value="Spieltag 3" action="#{matchlistController.doLookup(3)}"/>
+                                <p:menuitem value="Spieltag 4" action="#{matchlistController.doLookup(4)}"/>
+                                <p:menuitem value="Spieltag 5" action="#{matchlistController.doLookup(5)}"/>
+                                <p:menuitem value="Spieltag 6" action="#{matchlistController.doLookup(6)}"/>
+                                <p:menuitem value="Spieltag 7" action="#{matchlistController.doLookup(7)}"/>
+                                <p:menuitem value="Spieltag 8" action="#{matchlistController.doLookup(8)}"/>
+                                <p:menuitem value="Tiebreaker" action="#{matchlistController.doLookup(9)}"/>
+                                <p:menuitem value="Playoffs" action="#{matchlistController.doLookup(10)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Teams" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" action="#{teamlistController.doLookup}"/>
+                        <p:submenu label="Filter" icon="pi pi-fw pi-filter">
+                            <p:submenu label="Divison" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Division 3" action="#{teamlistController.doLookup(3)}"/>
+                                <p:menuitem value="Division 4" action="#{teamlistController.doLookup(4)}"/>
+                                <p:menuitem value="Division 5" action="#{teamlistController.doLookup(5)}"/>
+                                <p:menuitem value="Division 6" action="#{teamlistController.doLookup(6)}"/>
+                                <p:menuitem value="Division 7" action="#{teamlistController.doLookup(7)}"/>
+                                <p:menuitem value="Division 8" action="#{teamlistController.doLookup(8)}"/>
+                                <p:menuitem value="Swiss Starter" action="#{teamlistController.doLookup(2)}"/>
+                                <p:menuitem value="Kalibrierung" action="#{teamlistController.doLookup(1)}"/>
+                            </p:submenu>
+                            <p:submenu label="Typ" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="bestehende Teams" action="#{teamlistController.doLookup(10)}"/>
+                                <p:menuitem value="2. Split" action="#{teamlistController.doLookup(11)}"/>
+                                <p:menuitem value="neue Teams" action="#{teamlistController.doLookup(12)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Spieler" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" action="#{playerlistController.doLookup}"/>
+                        <p:submenu label="Filter" icon="pi pi-fw pi-filter">
+                            <p:submenu label="Lane" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Top" action="#{playerlistController.doLookup(21)}"/>
+                                <p:menuitem value="Jungle" action="#{playerlistController.doLookup(22)}"/>
+                                <p:menuitem value="Middle" action="#{playerlistController.doLookup(23)}"/>
+                                <p:menuitem value="Bottom" action="#{playerlistController.doLookup(24)}"/>
+                                <p:menuitem value="Support" action="#{playerlistController.doLookup(25)}"/>
+                            </p:submenu>
+                            <p:submenu label="Elo" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Iron" action="#{playerlistController.doLookup(11)}"/>
+                                <p:menuitem value="Bronze" action="#{playerlistController.doLookup(12)}"/>
+                                <p:menuitem value="Silver" action="#{playerlistController.doLookup(13)}"/>
+                                <p:menuitem value="Gold" action="#{playerlistController.doLookup(14)}"/>
+                                <p:menuitem value="Platinum" action="#{playerlistController.doLookup(15)}"/>
+                                <p:menuitem value="Diamond" action="#{playerlistController.doLookup(16)}"/>
+                                <p:menuitem value="Master" action="#{playerlistController.doLookup(17)}"/>
+                                <p:menuitem value="Grandmaster" action="#{playerlistController.doLookup(18)}"/>
+                                <p:menuitem value="Challenger" action="#{playerlistController.doLookup(19)}"/>
+                            </p:submenu>
+                            <p:submenu label="Divison" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Division 3" action="#{playerlistController.doLookup(3)}"/>
+                                <p:menuitem value="Division 4" action="#{playerlistController.doLookup(4)}"/>
+                                <p:menuitem value="Division 5" action="#{playerlistController.doLookup(5)}"/>
+                                <p:menuitem value="Division 6" action="#{playerlistController.doLookup(6)}"/>
+                                <p:menuitem value="Division 7" action="#{playerlistController.doLookup(7)}"/>
+                                <p:menuitem value="Division 8" action="#{playerlistController.doLookup(8)}"/>
+                                <p:menuitem value="Swiss Starter" action="#{playerlistController.doLookup(2)}"/>
+                                <p:menuitem value="Kalibrierung" action="#{playerlistController.doLookup(1)}"/>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Champions" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" action="#{championlistController.doLookup}"/>
+                        <p:submenu label="Filter" icon="pi pi-fw pi-filter">
+                            <p:submenu label="Lane" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Top" action="#{championlistController.doLookup(1)}"/>
+                                <p:menuitem value="Jungle" action="#{championlistController.doLookup(2)}"/>
+                                <p:menuitem value="Middle" action="#{championlistController.doLookup(3)}"/>
+                                <p:menuitem value="Bottom" action="#{championlistController.doLookup(4)}"/>
+                                <p:menuitem value="Support" action="#{championlistController.doLookup(5)}"/>
+                            </p:submenu>
+                            <p:submenu label="Klassen" icon="pi pi-fw pi-filter">
+                                <p:submenu label="Controller" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(10)}"/>
+                                    <p:menuitem value="Catcher" action="#{championlistController.doLookup(11)}"/>
+                                    <p:menuitem value="Enchanter" action="#{championlistController.doLookup(12)}"/>
+                                </p:submenu>
+                                <p:submenu label="Fighter" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(20)}"/>
+                                    <p:menuitem value="Diver" action="#{championlistController.doLookup(21)}"/>
+                                    <p:menuitem value="Juggernauts" action="#{championlistController.doLookup(22)}"/>
+                                </p:submenu>
+                                <p:submenu label="Mages" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(30)}"/>
+                                    <p:menuitem value="Artillerymages" action="#{championlistController.doLookup(31)}"/>
+                                    <p:menuitem value="Battlemages" action="#{championlistController.doLookup(32)}"/>
+                                    <p:menuitem value="Burstmages" action="#{championlistController.doLookup(33)}"/>
+                                </p:submenu>
+                                <p:submenu label="Marksman" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(40)}"/>
+                                    <p:menuitem value="Dominator" action="#{championlistController.doLookup(41)}"/>
+                                    <p:menuitem value="Hypercarrys" action="#{championlistController.doLookup(42)}"/>
+                                    <p:menuitem value="Scaler" action="#{championlistController.doLookup(43)}"/>
+                                </p:submenu>
+                                <p:submenu label="Slayers" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(50)}"/>
+                                    <p:menuitem value="Assassins" action="#{championlistController.doLookup(51)}"/>
+                                    <p:menuitem value="Skirmishers" action="#{championlistController.doLookup(52)}"/>
+                                </p:submenu>
+                                <p:submenu label="Slayer" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(60)}"/>
+                                    <p:menuitem value="Assassins" action="#{championlistController.doLookup(61)}"/>
+                                    <p:menuitem value="Skirmishe" action="#{championlistController.doLookup(62)}"/>
+                                </p:submenu>
+                                <p:submenu label="Tanks" icon="pi pi-fw pi-filter">
+                                    <p:menuitem value="Liste" action="#{championlistController.doLookup(70)}"/>
+                                    <p:menuitem value="Vanguards" action="#{championlistController.doLookup(71)}"/>
+                                    <p:menuitem value="Wardens" action="#{championlistController.doLookup(72)}"/>
+                                </p:submenu>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Items" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" action="#{itemlistController.doLookup}"/>
+                        <p:submenu label="Filter" icon="pi pi-fw pi-filter">
+                            <p:submenu label="Itemtyp" icon="pi pi-fw pi-filter">
+                                <p:menuitem value="Mythics" action="#{itemlistController.doLookup('mythic')}"/>
+                                <p:menuitem value="Legendarys" action="#{itemlistController.doLookup('lengendary')}"/>
+                                <p:menuitem value="Starters" action="#{itemlistController.doLookup('starter')}"/>
+                                <p:menuitem value="andere" action="#{itemlistController.doLookup('others')}"/>
+                            </p:submenu>
+                        </p:submenu>
+                    </p:submenu>
+                    <p:submenu label="Runen" icon="pi pi-fw pi-user">
+                        <p:menuitem value="Liste" icon="pi pi-fw pi-bars" url="runelist.xhtml"/>
+                    </p:submenu>
+                </p:submenu>
+                <p:submenu label="Datenbank">
+                    <p:menuitem value="Champions" url="dbchampions.xhtml"/>
+                    <p:menuitem value="Items" url="dbitems.xhtml"/>
+                    <p:menuitem value="Runen" url="dbrunes.xhtml"/>
+                </p:submenu>
+                <p:divider layout="vertical"/>
+                <p:submenu label="Einstellungen" icon="pi pi-fw pi-pencil">
+                    <p:menuitem value="Anzeige" icon="pi pi-fw pi-align-left" url="settingdisplay.xhtml"/>
+                    <p:menuitem value="Champions" icon="pi pi-fw pi-align-right" url="settingchampions.xhtml"/>
+                    <p:menuitem value="Match" icon="pi pi-fw pi-align-center" url="settingmatch.xhtml"/>
+                </p:submenu>
+                <p:menuitem value="Quit" icon="pi pi-fw pi-power-off"/>
+                <f:facet name="options">
+                    <div class="ui-input-icon-left p-mr-2">
+                        <i class="pi pi-fw pi-search"/>
+                        <p:inputText placeholder="Search"/>
+                    </div>
+                    <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
+                </f:facet>
+            </p:menubar>
+        </h:form>
     </ui:fragment>
-
 </ui:composition>
 </body>
 </html>

@@ -117,7 +117,6 @@ public final class RiotGameRequester {
         }
         determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
       }
-      // TODO: 08.04.2022 change gametype
       return true;
     }
     return false;

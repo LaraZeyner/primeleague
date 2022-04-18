@@ -155,7 +155,7 @@ public class Rune implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getSlot(), getName(), getDescription(), getShortDescription(), getPlayerperformances());
+    return Objects.hash(getId(), getSlot(), getName(), getDescription(), getShortDescription());
   }
 
   @Override
@@ -167,7 +167,7 @@ public class Rune implements Serializable {
         ", name='" + name + '\'' +
         ", description='" + description + '\'' +
         ", shortDescription='" + shortDescription + '\'' +
-        ", playerperformances=" + playerperformances +
+        ", playerperformances=" + playerperformances.size() +
         '}';
   }
   //</editor-fold>

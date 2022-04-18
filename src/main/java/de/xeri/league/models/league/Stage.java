@@ -53,7 +53,8 @@ public class Stage implements Serializable {
   public static Stage get(Stage neu, Season season) {
     get();
     if (find(season, neu.getStageType()) == null) {
-      season.addStage(neu);
+      season.getStages().add(neu);
+      neu.setSeason(season);
       data.add(neu);
     }
     return find(season, neu.getStageType());
@@ -105,9 +106,8 @@ public class Stage implements Serializable {
     return Matchday.get(matchday, this);
   }
 
-  public void addLeague(League league) {
-    leagues.add(league);
-    league.setStage(this);
+  public League addLeague(League league) {
+    return League.get(league, this);
   }
 
   //<editor-fold desc="getter and setter">
@@ -165,7 +165,7 @@ public class Stage implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getSeason(), getStageType(), getStageStart(), getStageEnd(), getMatchdays(), getLeagues());
+    return Objects.hash(getId(), getSeason(), getStageType(), getStageStart(), getStageEnd());
   }
 
   @Override
@@ -176,6 +176,7 @@ public class Stage implements Serializable {
         ", stageType=" + stageType +
         ", stageStart=" + stageStart +
         ", stageEnd=" + stageEnd +
+        ", leagues=" + leagues.size() +
         '}';
   }
   //</editor-fold>

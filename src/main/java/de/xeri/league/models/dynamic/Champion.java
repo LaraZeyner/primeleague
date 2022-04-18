@@ -159,8 +159,7 @@ public class Champion implements Serializable {
   @OneToMany(mappedBy = "champion")
   private final Set<ChampionSelection> championSelections = new LinkedHashSet<>();
 
-  // TODO: 03.04.2022 orphan Removal
-  @OneToMany(mappedBy = "champion", /*cascade = CascadeType.ALL, */orphanRemoval = true)
+  @OneToMany(mappedBy = "champion", orphanRemoval = true)
   private final Set<Ability> abilities = new LinkedHashSet<>();
 
   @ElementCollection(targetClass = Championclass.class)
@@ -435,7 +434,7 @@ public class Champion implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.getId(), this.getName(), this.getTitle(), this.getSubclass(), this.getResource(), this.getAttack(), this.getDefense(), this.getSpell(), this.getHealth(), this.getSecondary(), this.getMoveSpeed(), this.getResist(), this.getAttackRange(), this.getHealthRegen(), this.getSpellRegen(), this.getDamage(), this.getAttackSpeed(), this.getFightType(), this.getFightStyle(), this.getChampionRelationshipsFrom(), this.getChampionRelationshipsTo(), this.getWinconditions(), this.getPlayerperformancesOwn(), this.getPlayerperformancesEnemy(), this.getPlaystyles(), this.getChampionSelections(), this.getClasses());
+    return Objects.hash(this.getId(), this.getName(), this.getTitle(), this.getSubclass(), this.getResource(), this.getAttack(), this.getDefense(), this.getSpell(), this.getHealth(), this.getSecondary(), this.getMoveSpeed(), this.getResist(), this.getAttackRange(), this.getHealthRegen(), this.getSpellRegen(), this.getDamage(), this.getAttackSpeed(), this.getFightType(), this.getFightStyle());
   }
 
   @Override
