@@ -17,6 +17,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.Elo;
 import de.xeri.league.models.ids.SeasonEloId;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
@@ -78,6 +79,14 @@ public class SeasonElo implements Serializable {
     this.mmr = mmr;
     this.wins = wins;
     this.losses = losses;
+  }
+
+  public String getRank() {
+    final Elo division = Elo.getDivision(mmr);
+    int lp = mmr - division.getMmr();
+    if (division.equals(Elo.GRANDMASTER)) lp+= 500;
+    if (division.equals(Elo.CHALLENGER)) lp+= 1000;
+    return division + " " + lp + " LP";
   }
 
   public short getGames() {

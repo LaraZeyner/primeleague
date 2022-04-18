@@ -2,16 +2,55 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:p="http://primefaces.org/ui"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
-<f:view>
-    <h:outputLabel value="Hello, world"/>
-</f:view>
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 <h:head>
-    <title>Team View</title>
+    <title>Team</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+    <h:outputStylesheet library="css" name="w3.css"/>
 </h:head>
-<h:body>
-    You requested catalog item: ${teamController.teamEntry.name}
+
+<h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
+    <ui:insert name="header">
+        <ui:include src="/templates/header.xhtml"/>
+    </ui:insert>
+
+    <h:panelGrid styleClass="maincontrainer" columns="2">
+        <h:panelGroup styleClass="content" id="content" layout="block">
+            <h3>${teamController.team.teamName} (${teamController.team.teamAbbr})</h3>
+            <br/>
+            Liga: ${teamController.team.lastLeague.name}
+            <br/>
+            Ergebnis: ${teamController.team.teamResult}
+            <br/>
+            <h5>Scrimpartner:</h5>
+            <p:selectBooleanButton onIcon="pi pi-check" offIcon="pi pi-times" />
+            <br/>
+            Games: ${teamController.games}
+
+
+            <h:form>
+                <div class="card">
+                    <div class="p-grid p-text-center">
+                        <div class="p-field p-col-12 p-md-4">
+                            <h5>Wins</h5>
+                            <div class="knob-container ui-corner-all">
+                                <p:knob height="150px" width="150px" thickness="0.5" labelTemplate="{value}%"
+                                        disabled="true"
+                                        value="${teamController.wins}"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </h:form>
+
+
+        </h:panelGroup>
+        <ui:insert name="sidebar">
+            <ui:include src="/templates/sidebar.xhtml"/>
+        </ui:insert>
+    </h:panelGrid>
 </h:body>
 </html>

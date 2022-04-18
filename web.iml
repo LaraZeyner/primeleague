@@ -84,16 +84,6 @@
     <orderEntry type="library" name="Maven: javax.faces:javax.faces-api:2.2" level="project" />
     <orderEntry type="library" name="Maven: org.glassfish:javax.faces:2.2.20" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20220320" level="project" />
-    <orderEntry type="library" name="Maven: net.bootsfaces:bootsfaces:1.5.0" level="project" />
-    <orderEntry type="library" name="Maven: com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20191001.1" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava:27.1-jre" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:failureaccess:1.0.1" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava" level="project" />
-    <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:3.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.checkerframework:checker-qual:2.5.2" level="project" />
-    <orderEntry type="library" name="Maven: com.google.errorprone:error_prone_annotations:2.2.0" level="project" />
-    <orderEntry type="library" name="Maven: com.google.j2objc:j2objc-annotations:1.1" level="project" />
-    <orderEntry type="library" name="Maven: org.codehaus.mojo:animal-sniffer-annotations:1.17" level="project" />
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.14.3" level="project" />
     <orderEntry type="library" name="Maven: org.jetbrains:annotations:23.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.primefaces:primefaces:11.0.0" level="project" />

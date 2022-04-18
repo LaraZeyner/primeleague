@@ -28,6 +28,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
@@ -136,11 +137,43 @@ public class Account implements Serializable {
 
   public List<Game> getCompetitiveGames() {
     final List<Short> ids = Arrays.asList((short) -1, (short) QueueType.TOURNEY.getQueueId(), (short) QueueType.CLASH.getQueueId());
-    return getGames().stream().filter(game -> ids.contains(game.getGametype().getId())).collect(Collectors.toList());
+    return getGames().stream()
+        .filter(game -> ids.contains(game.getGametype().getId()))
+        .filter(game -> Util.inRange(game.getGameStart()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Playerperformance> getCompetitivePerformances() {
+    final List<Short> ids = Arrays.asList((short) -1, (short) QueueType.TOURNEY.getQueueId(), (short) QueueType.CLASH.getQueueId());
+    return getPlayerperformances().stream()
+        .filter(playerperformance -> ids.contains(playerperformance.getTeamperformance().getGame().getGametype().getId()))
+        .filter(playerperformance -> Util.inRange(playerperformance.getTeamperformance().getGame().getGameStart()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Playerperformance> getAllPerformances() {
+    return getPlayerperformances().stream()
+        .filter(playerperformance -> Util.inRange(playerperformance.getTeamperformance().getGame().getGameStart()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Playerperformance> getGamesOn(Lane lane, boolean competitive) {
+    if (competitive) {
+      return getCompetitivePerformances().stream().filter(playerperformance -> playerperformance.getLane().equals(lane))
+          .collect(Collectors.toList());
+    } else {
+      return getAllPerformances().stream().filter(playerperformance -> playerperformance.getLane().equals(lane))
+          .collect(Collectors.toList());
+    }
+
   }
 
   public Date getLastCompetitiveGame() {
     return getCompetitiveGames().stream().map(Game::getGameStart).max(Date::compareTo).orElse(null);
+  }
+
+  public SeasonElo getMostRecentElo() {
+    return seasonElos.stream().min((elo1, elo2) -> elo2.getSeason().getId() - elo1.getSeason().getId()).orElse(null);
   }
 
   public void addSeasonElo(SeasonElo seasonElo) {

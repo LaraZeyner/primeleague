@@ -20,4 +20,9 @@ public final class Util {
     final Session session = Data.getInstance().getSession();
     return session.createQuery("from " + entityType).list();
   }
+
+  public static boolean inRange(Date date) {
+    if (Data.getInstance().getStatLimit() == 0) return true;
+    return date.after(new Date(System.currentTimeMillis() - Data.getInstance().getStatLimit() * 86_400_000L));
+  }
 }

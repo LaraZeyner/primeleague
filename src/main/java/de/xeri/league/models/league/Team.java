@@ -1,11 +1,16 @@
 package de.xeri.league.models.league;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,6 +23,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.Lane;
+import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.match.Game;
+import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
@@ -59,6 +68,15 @@ public class Team implements Serializable {
   public static Team find(int id) {
     get();
     return data.stream().filter(entry -> entry.getTeamTid() == id).findFirst().orElse(null);
+  }
+
+  public static Team findNext() {
+    final List<Schedule> next = Schedule.next();
+    if (!next.isEmpty()) {
+       return next.get(0).getEnemyTeam();
+    }
+    final List<Schedule> last = Schedule.last();
+    return last.get(last.size() - 1).getEnemyTeam();
   }
 
   @Id
@@ -134,6 +152,46 @@ public class Team implements Serializable {
   public void addLogEntry(Matchlog entry) {
     logEntries.add(entry);
     entry.setTeam(this);
+  }
+
+  public List<Clash> getClashDays() {
+    final List<Game> clashGames = teamperformances.stream().filter(teamperformance -> teamperformance.getGame().isQueue(QueueType.CLASH))
+        .map(Teamperformance::getGame).sorted(Comparator.comparingLong(game -> game.getGameStart().getTime())).collect(Collectors.toList());
+    final List<Clash> clashes = new ArrayList<>();
+    long millis = 0;
+    for (Game game : clashGames) {
+      final long gameMillis = game.getGameStart().getTime();
+      final long difference = gameMillis - millis;
+      if (difference > 43_200_000L) { // 12 Stunden
+        clashes.add(new Clash(game.getGameStart(), this));
+      }
+
+      final Clash clash = clashes.get(clashes.size() - 1);
+      final Teamperformance teamperformance = game.getPerformanceOf(this);
+      clash.addGame(teamperformance);
+
+
+      millis = gameMillis;
+    }
+    return clashes;
+  }
+
+  public List<Teamperformance> getCompetitivePerformances() {
+    return Teamperformance.get().stream()
+        .filter(teamperformance -> teamperformance.getTeam().equals(this) && Util.inRange(teamperformance.getGame().getGameStart()))
+        .collect(Collectors.toList());
+  }
+
+  public Map<Account, Integer> getLaner(Lane lane) {
+    return getCompetitivePerformances().stream()
+        .flatMap(teamperformance -> teamperformance.getPlayerperformances().stream())
+        .collect(Collectors.toMap(Playerperformance::getAccount,
+            playerperformance -> playerperformance.getAccount().getGamesOn(lane, true).size(),
+            (a, b) -> b)).entrySet().stream()
+        .sorted(Map.Entry.comparingByValue())
+        .collect(Collectors.toMap(Map.Entry::getKey,
+            Map.Entry::getValue,
+            (e1, e2) -> e1, LinkedHashMap::new));
   }
 
   public League getLastLeague() {

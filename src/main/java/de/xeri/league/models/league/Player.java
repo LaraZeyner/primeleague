@@ -110,6 +110,34 @@ public class Player implements Serializable {
     entry.setPlayer(this);
   }
 
+  public String getDisplayName() {
+    return accounts.stream().filter(Account::isActive).map(Account::getName).findFirst().orElse(name);
+  }
+
+  public Account getActiveAccount() {
+    return accounts.stream().filter(Account::isActive).findFirst().orElse(null);
+  }
+
+  public SeasonElo getCurrentElo() {
+    int points = 0;
+    int wins = 0;
+    int losses = 0;
+    Season season = null;
+    for (Account account : accounts) {
+      final SeasonElo mostRecentElo = account.getMostRecentElo();
+      if (season == null || mostRecentElo.getSeason().getId() > season.getId()) {
+        season = mostRecentElo.getSeason();
+        points = 0;
+        wins = 0;
+        losses = 0;
+      }
+      points += mostRecentElo.getMmr() * mostRecentElo.getGames();
+      wins += mostRecentElo.getWins();
+      losses += mostRecentElo.getLosses();
+    }
+    return new SeasonElo((short) (points/(wins + losses)), (short) wins, (short) losses);
+  }
+
   public String getLogoUrl() {
     return "https://cdn0.gamesports.net/user_pictures/" + id /10000  + "0000/" + id + ".jpg";
   }

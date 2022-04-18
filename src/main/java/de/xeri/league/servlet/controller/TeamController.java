@@ -1,38 +1,54 @@
 package de.xeri.league.servlet.controller;
 
-import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.inject.Named;
 
-import de.xeri.league.servlet.teams.TeamBean;
-import de.xeri.league.servlet.teams.TeamEntry;
+import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Const;
+import de.xeri.league.util.Util;
 
 /**
  * Created by Lara on 04.04.2022 for web
  */
-@ManagedBean
+@Named
 @RequestScoped
 public class TeamController {
-  private TeamEntry teamEntry;
+  private Team team;
 
-  public TeamEntry getTeamEntry() {
-    return teamEntry;
+  public Team getTeam() {
+    return team;
   }
 
-  public void setTeamEntry(TeamEntry teamEntry) {
-    this.teamEntry = teamEntry;
+  public void setTeam(Team team) {
+    this.team = team;
   }
 
   public String doLookup(int id) {
-    teamEntry = new TeamBean().getTeamEntries().stream().filter(team -> id == team.getId())
-        .findFirst().orElse(null);
+    team = Team.find(id);
     return "team";
   }
 
   public String doLookup() {
-    teamEntry = new TeamBean().getTeamEntries().stream().filter(team -> Const.TEAMID == team.getId())
-        .findFirst().orElse(null);
-    return "team";
+    return doLookup(Const.TEAMID);
+  }
+
+  public String doLookup(String string) {
+    if (string.equals("live")) {
+      final Team team = Team.findNext();
+      return doLookup(team.getId());
+    }
+    return doLookup();
+  }
+
+  public int getGames() {
+    return (int) team.getCompetitivePerformances().stream()
+        .filter(teamperformance -> Util.inRange(teamperformance.getGame().getGameStart()))
+        .count();
+  }
+
+  public int getWins() {
+    return (int) team.getCompetitivePerformances().stream()
+        .filter(teamperformance -> Util.inRange(teamperformance.getGame().getGameStart()) && teamperformance.isWin())
+        .count() * 100 / getGames();
   }
 }
-

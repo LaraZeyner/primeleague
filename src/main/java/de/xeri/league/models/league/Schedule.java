@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -54,7 +55,23 @@ public class Schedule implements Serializable {
 
   public static Schedule find(String title, Date startTime) {
     get();
-    return data.stream().filter(entry -> entry.getTitle().equals(title) && entry.getStartTime().equals(startTime)).findFirst().orElse(null);
+    return data.stream()
+        .filter(entry -> entry.getTitle().equals(title))
+        .filter(entry -> entry.getStartTime().equals(startTime))
+        .findFirst().orElse(null);
+  }
+
+  public static List<Schedule> next() {
+    return get().stream()
+        .filter(schedule -> schedule.getEndTime().getTime() > System.currentTimeMillis() + 900_000L)
+        .filter(schedule -> schedule.getEnemyTeam() != null)
+        .collect(Collectors.toList());
+  }
+
+  public static List<Schedule> last() {
+    return get().stream()
+        .filter(schedule -> schedule.getEnemyTeam() != null)
+        .collect(Collectors.toList());
   }
 
   @Id

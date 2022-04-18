@@ -225,6 +225,10 @@ public class Teamperformance implements Serializable {
     return game.getTeamperformances().stream().filter(teamperformance -> teamperformance.isFirstPick() != firstPick).findFirst().orElse(null);
   }
 
+  public Playerperformance getPerformanceOf(Account account) {
+    return playerperformances.stream().filter(playerperformance -> playerperformance.getAccount().equals(account)).findFirst().orElse(null);
+  }
+
   public boolean isPerfect() {
     return getOtherTeamperformance() != null && getOtherTeamperformance().getTotalKills() == 0;
   }

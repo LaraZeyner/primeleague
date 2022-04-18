@@ -51,12 +51,17 @@ public class Data {
   private final Session session;
   private final EntityManagerFactory factory;
   private final EntityManager manager;
+  private final int statLimit = 180;
 
   public Data() {
     this.requester = new RequestManager();
     this.session = HibernateUtil.getSessionFactory().openSession();
     this.factory = Persistence.createEntityManagerFactory("Persistence");
     this.manager = factory.createEntityManager();
+  }
+
+  public int getStatLimit() {
+    return statLimit;
   }
 
   public void save() {

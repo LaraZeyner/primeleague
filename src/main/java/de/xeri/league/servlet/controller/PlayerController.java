@@ -1,30 +1,41 @@
 package de.xeri.league.servlet.controller;
 
-import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
+import java.util.List;
 
-import de.xeri.league.servlet.plan.ScheduleBean;
-import de.xeri.league.servlet.plan.ScheduleEntry;
+import javax.faces.bean.RequestScoped;
+import javax.inject.Named;
+
+import de.xeri.league.models.league.Player;
+import de.xeri.league.models.league.Team;
 
 /**
  * Created by Lara on 04.04.2022 for web
  */
-@ManagedBean
+@Named
 @RequestScoped
 public class PlayerController {
-  private ScheduleEntry scheduleEntry;
+  private Team team;
+  private List<Player> players;
 
-  public ScheduleEntry getScheduleEntry() {
-    return scheduleEntry;
+  public Team getTeam() {
+    return team;
   }
 
-  public void setScheduleEntry(ScheduleEntry scheduleEntry) {
-    this.scheduleEntry = scheduleEntry;
+  public void setTeam(Team team) {
+    this.team = team;
+  }
+
+  public List<Player> getPlayers() {
+    return players;
+  }
+
+  public void setPlayers(List<Player> players) {
+    this.players = players;
   }
 
   public String doLookup(int id) {
-    scheduleEntry = new ScheduleBean().getScheduled().stream().filter(match -> id == match.getId())
-        .findFirst().orElse(null);
+    team = Team.find(id);
+    players = (List<Player>) team.getPlayers();
     return "player";
   }
 }

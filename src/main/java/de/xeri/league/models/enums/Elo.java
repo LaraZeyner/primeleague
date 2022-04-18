@@ -30,8 +30,8 @@ public enum Elo {
   DIAMOND_II(2800),
   DIAMOND_I(2900),
   MASTER(3100),
-  GRANDMASTER(3100),
-  CHALLENGER(3100);
+  GRANDMASTER(3600),
+  CHALLENGER(4100);
 
   private final int mmr;
 
@@ -41,5 +41,16 @@ public enum Elo {
 
   public int getMmr() {
     return mmr;
+  }
+
+  public static Elo getDivision(int mmr) {
+    Elo selected = Elo.UNRANKED;
+    for (Elo elo : Elo.values()) {
+      if (elo.getMmr() > mmr) {
+        return selected;
+      }
+      selected = elo;
+    }
+    return Elo.UNRANKED;
   }
 }

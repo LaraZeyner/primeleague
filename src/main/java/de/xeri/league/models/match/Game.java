@@ -22,6 +22,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.dynamic.Champion;
+import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.util.Data;
@@ -114,6 +116,18 @@ public class Game implements Serializable {
 
   public GamePause addPause(GamePause pause) {
     return GamePause.get(pause, this);
+  }
+
+  public boolean isQueue(QueueType queueType) {
+    return gametype.getId() == queueType.getQueueId() || gametype.getId() == -1 && queueType.equals(QueueType.TOURNEY);
+  }
+
+  public Teamperformance getPerformanceOf(Team team) {
+    return teamperformances.stream().filter(teamperformance -> teamperformance.getTeam().equals(team)).findFirst().orElse(null);
+  }
+
+  public Playerperformance getPerformanceOf(Account account) {
+    return teamperformances.stream().findFirst().map(teamperformance -> teamperformance.getPerformanceOf(account)).orElse(null);
   }
 
   public List<Team> getTeams() {

@@ -104,7 +104,10 @@ public final class RiotAccountRequester {
 
   private static short determineMMR(String tier, String rank, short lp) {
     final Elo elo = Elo.valueOf(tier + "_" + rank);
-    return (short) (elo.getMmr() + lp);
+    short mmr = (short) (elo.getMmr() + lp);
+    if (elo.equals(Elo.GRANDMASTER)) mmr -= 500;
+    if (elo.equals(Elo.CHALLENGER)) mmr -= 1000;
+    return mmr;
   }
 
   public static void loadAll(Account account) {
@@ -119,8 +122,7 @@ public final class RiotAccountRequester {
 
   public static void loadCompetitive(Account account) {
     load(QueueType.TOURNEY, account);
-    //load(QueueType.CLASH, account);
-    // TODO: 15.04.2022 Only if not to much
+    load(QueueType.CLASH, account); // TODO: 15.04.2022 Only if not to much
   }
 
 

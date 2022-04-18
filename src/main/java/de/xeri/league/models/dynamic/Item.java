@@ -113,6 +113,10 @@ public class Item implements Serializable {
     }
   }
 
+  public String getImage() {
+    return "http://ddragon.leagueoflegends.com/cdn/img/item/" + id + ".jpg";
+  }
+
   //<editor-fold desc="getter and setter">
   public Set<Item_Stat> getItemStats() {
     return itemStats;

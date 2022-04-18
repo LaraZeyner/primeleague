@@ -3,15 +3,53 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
       xmlns:f="http://xmlns.jcp.org/jsf/core">
 <f:view>
     <h:outputLabel value="Hello, world"/>
 </f:view>
 <h:head>
-    <title>Team View</title>
+    <title>Player</title>
 </h:head>
 <h:body>
+    <h:form id="form">
+        <p:growl id="msgs" showDetail="true" skipDetailIfEqualsSummary="true"/>
+        <div class="card">
+            <h5 class="p-mt-0">Team: ${playerController.team.teamName}</h5>
+            <p:tabView value="#{playerController.players}" var="tabItem">
+                <p:tab title="#{tabItem.displayName}">
+                    <h:outputText value="Name: #{tabItem.displayName}"/>
+                    <h:outputText value="Elo: #{tabItem.currentElo}"/>
+                    <h:outputText value="Name: #{tabItem.displayName}"/>
+                    <h:outputText value="Name: #{tabItem.displayName}"/>
+                    ... etc.
+                </p:tab>
+            </p:tabView>
+
+            <p:tabView>
+                <p:tab title="Team">
+                    <p class="p-m-0">
+                        Teaminfo
+                    </p>
+                </p:tab>
+                <p:tab title="Header II">
+                    <p class="p-m-0">
+                        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab
+                        illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut
+                        odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Consectetur, adipisci velit, sed quia non numquam eius modi.
+                    </p>
+                </p:tab>
+                <p:tab title="Header III">
+                    <p class="p-m-0">At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores
+                        et quas molestias excepturi sint occaecati cupiditate non provident, similique sunt in culpa qui officia deserunt mollitia animi, id est laborum et dolorum fuga.
+                        Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus.
+                    </p>
+                </p:tab>
+            </p:tabView>
+        </div>
+    </h:form>
+
+
     You requested catalog item: ${teamController.teamEntry.name}
 </h:body>
 </html>
