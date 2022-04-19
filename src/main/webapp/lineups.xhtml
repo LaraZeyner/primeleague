@@ -16,16 +16,15 @@
         <h:form>
             <div class="p-field p-col-12 p-md-4">
                 <p:outputLabel for="@next" value="Toplaner"/>
-                <p:selectOneMenu id="lineupTOp" value="#{lineups.getSelected('live', 'TOP')}"
-                                 converter="#{countryConverter}"
+                <p:selectOneMenu id="lineupTop" value="#{lineups.getSelected('live', 'TOP')}"
                                  panelStyle="width:180px" effect="fade" var="c"
                                  filter="true" filterMatchMode="startsWith">
 
-                    <f:selectItems value="#{selectOneMenuView.countries}" var="country"
-                                   itemLabel="#{country.name}" itemValue="#{country}"/>
+                    <f:selectItems value="#{lineups.getLaners()}" var="account"
+                                   itemLabel="#{account}" itemValue="#{account.}"/>
 
                     <p:column style="width:10%">
-                        <span class="flag flag-#{c.code}" style="width: 30px; height: 20px"/>
+                        <p:graphicImage name="#{player.g}" style="width: 30px; height: 20px"/>
                     </p:column>
 
                     <p:column>

@@ -25,4 +25,8 @@ public final class Util {
     if (Data.getInstance().getStatLimit() == 0) return true;
     return date.after(new Date(System.currentTimeMillis() - Data.getInstance().getStatLimit() * 86_400_000L));
   }
+
+  public static String capitalizeFirst(String str) {
+    return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+  }
 }

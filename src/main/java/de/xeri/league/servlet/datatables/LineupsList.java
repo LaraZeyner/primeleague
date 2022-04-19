@@ -1,8 +1,6 @@
 package de.xeri.league.servlet.datatables;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.faces.bean.ViewScoped;
 import javax.inject.Named;
@@ -21,37 +19,27 @@ public class LineupsList {
 
   public String getSelected(String type, String lane) {
     if (type.equals("live")) {
-      return getLaners(Team.findNext().getTeamTid(), lane).isEmpty() ? "null" : getLaners(Team.findNext().getTeamTid(), lane).get(0);
+      return getLaners(Team.findNext().getTeamTid(), lane).isEmpty() ? "null" :
+          getLaners(Team.findNext().getTeamTid(), lane).get(0).getDisplayName(Lane.findLane(lane));
     }
-    return getLaners(Team.find(Const.TEAMID).getTeamTid(), lane).isEmpty() ? "null" : getLaners(Team.find(Const.TEAMID).getTeamTid(), lane).get(0);
+    return getLaners(Team.find(Const.TEAMID).getTeamTid(), lane).isEmpty() ? "null" :
+        getLaners(Team.find(Const.TEAMID).getTeamTid(), lane).get(0).getDisplayName(Lane.findLane(lane));
   }
 
-  public List<String> getLaners(String type, String lane) {
-    final Team team = type.equals("live") ? Team.find(Team.findNext().getTeamTid()) : Team.find(Const.TEAMID);
-    final List<String> list = new ArrayList<>();
-    final Map<Account, Integer> laner = team.getLaner(Lane.valueOf(lane));
-    for (Account account : laner.keySet()) {
-      final String accountName = account.getName();
-      final int amount = laner.get(account);
-      list.add(accountName + " - " + amount + " Spiel" + (amount != 1 ? "e" : ""));
+  public List<Account> getLaners(String type, String lane) {
+    if (type.equals("live")) {
+      return getLaners(Team.findNext().getTeamTid(), lane);
     }
-    return list;
+    return getLaners(Team.find(Const.TEAMID).getTeamTid(), lane);
   }
 
   public String getSelected(int teamId, String lane) {
-    return getLaners(teamId, lane).isEmpty() ? "null" : getLaners(teamId, lane).get(0);
+    return getLaners(teamId, lane).isEmpty() ? "null" : getLaners(teamId, lane).get(0).getDisplayName(Lane.findLane(lane));
   }
 
-  public List<String> getLaners(int teamId, String lane) {
+  public List<Account> getLaners(int teamId, String lane) {
     final Team team = Team.find(teamId);
-    final List<String> list = new ArrayList<>();
-    final Map<Account, Integer> laner = team.getLaner(Lane.valueOf(lane));
-    for (Account account : laner.keySet()) {
-      final String accountName = account.getName();
-      final int amount = laner.get(account);
-      list.add(accountName + " - " + amount + " Spiel" + (amount != 1 ? "e" : ""));
-    }
-    return list;
+    return team.getLaner(Lane.valueOf(lane));
   }
 
 }

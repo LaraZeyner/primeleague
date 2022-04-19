@@ -4,10 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -182,16 +180,14 @@ public class Team implements Serializable {
         .collect(Collectors.toList());
   }
 
-  public Map<Account, Integer> getLaner(Lane lane) {
+  public List<Account> getLaner(Lane lane) {
     return getCompetitivePerformances().stream()
         .flatMap(teamperformance -> teamperformance.getPlayerperformances().stream())
-        .collect(Collectors.toMap(Playerperformance::getAccount,
-            playerperformance -> playerperformance.getAccount().getGamesOn(lane, true).size(),
-            (a, b) -> b)).entrySet().stream()
-        .sorted(Map.Entry.comparingByValue())
-        .collect(Collectors.toMap(Map.Entry::getKey,
-            Map.Entry::getValue,
-            (e1, e2) -> e1, LinkedHashMap::new));
+        .map(Playerperformance::getAccount)
+        .filter(account -> !account.getGamesOn(lane, true).isEmpty())
+        .sorted((account1, account2) -> account2.getGamesOn(lane, true).size() - account1.getGamesOn(lane, true).size())
+        .collect(Collectors.toList());
+
   }
 
   public League getLastLeague() {

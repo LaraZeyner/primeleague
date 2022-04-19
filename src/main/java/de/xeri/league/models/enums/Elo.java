@@ -1,5 +1,7 @@
 package de.xeri.league.models.enums;
 
+import de.xeri.league.util.Util;
+
 /**
  * Created by Lara on 29.03.2022 for TRUES
  */
@@ -52,5 +54,10 @@ public enum Elo {
       selected = elo;
     }
     return Elo.UNRANKED;
+  }
+
+  public String getTier() {
+    final String tierUnformatted = name().contains("_") ? name().split("_")[0] : name();
+    return Util.capitalizeFirst(tierUnformatted);
   }
 }

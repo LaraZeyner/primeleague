@@ -2,6 +2,8 @@ package de.xeri.league.models.enums;
 
 import java.util.Arrays;
 
+import de.xeri.league.util.Util;
+
 /**
  * Created by Lara on 25.03.2022 for TRUES
  */
@@ -30,5 +32,12 @@ public enum Lane {
 
   public static Lane findLane(String laneString) {
     return Arrays.stream(Lane.values()).filter(lane -> lane.getType().equals(laneString)).findFirst().orElse(null);
+  }
+
+  public String getDisplayName() {
+    if (name().equals("UTILITY")) {
+      return "Support";
+    }
+    return Util.capitalizeFirst(name());
   }
 }

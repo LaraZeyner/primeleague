@@ -28,6 +28,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.Elo;
 import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.match.Game;
@@ -204,6 +205,31 @@ public class Account implements Serializable {
 
   public Team getOfficialTeam() {
     return player != null ? player.getTeam() : null;
+  }
+
+  public Lane getMainRole() {
+    int amount = 0;
+    Lane lane = null;
+    for (Lane laneIteration : Lane.values()) {
+      final int gamesOnLaneAmount = getGamesOn(laneIteration, true).size();
+      if (gamesOnLaneAmount > amount) {
+        amount = gamesOnLaneAmount;
+        lane = laneIteration;
+      }
+    }
+    return lane;
+  }
+
+  public String getDisplayName(Lane lane) {
+    final int amount = getGamesOn(lane, true).size();
+    return name + " - " + amount + " Spiel" + (amount != 1 ? "e" : "");
+  }
+
+  public String getPositionalIcon(Lane lane) {
+    if (getMostRecentElo() == null || getMostRecentElo().getElo().equals(Elo.UNRANKED)) {
+      return "images/ranked/Ranked_Unranked.png";
+    }
+    return "images/ranked/position/Position_" + getMostRecentElo().getElo().getTier() + "-" + lane.getDisplayName() + ".png";
   }
 
   //<editor-fold desc="getter and setter">

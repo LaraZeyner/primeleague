@@ -81,12 +81,15 @@ public class SeasonElo implements Serializable {
     this.losses = losses;
   }
 
+  public Elo getElo() {
+    return Elo.getDivision(mmr);
+  }
+
   public String getRank() {
-    final Elo division = Elo.getDivision(mmr);
-    int lp = mmr - division.getMmr();
-    if (division.equals(Elo.GRANDMASTER)) lp+= 500;
-    if (division.equals(Elo.CHALLENGER)) lp+= 1000;
-    return division + " " + lp + " LP";
+    int lp = mmr - getElo().getMmr();
+    if (getElo().equals(Elo.GRANDMASTER)) lp+= 500;
+    if (getElo().equals(Elo.CHALLENGER)) lp+= 1000;
+    return getElo() + " " + lp + " LP";
   }
 
   public short getGames() {
