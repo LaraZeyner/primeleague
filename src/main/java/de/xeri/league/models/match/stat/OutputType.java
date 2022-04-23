@@ -1,4 +1,4 @@
-package de.xeri.league.models.match.stat.neu;
+package de.xeri.league.models.match.stat;
 
 /**
  * Created by Lara on 22.04.2022 for web
@@ -8,7 +8,8 @@ public enum OutputType {
   AVG("avg("),
   SUM("sum("),
   MIN("min("),
-  COUNT("count(");
+  COUNT("count("),
+  LIST("LIST");
 
   private final String query;
 

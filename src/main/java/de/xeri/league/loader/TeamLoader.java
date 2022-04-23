@@ -184,6 +184,9 @@ public class TeamLoader {
             Integer.parseInt(titleText.split("Spieltag ")[1].substring(0, 1)) : i + 1;
         final Element matchElement = matchElements.get(i).selectFirst("tr");
         final Matchday neu = new Matchday(matchdayPrefix + id, calendar.getTime(), calendar1.getTime());
+        if (!Matchday.has(neu.getType(), neu.getStage())) {
+          System.err.println("ERROR");
+        }
         final Matchday matchday = Matchday.get(neu, stage);
 
         if (matchElement != null) {
