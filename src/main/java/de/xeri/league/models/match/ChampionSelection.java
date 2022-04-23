@@ -2,7 +2,6 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,45 +22,43 @@ import de.xeri.league.models.dynamic.Champion;
 import de.xeri.league.models.enums.SelectionType;
 import de.xeri.league.models.ids.ChampionSelectionId;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "ChampionSelection")
 @Table(name = "champion_selection", indexes = @Index(name = "champion", columnList = "champion"))
 @IdClass(ChampionSelectionId.class)
+@NamedQuery(name = "ChampionSelection.findAll", query = "FROM ChampionSelection c")
+@NamedQuery(name = "ChampionSelection.findBy",
+    query = "FROM ChampionSelection c WHERE game = :game AND selectionType = :type AND selectionOrder = :sOrder")
 public class ChampionSelection implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -2624837614626155375L;
 
-  private static Set<ChampionSelection> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<ChampionSelection> get() {
-    if (data == null) data = new LinkedHashSet<>((List<ChampionSelection>) Util.query("ChampionSelection"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(ChampionSelection.class));
   }
 
   public static ChampionSelection get(ChampionSelection neu, Game game, Champion champion) {
-    get();
-    final ChampionSelection entry = find(game, neu.getSelectionType(), neu.getSelectionOrder());
-    if (entry == null) {
-      game.getChampionSelections().add(neu);
-      neu.setGame(game);
-      champion.getChampionSelections().add(neu);
-      neu.setChampion(champion);
-      data.add(neu);
+    if (has(game, neu.getSelectionType(), neu.getSelectionOrder())) {
+      return find(game, neu.getSelectionType(), neu.getSelectionOrder());
     }
-    return find(game, neu.getSelectionType(), neu.getSelectionOrder());
+    game.getChampionSelections().add(neu);
+    neu.setGame(game);
+    champion.getChampionSelections().add(neu);
+    neu.setChampion(champion);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Game game, SelectionType type, byte order) {
+    return HibernateUtil.has(ChampionSelection.class, new String[]{"game", "type", "sOrder"}, new Object[]{game, type, order});
   }
 
   public static ChampionSelection find(Game game, SelectionType type, byte order) {
-    get();
-    return data.stream().filter(selection1 -> selection1.getGame().equals(game) && selection1.getSelectionType().equals(type) &&
-        selection1.getSelectionOrder() == order).findFirst().orElse(null);
+    return HibernateUtil.find(ChampionSelection.class, new String[]{"game", "type", "sOrder"}, new Object[]{game, type, order});
   }
 
   @Id

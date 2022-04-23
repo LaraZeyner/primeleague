@@ -27,44 +27,52 @@ import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Game")
 @Table(name = "game", indexes = @Index(name = "turnamentmatch", columnList = "turnamentmatch"))
+@NamedQuery(name = "Game.findAll", query = "FROM Team t")
+@NamedQuery(name = "Game.findById", query = "FROM Team t WHERE id = :pk")
 public class Game implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 4639052028429524051L;
 
-  //<editor-fold desc="Queries">
-  private static Set<Game> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Game> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Game>) Util.query("Game"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Game.class));
   }
 
-  public static Game get(Game neu, Gametype type) {
-    get();
-    final Game entry = find(neu.getId());
-    if (entry == null) {
-      type.getGames().add(neu);
-      neu.setGametype(type);
-      data.add(neu);
+  public static Game get(Game neu, Gametype gametype) {
+    if (has(neu.getId())) {
+      final Game game = find(neu.getId());
+      game.setGameStart(neu.getGameStart());
+      game.setDuration(neu.getDuration());
+      return game;
     }
-    return find(neu.getId());
+    gametype.getGames().add(neu);
+    neu.setGametype(gametype);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(String id) {
+    return HibernateUtil.has(Game.class, id);
   }
 
   public static Game find(String id) {
-    get();
-    return data.stream().filter(entry -> entry.getId().equals(id)).findFirst().orElse(null);
+    return HibernateUtil.find(Game.class, id);
   }
-  //</editor-fold>
+
+
+  public List<GamePause> getNotClosed() {
+    return HibernateUtil.findList(GamePause.class, new String[]{"game", "end"}, new Object[]{this, 0}, "findByEnd");
+  }
+
+  public List<GamePause> getNotOpened() {
+    return HibernateUtil.findList(GamePause.class, new String[]{"game", "start"}, new Object[]{this, 0});
+  }
 
   @Id
   @Check(constraints = "game_id REGEXP ('^EUW')")

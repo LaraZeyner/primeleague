@@ -3,7 +3,7 @@ USE trues;
 CREATE TABLE `season`
 (
     season_id    SMALLINT(5) UNSIGNED PRIMARY KEY,
-    season_name  VARCHAR(17) NOT NULL UNIQUE,
+    season_name  VARCHAR(21) NOT NULL UNIQUE,
     season_start DATE        NOT NULL UNIQUE,
     season_end   DATE        NOT NULL UNIQUE,
     CHECK ( season_start < season_end )
@@ -11,9 +11,9 @@ CREATE TABLE `season`
 
 CREATE TABLE `stage`
 (
-    stage_id    TINYINT(2) AUTO_INCREMENT PRIMARY KEY,
+    stage_id    SMALLINT(2) AUTO_INCREMENT PRIMARY KEY,
     season      SMALLINT(5) UNSIGNED NOT NULL,
-    stage_type  VARCHAR(8)           NOT NULL,
+    stage_type  VARCHAR(18)          NOT NULL,
     stage_start DATE                 NOT NULL UNIQUE,
     stage_end   DATE                 NOT NULL UNIQUE,
     UNIQUE INDEX idx_stage_type (season ASC, stage_type ASC),
@@ -25,8 +25,8 @@ CREATE TABLE `stage`
 CREATE TABLE `league`
 (
     league_id   SMALLINT(5) UNSIGNED PRIMARY KEY,
-    stage       TINYINT(2)  NOT NULL,
-    league_name VARCHAR(13) NOT NULL,
+    stage       SMALLINT(2) NOT NULL,
+    league_name VARCHAR(25) NOT NULL,
     FOREIGN KEY (stage) REFERENCES `stage` (stage_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     UNIQUE INDEX idx_league_name (stage ASC, league_name ASC)
@@ -35,7 +35,7 @@ CREATE TABLE `league`
 CREATE TABLE `matchday`
 (
     matchday_id    SMALLINT(4) AUTO_INCREMENT PRIMARY KEY,
-    stage          TINYINT(2)  NOT NULL,
+    stage          SMALLINT(2) NOT NULL,
     matchday_type  VARCHAR(11) NOT NULL,
     matchday_start TIMESTAMP   NOT NULL UNIQUE,
     matchday_end   TIMESTAMP   NOT NULL UNIQUE,
@@ -49,8 +49,8 @@ CREATE TABLE `team`
 (
     team_id     SMALLINT(4) AUTO_INCREMENT PRIMARY KEY,
     team_tId    INTEGER(6) UNSIGNED NULL UNIQUE,
-    team_name   VARCHAR(100)        NOT NULL UNIQUE,
-    team_abbr   VARCHAR(10)         NOT NULL UNIQUE,
+    team_name   VARCHAR(100)        NOT NULL,
+    team_abbr   VARCHAR(25)         NOT NULL,
     team_result VARCHAR(30)         NULL,
     scrims      BOOLEAN             NULL
 );
@@ -271,7 +271,7 @@ CREATE TABLE `teamperformance`
 CREATE TABLE `player`
 (
     player_id   INTEGER(7) UNSIGNED PRIMARY KEY,
-    player_name VARCHAR(100) NOT NULL UNIQUE,
+    player_name VARCHAR(100) NULL UNIQUE,
     team        SMALLINT(4)  NULL,
     player_role VARCHAR(7)   NULL,
     FOREIGN KEY (team) REFERENCES `team` (team_id)
@@ -298,10 +298,10 @@ CREATE TABLE `matchlog`
 
 CREATE TABLE `account`
 (
-    account_id     SMALLINT(5) UNSIGNED PRIMARY KEY,
+    account_id     SMALLINT(5) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     puuid          VARCHAR(78)          NULL UNIQUE,
     summoner_id    VARCHAR(47)          NULL UNIQUE,
-    account_name   VARCHAR(16)          NOT NULL UNIQUE,
+    account_name   VARCHAR(25)          NOT NULL UNIQUE,
     player         INTEGER(7) UNSIGNED  NULL,
     icon           SMALLINT(5)          NULL,
     account_level  SMALLINT(4) UNSIGNED NULL,

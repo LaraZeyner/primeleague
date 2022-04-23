@@ -2,7 +2,6 @@ package de.xeri.league.models.dynamic;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,39 +18,48 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.league.loader.ItemLoader;
 import de.xeri.league.models.enums.ItemType;
 import de.xeri.league.models.match.PlayerperformanceItem;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Item")
 @Table(name = "item", indexes = @Index(name = "item_name", columnList = "item_name", unique = true))
+@NamedQuery(name = "Item.findAll", query = "FROM Item i")
+@NamedQuery(name = "Item.findById", query = "FROM Item i WHERE id = :pk")
+@NamedQuery(name = "Item.findBy", query = "FROM Item i WHERE itemName = :name")
 public class Item implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -8359778382859330032L;
 
-  private static Set<Item> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Item> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Item>) Util.query("Item"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Item.class));
   }
 
   public static Item get(Item neu) {
-    get();
-    if (find(neu.getId()) == null) data.add(neu);
-    return find(neu.getId());
+    if (has(neu.getId())) {
+      return find(neu.getId());
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Item find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (short) id).findFirst().orElse(null);
+  public static boolean has(short id) {
+    return HibernateUtil.has(Item.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Item.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Item find(String name) {
+    return HibernateUtil.find(Item.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Item find(short id) {
+    return HibernateUtil.find(Item.class, id);
   }
 
   @Id
@@ -105,11 +113,10 @@ public class Item implements Serializable {
   }
 
   public void addItemStat(ItemStat itemStat, double amount) {
-    final Item_Stat stat = new Item_Stat(this, itemStat, amount);
+    final Item_Stat stat = Item_Stat.get(new Item_Stat(this, itemStat, amount));
     if (!itemStats.contains(stat)) {
       itemStats.add(stat);
       itemStat.getItemStats().add(stat);
-      ItemLoader.addStat(stat);
     }
   }
 
@@ -134,28 +141,44 @@ public class Item implements Serializable {
     return cost;
   }
 
+  public void setCost(short cost) {
+    this.cost = cost;
+  }
+
   public String getItemDescription() {
     return itemDescription;
+  }
+
+  public void setItemDescription(String itemDescription) {
+    this.itemDescription = itemDescription;
   }
 
   public String getShortDescription() {
     return shortDescription;
   }
-  
+
+  public void setShortDescription(String shortDescription) {
+    this.shortDescription = shortDescription;
+  }
+
   public String getItemName() {
     return itemName;
+  }
+
+  public void setItemName(String itemName) {
+    this.itemName = itemName;
   }
 
   public ItemType getItemtype() {
     return itemtype;
   }
 
-  public short getId() {
-    return id;
+  public void setItemtype(ItemType itemtype) {
+    this.itemtype = itemtype;
   }
 
-  public void setId(short id) {
-    this.id = id;
+  public short getId() {
+    return id;
   }
 
   @Override

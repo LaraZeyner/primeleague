@@ -21,7 +21,7 @@ public final class GameLoader {
     gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.TOURNEY)).forEach(RiotGameRequester::loadCompetitive);
     mergeTurnamentMatch();
     gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.CLASH)).forEach(RiotGameRequester::loadClashGame);
-    Data.getInstance().save();
+    Data.getInstance().commit();
     gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.OTHER)).forEach(RiotGameRequester::loadMatchmade);
   }
 

@@ -2,8 +2,8 @@ package de.xeri.league.models.league;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +18,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Season")
 @Table(name = "season", indexes = {
@@ -26,49 +27,63 @@ import de.xeri.league.util.Util;
     @Index(name = "idx_season_start", columnList = "season_start", unique = true),
     @Index(name = "idx_season_end", columnList = "season_end", unique = true)
 })
+@NamedQuery(name = "Season.findAll", query = "FROM Season s")
+@NamedQuery(name = "Season.findById", query = "FROM Season s WHERE id = :pk")
+@NamedQuery(name = "Season.findBy", query = "FROM Season s WHERE seasonName = :name")
 public class Season implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -3593638320708107825L;
 
-  private static Set<Season> data;
-
-  public static Season current() {
-    final Calendar now = Calendar.getInstance();
-    return Season.get().stream().filter(season -> season.getSeasonStart().after(now) && season.getSeasonEnd().before(now))
-        .findFirst().orElse(null);
-  }
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Season> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Season>) Util.query("Season"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Season.class));
   }
 
   public static Season get(Season neu) {
-    get();
-    if (find(neu.getId()) == null) data.add(neu);
-    return find(neu.getId());
+    if (has(neu.getId())) {
+      final Season season = find(neu.getId());
+      season.setSeasonStart(neu.getSeasonStart());
+      season.setSeasonEnd(neu.getSeasonEnd());
+      return season;
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Season find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (short) id).findFirst().orElse(null);
+  public static boolean has(short id) {
+    return HibernateUtil.has(Season.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Season.class, new String[]{"name"}, new Object[]{name});
   }
 
   public static Season find(String name) {
-    get();
-    return data.stream().filter(entry -> entry.getSeasonName().equals(name)).findFirst().orElse(null);
+    return HibernateUtil.find(Season.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Season find(short id) {
+    return HibernateUtil.find(Season.class, id);
+  }
+
+  public static Season current() {
+    final Calendar now = Calendar.getInstance();
+    return Season.get().stream()
+        .filter(season -> season.getSeasonStart().after(now) && season.getSeasonEnd().before(now))
+        .findFirst().orElse(last());
+  }
+
+  public static Season last() {
+    return Season.get().stream()
+        .max(Comparator.comparingLong(season -> season.getSeasonEnd().getTimeInMillis()))
+        .orElse(null);
   }
 
   @Id
   @Column(name = "season_id", nullable = false)
   private short id;
 
-  @Column(name = "season_name", nullable = false, length = 17)
+  @Column(name = "season_name", nullable = false, length = 21)
   private String seasonName;
 
   @Temporal(TemporalType.DATE)

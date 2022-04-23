@@ -97,7 +97,7 @@ public final class RiotGameRequester {
       if (timelineJson.getJSONObject() != null) {
         loadTimeline(events, playerInfo, timelineJson.getJSONObject());
       }
-      final Gametype gametype = (info.has("tournamentCode") && !info.isNull("tournamentCode")) ? Gametype.find(-1) : Gametype.find(queueId);
+      final Gametype gametype = (info.has("tournamentCode") && !info.isNull("tournamentCode")) ? Gametype.find((short) -1) : Gametype.find((short) queueId);
       final Game game = handleGame(info, gameId, gametype);
       gametype.addGame(game, gametype);
       handleGameEvents(events, game);
@@ -309,7 +309,7 @@ public final class RiotGameRequester {
     final List<JSONTeam> jsonTeams = Arrays.asList(new JSONTeam(1), new JSONTeam(2));
     for (int i = 0; i < participants.length(); i++) {
       final JSONObject participant = participants.getJSONObject(i);
-      final Account account = Account.find(participant.getString("puuid"));
+      final Account account = Account.findPuuid(participant.getString("puuid"));
       final JSONPlayer jsonPlayer = new JSONPlayer(i, participant, account);
       if (participant.getInt("teamid") == 100) {
         jsonTeams.get(0).addPlayer(jsonPlayer);
@@ -408,18 +408,18 @@ public final class RiotGameRequester {
   }
 
   private static void handlePauseStart(int timestamp, Game game) {
-    if (GamePause.getNotOpened().isEmpty()) {
+    if (game.getNotOpened().isEmpty()) {
       game.addPause(new GamePause(timestamp, 0));
     } else {
-      GamePause.getNotOpened().get(0).setStart(timestamp);
+      game.getNotOpened().get(0).setStart(timestamp);
     }
   }
 
   private static void handlePauseEnd(int timestamp, Game game) {
-    if (GamePause.getNotClosed().isEmpty()) {
+    if (game.getNotClosed().isEmpty()) {
       game.addPause(new GamePause(0, timestamp));
     } else {
-      GamePause.getNotClosed().get(0).setEnd(timestamp);
+      game.getNotClosed().get(0).setEnd(timestamp);
     }
   }
 
@@ -438,18 +438,18 @@ public final class RiotGameRequester {
   }
 
   private static void handleBountyStart(int timestamp, Teamperformance teamperformance) {
-    if (TeamperformanceBounty.getNotOpened().isEmpty()) {
+    if (teamperformance.getNotOpened().isEmpty()) {
       teamperformance.addBounty(new TeamperformanceBounty(timestamp, 0));
     } else {
-      TeamperformanceBounty.getNotOpened().get(0).setStart(timestamp);
+      teamperformance.getNotOpened().get(0).setStart(timestamp);
     }
   }
 
   private static void handleBountyEnd(int timestamp, Teamperformance teamperformance) {
-    if (TeamperformanceBounty.getNotClosed().isEmpty()) {
+    if (teamperformance.getNotClosed().isEmpty()) {
       teamperformance.addBounty(new TeamperformanceBounty(0, timestamp));
     } else {
-      TeamperformanceBounty.getNotClosed().get(0).setEnd(timestamp);
+      teamperformance.getNotClosed().get(0).setEnd(timestamp);
     }
   }
 
@@ -478,7 +478,7 @@ public final class RiotGameRequester {
           playerperformance.addLevelup(new PlayerperformanceLevel((byte) event.getInt("level"), timestamp));
         } else if (type.equals(EventTypes.ITEM_PURCHASED)) {
           final int itemId = event.getInt("itemId");
-          playerperformance.addItem(Item.find(itemId), items.contains(itemId), timestamp);
+          playerperformance.addItem(Item.find((short) itemId), items.contains(itemId), timestamp);
         } else if (type.equals(EventTypes.CHAMPION_SPECIAL_KILL) || type.equals(EventTypes.CHAMPION_KILL)) {
           handleChampionKills(playerperformance, event, type, timestamp, role);
         } else if (type.equals(EventTypes.TURRET_PLATE_DESTROYED) || type.equals(EventTypes.BUILDING_KILL) ||
@@ -532,7 +532,7 @@ public final class RiotGameRequester {
   }
 
   private static void handleSummonerspells(JSONPlayer player, Playerperformance performance) {
-    performance.addSummonerspell(Summonerspell.find(player.getMedium(StoredStat.SUMMONER1_ID)), player.getTiny(StoredStat.SUMMONER1_AMOUNT));
-    performance.addSummonerspell(Summonerspell.find(player.getMedium(StoredStat.SUMMONER2_ID)), player.getTiny(StoredStat.SUMMONER2_AMOUNT));
+    performance.addSummonerspell(Summonerspell.find(player.getTiny(StoredStat.SUMMONER1_ID)), player.getTiny(StoredStat.SUMMONER1_AMOUNT));
+    performance.addSummonerspell(Summonerspell.find(player.getTiny(StoredStat.SUMMONER2_ID)), player.getTiny(StoredStat.SUMMONER2_AMOUNT));
   }
 }

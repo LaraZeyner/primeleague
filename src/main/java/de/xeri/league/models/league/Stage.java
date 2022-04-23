@@ -3,7 +3,6 @@ package de.xeri.league.models.league;
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -26,7 +25,8 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.StageType;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Stage")
 @Table(name = "stage", indexes = {
@@ -34,48 +34,57 @@ import de.xeri.league.util.Util;
     @Index(name = "stage_start", columnList = "stage_start", unique = true),
     @Index(name = "stage_end", columnList = "stage_end", unique = true)
 })
+@NamedQuery(name = "Stage.findAll", query = "FROM Stage s")
+@NamedQuery(name = "Stage.findById", query = "FROM Stage s WHERE id = :pk")
+@NamedQuery(name = "Stage.findBy", query = "FROM Stage s WHERE season = :season AND stageType = :type")
 public class Stage implements Serializable {
-
   @Transient
   private static final long serialVersionUID = 3935879920437275466L;
 
-  private static Set<Stage> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Stage> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Stage>) Util.query("Stage"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Stage.class));
   }
 
   public static Stage get(Stage neu, Season season) {
-    get();
-    if (find(season, neu.getStageType()) == null) {
-      season.getStages().add(neu);
-      neu.setSeason(season);
-      data.add(neu);
+    if (has(season, neu.getStageType())) {
+      final Stage stage = find(season, neu.getStageType());
+      stage.setStageStart(neu.getStageStart());
+      stage.setStageEnd(neu.getStageEnd());
+      return stage;
     }
-    return find(season, neu.getStageType());
+    season.getStages().add(neu);
+    neu.setSeason(season);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Stage find(Season season, StageType type) {
-    get();
-    return data.stream().filter(entry -> entry.getStageType().equals(type) && entry.getSeason().equals(season)).findFirst().orElse(null);
+  public static boolean has(short id) {
+    return HibernateUtil.has(Stage.class, id);
+  }
+
+  public static boolean has(Season season, StageType stageType) {
+    return HibernateUtil.has(Stage.class, new String[]{"season", "type"}, new Object[]{season, stageType});
+  }
+
+  public static Stage find(Season season, StageType stageType) {
+    return HibernateUtil.find(Stage.class, new String[]{"season", "type"}, new Object[]{season, stageType});
+  }
+
+  public static Stage find(short id) {
+    return HibernateUtil.find(Stage.class, id);
   }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "stage_id", nullable = false)
-  private byte id;
+  private short id;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "season")
   private Season season;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "stage_type", nullable = false, length = 8)
+  @Column(name = "stage_type", nullable = false, length = 18)
   private StageType stageType;
 
   @Temporal(TemporalType.DATE)
@@ -151,7 +160,7 @@ public class Stage implements Serializable {
     this.season = season;
   }
 
-  public byte getId() {
+  public short getId() {
     return id;
   }
 

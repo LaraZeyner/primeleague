@@ -1,15 +1,11 @@
 package de.xeri.league.loader;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import de.xeri.league.models.dynamic.Rune;
 import de.xeri.league.models.dynamic.Runetree;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.io.json.JSON;
 import de.xeri.league.util.io.JSONList;
 import de.xeri.league.util.io.JSONParser;
+import de.xeri.league.util.io.json.JSON;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -19,16 +15,8 @@ import org.json.JSONObject;
 public final class RuneLoader {
   private static final JSON json = Data.getInstance().getRequester()
       .requestJSON("http://ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/runesReforged.json");
-  private static final Map<Short, Runetree> runetrees = new HashMap<>();
-  private static final Map<Short, Rune> runes = new HashMap<>();
 
   public static void createItems() {
-    final List<Runetree> runetreeList = (List<Runetree>) Data.getInstance().getSession().createQuery("from Runetree").list();
-    runetreeList.forEach(runetree -> runetrees.put(runetree.getId(), runetree));
-
-    final List<Rune> runeList = (List<Rune>) Data.getInstance().getSession().createQuery("from Rune").list();
-    runeList.forEach(rune -> runes.put(rune.getId(), rune));
-
     final JSONArray trees = ((JSONList) JSONParser.from(json)).getArray();
     for (int i = 0; i < trees.length(); i++) {
       final JSONObject tree = trees.getJSONObject(i);
@@ -58,18 +46,13 @@ public final class RuneLoader {
               .replace("</lol-uikit-tooltipped-keyword>", "</k>");
           final Rune rune = determineRune(runeId, runeSlot, runeName, description, shortDescription);
           runetree.addRune(rune);
-          runes.put(runeId, rune);
         }
       }
-      runetrees.put(treeId, runetree);
     }
-
-    runetrees.forEach((i, runetree) -> Data.getInstance().getSession().saveOrUpdate(runetree));
-    runes.forEach((i, rune) -> Data.getInstance().getSession().saveOrUpdate(rune));
   }
 
   private static Rune determineRune(short runeId, byte runeSlot, String runeName, String description, String shortDescription) {
-    final Rune rune = runes.get(runeId) == null ? new Rune(runeId, runeSlot, runeName, description, shortDescription) : runes.get(runeId);
+    final Rune rune = Rune.get(new Rune(runeId, runeSlot, runeName, description, shortDescription));
     rune.setSlot(runeSlot);
     rune.setName(runeName);
     rune.setDescription(description);
@@ -78,7 +61,7 @@ public final class RuneLoader {
   }
 
   private static Runetree determineRunetree(short treeId, String treeName, String treeIcon) {
-    final Runetree runetree = runetrees.get(treeId) == null ? new Runetree(treeId, treeName, treeIcon) : runetrees.get(treeId);
+    final Runetree runetree = Runetree.get(new Runetree(treeId, treeName, treeIcon));
     runetree.setName(treeName);
     runetree.setIconURL(treeIcon);
     return runetree;

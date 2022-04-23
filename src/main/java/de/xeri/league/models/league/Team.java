@@ -27,46 +27,65 @@ import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Team")
 @Table(name = "team", indexes = {
     @Index(name = "team_tId", columnList = "team_tId", unique = true),
-    @Index(name = "team_abbr", columnList = "team_abbr", unique = true),
-    @Index(name = "team_name", columnList = "team_name", unique = true)
+    @Index(name = "team_abbr", columnList = "team_abbr"),
+    @Index(name = "team_name", columnList = "team_name")
 })
+@NamedQuery(name = "Team.findAll", query = "FROM Team t")
+@NamedQuery(name = "Team.findById", query = "FROM Team t WHERE id = :pk")
+@NamedQuery(name = "Team.findBy", query = "FROM Team t WHERE teamName = :name")
+@NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE teamTid = :tid")
 public class Team implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 2656015802095877363L;
 
-  private static Set<Team> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Team> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Team>) Util.query("Team"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Team.class));
   }
 
   public static Team get(Team neu) {
-    get();
-    final Team team = find(neu.getTeamTid());
-    if (team == null) {
-      data.add(neu);
-    } else {
+    if (hasTId(neu.getTeamTid())) {
+      final Team team = findTid(neu.getTeamTid());
       team.setTeamAbbr(neu.teamAbbr);
       team.setTeamName(neu.teamName);
+      return team;
     }
-    return find(neu.getTeamTid());
+
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(short id) {
+    return HibernateUtil.has(Team.class, id);
+  }
+
+  public static boolean hasTId(int tid) {
+    return HibernateUtil.has(Team.class, new String[]{"tid"}, new Object[]{tid}, "findByTId");
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Team.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Team find(String name) {
+    return HibernateUtil.find(Team.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Team findTid(int tid) {
+    return HibernateUtil.find(Team.class, new String[]{"tid"}, new Object[]{tid}, "findByTId");
   }
 
   public static Team find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getTeamTid() == id).findFirst().orElse(null);
+    return HibernateUtil.find(Team.class, id);
   }
+
 
   public static Team findNext() {
     final List<Schedule> next = Schedule.next();
@@ -88,13 +107,13 @@ public class Team implements Serializable {
   @Column(name = "team_name", nullable = false, length = 100)
   private String teamName;
 
-  @Column(name = "team_abbr", nullable = false, length = 10)
+  @Column(name = "team_abbr", nullable = false, length = 25)
   private String teamAbbr;
 
   @ManyToMany(mappedBy = "teams")
   private final Set<League> leagues = new LinkedHashSet<>();
 
-  @Column(name = "team_result", length = 15)
+  @Column(name = "team_result", length = 30)
   private String teamResult;
 
   @Column(name = "scrims")

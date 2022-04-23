@@ -22,7 +22,6 @@ import de.xeri.league.models.ids.PlaystyleId;
 @Entity(name = "Playstyle")
 @Table(name = "playstyle")
 public class Playstyle implements Serializable {
-
   @Transient
   private static final long serialVersionUID = 2605401179400003709L;
 

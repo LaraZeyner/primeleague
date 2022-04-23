@@ -2,7 +2,6 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -20,42 +19,41 @@ import javax.persistence.Transient;
 import de.xeri.league.models.dynamic.Summonerspell;
 import de.xeri.league.models.ids.PlayerperformanceSummonerspellId;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity(name = "Playerperformance_Summonerspell")
+@Entity(name = "PlayerperformanceSummonerspell")
 @Table(name = "playerperformance_summonerspell", indexes = @Index(name = "summonerspell", columnList = "summonerspell"))
 @IdClass(PlayerperformanceSummonerspellId.class)
+@NamedQuery(name = "PlayerperformanceSummonerspell.findAll", query = "FROM PlayerperformanceSummonerspell p")
+@NamedQuery(name = "PlayerperformanceSummonerspell.findBy",
+    query = "FROM PlayerperformanceSummonerspell p WHERE playerperformance = :playerperformance AND summonerspell = :spell")
 public class PlayerperformanceSummonerspell implements Serializable {
-
   @Transient
   private static final long serialVersionUID = 330336380785350420L;
 
-  private static Set<PlayerperformanceSummonerspell> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<PlayerperformanceSummonerspell> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<PlayerperformanceSummonerspell>) Util.query("Playerperformance_Summonerspell"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(PlayerperformanceSummonerspell.class));
   }
 
   public static PlayerperformanceSummonerspell get(PlayerperformanceSummonerspell neu) {
-    get();
-    if (find(neu.getPlayerperformance(), neu.getSummonerspell()) == null) {
-      neu.getPlayerperformance().getSummonerspells().add(neu);
-      neu.getSummonerspell().getPlayerperformances().add(neu);
-      data.add(neu);
+    if (has(neu.getPlayerperformance(), neu.getSummonerspell())) {
+      return find(neu.getPlayerperformance(), neu.getSummonerspell());
     }
-    return find(neu.getPlayerperformance(), neu.getSummonerspell());
+    neu.getPlayerperformance().getSummonerspells().add(neu);
+    neu.getSummonerspell().getPlayerperformances().add(neu);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static PlayerperformanceSummonerspell find(Playerperformance playerperformance, Summonerspell summonerspell) {
-    get();
-    return data.stream().filter(entry -> entry.getPlayerperformance().equals(playerperformance) &&
-        entry.getSummonerspell().equals(summonerspell)).findFirst().orElse(null);
+  public static boolean has(Playerperformance playerperformance, Summonerspell spell) {
+    return HibernateUtil.has(PlayerperformanceSummonerspell.class, new String[]{"playerperformance", "spell"},
+        new Object[]{playerperformance, spell});
+  }
+
+  public static PlayerperformanceSummonerspell find(Playerperformance playerperformance, Summonerspell spell) {
+    return HibernateUtil.find(PlayerperformanceSummonerspell.class, new String[]{"playerperformance", "spell"},
+        new Object[]{playerperformance, spell});
   }
   
   @Id

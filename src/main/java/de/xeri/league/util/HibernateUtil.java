@@ -1,9 +1,13 @@
 package de.xeri.league.util;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
+
+import javax.persistence.NoResultException;
+import javax.persistence.metamodel.EntityType;
 
 import de.xeri.league.models.dynamic.Ability;
 import de.xeri.league.models.dynamic.Abilitystyle;
@@ -46,9 +50,12 @@ import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.models.match.TeamperformanceBounty;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
+import de.xeri.league.util.logger.Logger;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.query.Query;
 
 /**
  * Created by Lara on 24.03.2022 for TRUES
@@ -117,6 +124,164 @@ public final class HibernateUtil {
     classes.forEach(configuration::addAnnotatedClass);
     return configuration;
   }
+
+  public static <T> List<T> findList(Class<T> entityClass) {
+    final Session session = Data.getInstance().getSession();
+    final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
+    final String entityClassName = storedEntity.getName();
+
+    final Query<T> query = session.getNamedQuery(entityClassName + ".findAll");
+    return query.list();
+  }
+
+  public static <T> List<T> findList(Class<T> entityClass, long primaryKey) {
+    return findList(entityClass, String.valueOf(primaryKey));
+  }
+
+  public static <T> List<T> findList(Class<T> entityClass, String primaryKey) {
+    final List<T> list = performList(entityClass, primaryKey);
+    if (list.isEmpty()) {
+      Logger.getLogger("Entity-Query").attention("keine Einträge in der Collection");
+    }
+    return list;
+  }
+
+  public static <T> List<T> findList(Class<T> entityClass, String[] params, Object[] values) {
+    final List<T> list = performList(entityClass, params, values, "findBy");
+    if (list.isEmpty()) {
+      Logger.getLogger("Entity-Query").attention("keine Einträge in der Collection");
+    }
+    return list;
+  }
+
+  public static <T> List<T> findList(Class<T> entityClass, String[] params, Object[] values, String subQuery) {
+    final List<T> list = performList(entityClass, params, values, subQuery);
+    if (list.isEmpty()) {
+      Logger.getLogger("Entity-Query").attention("keine Einträge in der Collection");
+    }
+    return list;
+  }
+
+  public static <T> T find(Class<T> entityClass, long primaryKey) {
+    return find(entityClass, String.valueOf(primaryKey));
+  }
+
+  public static <T> T find(Class<T> entityClass, String primaryKey) {
+    try {
+      return performSingle(entityClass, primaryKey);
+    } catch (NoResultException exception) {
+      Logger.getLogger("Entity-Query").attention("Eintrag nicht vorhanden", exception);
+    }
+    return null;
+  }
+
+  public static <T> T find(Class<T> entityClass, String[] params, Object[] values) {
+    try {
+      return performSingle(entityClass, params, values, "findBy");
+    } catch (NoResultException exception) {
+      Logger.getLogger("Entity-Query").warning("Eintrag nicht vorhanden", exception);
+    }
+    return null;
+  }
+
+  public static <T> T find(Class<T> entityClass, String[] params, Object[] values, String subQuery) {
+    try {
+      return performSingle(entityClass, params, values, subQuery);
+    } catch (NoResultException exception) {
+      Logger.getLogger("Entity-Query").warning("Eintrag nicht vorhanden", exception);
+    }
+    return null;
+  }
+
+  public static <T> boolean has(Class<T> entityClass, long primaryKey) {
+    return has(entityClass, String.valueOf(primaryKey));
+  }
+
+  public static <T> boolean has(Class<T> entityClass, String primaryKey) {
+    try {
+      performSingle(entityClass, primaryKey);
+      return true;
+    } catch (NoResultException exception) {
+      return false;
+    }
+  }
+
+  public static <T> boolean has(Class<T> entityClass, String[] params, Object[] values) {
+    try {
+      performSingle(entityClass, params, values, "findBy");
+      return true;
+    } catch (NoResultException exception) {
+      return false;
+    }
+  }
+
+  public static <T> boolean has(Class<T> entityClass, String[] params, Object[] values, String subQuery) {
+    try {
+      performSingle(entityClass, params, values, subQuery);
+      return true;
+    } catch (NoResultException exception) {
+      return false;
+    }
+  }
+
+  private static <T> List<T> performList(Class<T> entityClass, String primaryKey) {
+    final Query<T> query = perform(entityClass, primaryKey);
+    return query.list();
+  }
+
+  private static <T> T performSingle(Class<T> entityClass, String primaryKey) {
+    final Query<T> query = perform(entityClass, primaryKey);
+    return query.getSingleResult();
+  }
+
+  private static <T> Query<T> perform(Class<T> entityClass, String primaryKey) {
+    final Session session = Data.getInstance().getSession();
+    final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
+    final String entityClassName = storedEntity.getName();
+
+    final Query<T> query = session.getNamedQuery(entityClassName + ".findById");
+    final Map<Class<?>, Number> ret = new HashMap<>();
+
+    try {
+      ret.put(Long.class, Long.parseLong(primaryKey));
+      ret.put(Integer.class, Integer.parseInt(primaryKey));
+      ret.put(Short.class, Short.parseShort(primaryKey));
+      ret.put(Byte.class, Byte.parseByte(primaryKey));
+
+    } catch (NumberFormatException exception) {
+      Logger.getLogger("Entity-Query").throwing(exception);
+    }
+
+    final Class<?> pk = query.getParameter("pk").getParameterType();
+    query.setParameter("pk", pk.equals(String.class) ? primaryKey : ret.get(pk));
+    return query;
+  }
+
+  private static <T> T performSingle(Class<T> entityClass, String[] params, Object[] values, String subquery) {
+    final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
+    return query.getSingleResult();
+  }
+
+  private static <T> List<T> performList(Class<T> entityClass, String[] params, Object[] values, String subquery) {
+    final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
+    return query.list();
+  }
+
+  private static <T> Query<T> performWithSubquery(Class<T> entityClass, String[] params, Object[] values, String subquery) {
+    final Session session = Data.getInstance().getSession();
+    final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
+    final String entityClassName = storedEntity.getName();
+
+    final Query<T> query = session.getNamedQuery(entityClassName + "." + subquery);
+
+    for (int i = 0; i < params.length; i++) {
+      final String param = params[i];
+      final Object value = values[i];
+      query.setParameter(param, value);
+    }
+    return query;
+  }
+
 
   public static SessionFactory getSessionFactory() {
     return sessionFactory;

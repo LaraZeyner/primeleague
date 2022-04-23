@@ -2,10 +2,8 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,48 +18,51 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity(name = "Teamperformance_Bounty")
+@Entity(name = "TeamperformanceBounty")
 @Table(name = "teamperformance_bounty", indexes = @Index(name = "teamperformance", columnList = "teamperformance"))
+@NamedQuery(name = "TeamperformanceBounty.findAll", query = "FROM TeamperformanceBounty t")
+@NamedQuery(name = "TeamperformanceBounty.findById", query = "FROM TeamperformanceBounty t WHERE id = :pk")
+@NamedQuery(name = "TeamperformanceBounty.findBy",
+    query = "FROM TeamperformanceBounty t WHERE teamperformance = :performance AND t.start = :start")
+@NamedQuery(name = "TeamperformanceBounty.findByEnd",
+    query = "FROM TeamperformanceBounty t WHERE teamperformance = :performance AND t.end = :end")
 public class TeamperformanceBounty implements Serializable {
   @Transient
   private static final long serialVersionUID = -51972098226067427L;
 
   //<editor-fold desc="Queries">
-  private static Set<TeamperformanceBounty> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
 
   public static Set<TeamperformanceBounty> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<TeamperformanceBounty>) Util.query("Teamperformance_Bounty"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(TeamperformanceBounty.class));
   }
 
-  static TeamperformanceBounty get(TeamperformanceBounty neu, Teamperformance performance) {
-    get();
-    if (find(performance, neu.getStart()) == null) {
-      performance.getBounties().add(neu);
-      neu.setTeamperformance(performance);
-      data.add(neu);
+  public static TeamperformanceBounty get(TeamperformanceBounty neu, Teamperformance performance) {
+    if (has(performance, neu.getStart())) {
+      return find(performance, neu.getStart());
     }
-    return find(performance, neu.getStart());
+    performance.getBounties().add(neu);
+    neu.setTeamperformance(performance);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(int id) {
+    return HibernateUtil.has(Teamperformance.class, id);
+  }
+
+  public static boolean has(Teamperformance performance, int start) {
+    return HibernateUtil.has(Teamperformance.class, new String[]{"performance", "start"}, new Object[]{performance, start});
   }
 
   public static TeamperformanceBounty find(Teamperformance performance, int start) {
-    return data.stream().filter(entry -> entry.getTeamperformance().equals(performance) &&
-        entry.getStart() == start).findFirst().orElse(null);
+    return HibernateUtil.find(TeamperformanceBounty.class, new String[]{"performance", "start"}, new Object[]{performance, start});
   }
 
-  public static List<TeamperformanceBounty> getNotClosed() {
-    return data.stream().filter(entry -> entry.getEnd() == 0).collect(Collectors.toList());
-  }
-
-  public static List<TeamperformanceBounty> getNotOpened() {
-    return data.stream().filter(entry -> entry.getStart() == 0).collect(Collectors.toList());
+  public static TeamperformanceBounty find(int id) {
+    return HibernateUtil.find(TeamperformanceBounty.class, id);
   }
   //</editor-fold>
 

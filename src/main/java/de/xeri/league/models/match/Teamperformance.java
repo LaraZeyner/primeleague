@@ -26,8 +26,9 @@ import de.xeri.league.models.enums.DragonSoul;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Teamperformance")
 @Table(name = "teamperformance", indexes = {
@@ -35,39 +36,54 @@ import org.hibernate.annotations.Check;
     @Index(name = "idx_teamperformance_side", columnList = "game, first_pick", unique = true),
     @Index(name = "team", columnList = "team")
 })
+@NamedQuery(name = "Teamperformance.findAll", query = "FROM Teamperformance t")
+@NamedQuery(name = "Teamperformance.findById", query = "FROM Teamperformance t WHERE id = :pk")
+@NamedQuery(name = "Teamperformance.findBy", query = "FROM Teamperformance t WHERE game = :game AND firstPick = :first")
 public class Teamperformance implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 8274298970011471960L;
 
-  private static Set<Teamperformance> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Teamperformance> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Teamperformance>) Util.query("Teamperformance"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Teamperformance.class));
   }
 
   public static Teamperformance get(Teamperformance neu, Game game, Team team) {
-    get();
-    if (find(game, neu.isFirstPick()) == null) {
-      game.getTeamperformances().add(neu);
-      neu.setGame(game);
-      if (team != null) {
-        team.getTeamperformances().add(neu);
-        neu.setTeam(team);
-      }
-      data.add(neu);
+    if (has(game, neu.isFirstPick())) {
+      return find(game, neu.isFirstPick());
     }
-    return find(game, neu.isFirstPick());
+    game.getTeamperformances().add(neu);
+    neu.setGame(game);
+    if (team != null) {
+      team.getTeamperformances().add(neu);
+      neu.setTeam(team);
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(int id) {
+    return HibernateUtil.has(Teamperformance.class, id);
+  }
+
+  public static boolean has(Game game, boolean firstPick) {
+    return HibernateUtil.has(Teamperformance.class, new String[]{"game", "first"}, new Object[]{game, firstPick});
   }
 
   public static Teamperformance find(Game game, boolean firstPick) {
-    get();
-    return data.stream().filter(entry -> entry.getGame().equals(game) && entry.isFirstPick() == firstPick).findFirst().orElse(null);
+    return HibernateUtil.find(Teamperformance.class, new String[]{"game", "first"}, new Object[]{game, firstPick});
+  }
+
+  public static Teamperformance find(int id) {
+    return HibernateUtil.find(Teamperformance.class, id);
+  }
+
+  public List<TeamperformanceBounty> getNotClosed() {
+    return HibernateUtil.findList(TeamperformanceBounty.class, new String[]{"performance", "end"}, new Object[]{this, 0}, "findByEnd");
+  }
+
+  public List<TeamperformanceBounty> getNotOpened() {
+    return HibernateUtil.findList(TeamperformanceBounty.class, new String[]{"performance", "start"}, new Object[]{this, 0});
   }
 
   @Id

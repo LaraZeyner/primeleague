@@ -2,7 +2,6 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -31,8 +30,9 @@ import de.xeri.league.models.enums.ItemType;
 import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Playerperformance")
 @Table(name = "playerperformance", indexes = {
@@ -42,39 +42,62 @@ import org.hibernate.annotations.Check;
     @Index(name = "champion_own", columnList = "champion_own"),
     @Index(name = "account", columnList = "account"),
 })
+@NamedQuery(name = "Playerperformance.findAll", query = "FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.findById", query = "FROM Playerperformance p WHERE id = :pk")
+@NamedQuery(name = "Playerperformance.findBy",
+    query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND account = :account")
+@NamedQuery(name = "Playerperformance.findByLane",
+    query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND lane = :lane")
 public class Playerperformance implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 6290895798073708343L;
 
   //<editor-fold desc="Queries">
-  private static Set<Playerperformance> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
 
   public static Set<Playerperformance> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<Playerperformance>) Util.query("Playerperformance"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Playerperformance.class));
   }
 
   static Playerperformance get(Playerperformance neu, Teamperformance performance, Account account) {
-    get();
-    if (find(performance, account) == null) {
-      account.getPlayerperformances().add(neu);
-      performance.getPlayerperformances().add(neu);
-      neu.setTeamperformance(performance);
-      neu.setAccount(account);
-      data.add(neu);
+    if (has(performance, account)) {
+      return find(performance, account);
     }
+    performCreate(neu, performance, account);
     return find(performance, neu.getAccount());
   }
 
+  static Playerperformance get(Playerperformance neu, Teamperformance performance, Account account, Lane lane) {
+    if (has(performance, lane)) {
+      return find(performance, lane);
+    }
+    neu.setLane(lane);
+    performCreate(neu, performance, account);
+    return find(performance, neu.getAccount());
+  }
+
+  private static void performCreate(Playerperformance neu, Teamperformance performance, Account account) {
+    account.getPlayerperformances().add(neu);
+    performance.getPlayerperformances().add(neu);
+    neu.setTeamperformance(performance);
+    neu.setAccount(account);
+    Data.getInstance().save(neu);
+  }
+
+  public static boolean has(Teamperformance teamperformance, Account account) {
+    return HibernateUtil.has(Playerperformance.class, new String[]{"teamperformance", "account"}, new Object[]{teamperformance, account});
+  }
+
+  public static boolean has(Teamperformance teamperformance, Lane lane) {
+    return HibernateUtil.has(Playerperformance.class, new String[]{"teamperformance", "lane"}, new Object[]{teamperformance, lane}, "findByLane");
+  }
+
+  public static Playerperformance find(Teamperformance teamperformance, Lane lane) {
+    return HibernateUtil.find(Playerperformance.class, new String[]{"teamperformance", "lane"}, new Object[]{teamperformance, lane}, "findByLane");
+  }
+
   public static Playerperformance find(Teamperformance teamperformance, Account account) {
-    return data.stream().filter(entry -> entry.getTeamperformance().equals(teamperformance) && entry.getAccount() == account)
-        .findFirst().orElse(null);
+    return HibernateUtil.find(Playerperformance.class, new String[]{"teamperformance", "account"}, new Object[]{teamperformance, account});
   }
   //</editor-fold>
 
@@ -435,8 +458,9 @@ public class Playerperformance implements Serializable {
     return PlayerperformanceItem.get(playerperformanceItem);
   }
 
-  public Rune addRune(Rune rune) {
-    return Rune.get(rune, this);
+  public void addRune(Rune rune) {
+    runes.add(rune);
+    rune.getPlayerperformances().add(this);
   }
 
   public PlayerperformanceSummonerspell addSummonerspell(Summonerspell summonerspell, byte amount) {

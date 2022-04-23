@@ -1,7 +1,6 @@
 package de.xeri.league.models.match;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -11,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -18,40 +18,39 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.ids.PlayerperformanceInfoId;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity(name = "Playerperformance_Info")
-@Table(name = "playerperformance_info")
+@Entity(name = "PlayerperformanceInfo")
+@Table(name = "playerperformance_info", indexes = @Index(name = "info_playerperformance", columnList = "playerperformance"))
 @IdClass(PlayerperformanceInfoId.class)
+@NamedQuery(name = "PlayerperformanceInfo.findAll", query = "FROM PlayerperformanceInfo p")
+@NamedQuery(name = "PlayerperformanceInfo.findBy",
+    query = "FROM PlayerperformanceInfo p WHERE playerperformance = :playerperformance AND minute = :minute")
 public class PlayerperformanceInfo extends Position {
   @Transient
   private static final long serialVersionUID = -1481745323015710010L;
 
-  private static Set<PlayerperformanceInfo> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<PlayerperformanceInfo> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<PlayerperformanceInfo>) Util.query("Playerperformance_Info"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(PlayerperformanceInfo.class));
   }
 
-  public static PlayerperformanceInfo get(PlayerperformanceInfo neu, Playerperformance performance) {
-    get();
-    if (find(performance, neu.getMinute()) == null) {
-      performance.getInfos().add(neu);
-      neu.setPlayerperformance(performance);
-      data.add(neu);
+  public static PlayerperformanceInfo get(PlayerperformanceInfo neu, Playerperformance playerperformance) {
+    if (has(playerperformance, neu.getMinute())) {
+      return find(playerperformance, neu.getMinute());
     }
-    return find(performance, neu.getMinute());
+    playerperformance.getInfos().add(neu);
+    neu.setPlayerperformance(playerperformance);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Playerperformance playerperformance, short minute) {
+    return HibernateUtil.has(PlayerperformanceInfo.class, new String[]{"playerperformance", "minute"}, new Object[]{playerperformance, minute});
   }
 
   public static PlayerperformanceInfo find(Playerperformance playerperformance, short minute) {
-    return data.stream().filter(entry -> entry.getPlayerperformance().equals(playerperformance) && entry.getMinute() == minute)
-        .findFirst().orElse(null);
+    return HibernateUtil.find(PlayerperformanceInfo.class, new String[]{"playerperformance", "minute"}, new Object[]{playerperformance, minute});
   }
 
   @Id

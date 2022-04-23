@@ -29,22 +29,22 @@ import org.jsoup.nodes.Element;
  * Created by Lara on 05.04.2022 for web
  */
 public final class SeasonLoader {
-  private static final Logger logger = Logger.getLogger("Season-Erstellung");
 
   static {
+    final Logger logger = Logger.getLogger("Season-Erstellung");
     try {
       final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/");
       final Document doc = Jsoup.parse(html.toString());
 
-      final String currentSeasonName = doc.select("li.breadcrumbs-subs").select("span").text();
-      if (Season.find(currentSeasonName) == null) {
-        final String[] split = doc.select("body").attr("class").split("body-");
-        final short id = Short.parseShort(split[split.length - 1].split("-")[0]);
-        loadSeason(id, true);
-      }
-      loadSeasons(doc); // TODO: 16.04.2022 ???
+      loadSeasons(doc);
+
+      final String[] split = doc.select("body").attr("class").split("body-");
+      final short id = Short.parseShort(split[split.length - 1].split("-")[0]);
+      loadSeason(id, true);
       updateSeason(Season.current().getId());
+
       PlayerLoader.load();
+
     } catch (FileNotFoundException exception) {
       logger.warning("konnte nicht gefunden werden");
     } catch (IOException exception) {
@@ -60,23 +60,20 @@ public final class SeasonLoader {
   }
 
   public static void load() {
-    Data.getInstance().save();
+    Data.getInstance().commit();
   }
 
   private static void loadSeasons(Document doc) {
     for (Element season : doc.select("li.breadcrumbs-subs").select("ul").select("li")) {
       final short id = Short.parseShort(season.select("a").attr("href").split("/prm/")[1].split("-")[0]);
-      if (Season.find(id) == null) {
+      if (!Season.has(id)) {
         loadSeason(id, false);
       }
     }
   }
 
-  /**
-   * @param id Turnament ID of the season
-   * @return Season
-   */
   private static void loadSeason(short id, boolean last) {
+    final Logger logger = Logger.getLogger("Season-Erstellung");
     try {
       final HTML seasonHTML = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/" + id);
       final Document seasonDoc = Jsoup.parse(seasonHTML.toString());
@@ -95,10 +92,9 @@ public final class SeasonLoader {
         final Calendar playoffs = Util.getCalendar(dates.get("Start von Playoffs"));
         playoffs.set(Calendar.HOUR_OF_DAY, 0);
         playoffs.set(Calendar.MINUTE, 0);
-
         loadCalibration(season, dates);
-        loadGroups(seasonDoc, dates, season, group, playoffs);
-        loadPlayoffs(seasonDoc, dates, season, playoffs);
+        loadGroups(dates, season, group, playoffs);
+        loadPlayoffs(dates, season, playoffs);
 
         final List<Team> teams = loadTeams(season);
         TeamLoader.loadMatches(teams, season);
@@ -157,33 +153,29 @@ public final class SeasonLoader {
   }
 
   private static void loadMatchdaysOfCalibration(Stage calibrationStage) {
-    final Date start = new Date(calibrationStage.getStageStart().getTimeInMillis());
-    final Date end = new Date();
+    final long start = calibrationStage.getStageStart().getTimeInMillis() + 51_000_000L;
     for (int i = 0; i < 2; i++) {
-      start.setTime(start.getTime() + 51_000_000L + i * 86_400_000L);
       for (int j = 0; j < 5; j++) {
-        end.setTime((start.getTime() + 2_700_000L));
-        final Matchday matchday = new Matchday("Runde " + ((i * 5) + j + 1), start, end);
+        final long startMillis = start + i * 86_400_000L + j * 4_500_000L;
+        final Matchday matchday = new Matchday("Runde " + ((i * 5) + j + 1), new Date(startMillis), new Date(startMillis + 2_700_000L));
         calibrationStage.addMatchday(matchday);
-        start.setTime(start.getTime() + 4_500_000L);
+        System.out.println(((i * 5) + j + 1));
       }
     }
   }
 
-  private static void loadGroups(Document doc, Map<String, Date> dates, Season season, Calendar group, Calendar playoffs) {
+  private static void loadGroups(Map<String, Date> dates, Season season, Calendar group, Calendar playoffs) {
     final Stage groupStage = season.addStage(new Stage(StageType.GRUPPENPHASE, group, playoffs));
     loadMatchdaysOf(groupStage, dates, 161, 7);
-    //loadStage(doc, "Gruppen", groupStage, season.getId());
   }
 
-  private static void loadPlayoffs(Document doc, Map<String, Date> dates, Season season, Calendar playoffs) {
+  private static void loadPlayoffs(Map<String, Date> dates, Season season, Calendar playoffs) {
     final Calendar playoffsEnd = Util.getCalendar(playoffs.getTime());
     playoffsEnd.add(Calendar.DAY_OF_YEAR, 1);
     playoffsEnd.set(Calendar.HOUR_OF_DAY, 0);
     playoffsEnd.set(Calendar.MINUTE, 0);
     final Stage playOffStage = season.addStage(new Stage(StageType.PLAYOFFS, playoffs, playoffsEnd));
     loadMatchdaysOf(playOffStage, dates, 0, 3);
-    //loadStage(doc, "Playoff", playOffStage, season.getId());
   }
 
   private static void loadMatchdaysOf(Stage stage, Map<String, Date> dates, int backward, int forward) {
@@ -205,70 +197,5 @@ public final class SeasonLoader {
             entry.getValue().compareTo(stage.getStageEnd().getTime()) <= 0)
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
   }
-
-  /*private static void loadStage(Document doc, String query, Stage stage, short seasonId) {
-    for (Element element : getLeague(doc, query).select("li")) {
-      final String idLink = element.select("a").attr("href");
-      if (!idLink.equals("")) {
-        final short id = Short.parseShort(idLink.split("/")[8].split("-")[0]);
-        final String name = element.select("a").text();
-        if (!name.startsWith("Division") || name.contains("Playoff") ||
-            Integer.parseInt(String.valueOf(name.replace("Division ", "").charAt(0))) >= 5) {
-          handleLeague(stage, id, name, seasonId);
-        }
-      }
-    }
-  }
-
-  private static Element getLeague(Document doc, String query) {
-    return doc.select("section.league-season-stage").stream()
-        .filter(stage -> stage.select("div.section-title").text().contains(query))
-        .findFirst().orElse(null);
-  }
-
-  private static void handleLeague(Stage stage, short id, String name, short seasonId) {
-    final League league = League.get(new League(id, name));
-    final String groupTypeName = stage.getStageType().getTypeName();
-    try {
-      final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/" + seasonId +
-          "/" + groupTypeName + "/" + stage.getStageType().getValue() + "/" + id);
-      final Document doc = Jsoup.parse(html.toString());
-      if (stage.getStageType().equals(StageType.GRUPPENPHASE)) {
-        handleGroupLeague(stage, name, league, doc);
-      } else if (stage.getStageType().equals(StageType.PLAYOFFS)) {
-        doc.select("section.league-playoff-matches").select("div.section-content").select("tbody").select("tr").forEach(match -> {
-          MatchLoader.loadMatch(league, null, match);
-        });
-      }
-      logger.info(league.getName() + " erstellt");
-    } catch (FileNotFoundException exception) {
-      logger.warning("League konnte nicht gefunden werden");
-    } catch (IOException exception) {
-      logger.severe(exception.getMessage());
-    }
-    stage.addLeague(league);
-  }
-
-  private static void handleGroupLeague(Stage stage, String name, League league, Document doc) {
-    if (!name.startsWith("Starter")) {
-      doc.select("section.league-group-scores").select("table").get(0).select("tr").forEach(row -> {
-        if (!row.select("td").isEmpty()) {
-          final String idString = row.select("td").get(1).select("a").attr("href").split("/teams/")[1].split("-")[0];
-          final String teamName = row.select("td").get(1).select("a").attr("href").split("/teams/")[1].split("-")[1];
-          final Team team = TeamLoader.handleTeam(Integer.parseInt(idString), stage.getSeason(), doc, teamName);
-          if (team != null) {
-            league.addTeam(team);
-          }
-        }
-      });
-
-      final Elements days = doc.select("section.league-group-matches").select("li");
-      for (int i = 0; i < days.size(); i++) {
-        final String title = days.get(i).select("h3").text().replace(" ", "_").toUpperCase();
-        final Matchday matchday = Matchday.get(new Matchday(MatchdayType.valueOf(title), null, null), stage);
-        MatchLoader.handleMatch(league, days, i, matchday);
-      }
-    }
-  }*/
 
 }

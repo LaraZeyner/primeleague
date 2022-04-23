@@ -12,19 +12,45 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
+
 @Entity(name = "Resource")
 @Table(name = "resource")
+@NamedQuery(name = "Resource.findAll", query = "FROM Resource r")
+@NamedQuery(name = "Resource.findById", query = "FROM Resource r WHERE name = :pk")
 public class Resource implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -726013433361561652L;
+
+  public static Set<Resource> get() {
+    return new LinkedHashSet<>(HibernateUtil.findList(Resource.class));
+  }
+
+  public static Resource get(Resource neu) {
+    if (has(neu.getName())) {
+      return find(neu.getName());
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Resource.class, name);
+  }
+
+  public static Resource find(String name) {
+    return HibernateUtil.find(Resource.class, name);
+  }
 
   @Id
   @Column(name = "resource_name", nullable = false, length = 12)
   private String name;
 
   @OneToMany(mappedBy = "resource")
-  private Set<Champion> champions = new LinkedHashSet<>();
+  private final Set<Champion> champions = new LinkedHashSet<>();
 
   public Resource() {
   }
@@ -43,16 +69,8 @@ public class Resource implements Serializable {
     return name;
   }
 
-  public void setName(String id) {
-    this.name = id;
-  }
-
   public Set<Champion> getChampions() {
     return champions;
-  }
-
-  public void setChampions(Set<Champion> champions) {
-    this.champions = champions;
   }
 
   @Override

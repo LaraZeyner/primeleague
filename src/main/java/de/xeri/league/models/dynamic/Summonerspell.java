@@ -2,7 +2,6 @@ package de.xeri.league.models.dynamic;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -16,36 +15,45 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.match.PlayerperformanceSummonerspell;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Summonerspell")
 @Table(name = "summonerspell", indexes = @Index(name = "idx_summoner", columnList = "summonerspell_name", unique = true))
+@NamedQuery(name = "Summonerspell.findAll", query = "FROM Summonerspell s")
+@NamedQuery(name = "Summonerspell.findById", query = "FROM Summonerspell s WHERE id = :pk")
+@NamedQuery(name = "Summonerspell.findBy", query = "FROM Summonerspell s WHERE name = :name")
 public class Summonerspell implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 1909398380615591390L;
 
-  private static Set<Summonerspell> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Summonerspell> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<Summonerspell>) Util.query("Summonerspell"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Summonerspell.class));
   }
 
   public static Summonerspell get(Summonerspell neu) {
-    get();
-    if (find(neu.getId()) == null) data.add(neu);
-    return find(neu.getId());
+    if (has(neu.getId())) {
+      return find(neu.getId());
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Summonerspell find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (byte) id).findFirst().orElse(null);
+  public static boolean has(byte id) {
+    return HibernateUtil.has(Summonerspell.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Summonerspell.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Summonerspell find(byte id) {
+    return HibernateUtil.find(Summonerspell.class, id);
+  }
+
+  public static Summonerspell find(String name) {
+    return HibernateUtil.find(Summonerspell.class, new String[]{"name"}, new Object[]{name});
   }
 
   @Id

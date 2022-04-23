@@ -2,10 +2,8 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,49 +18,50 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity
-@Table(name = "game_pause", indexes = {
-    @Index(name = "game", columnList = "game")
-})
+@Entity(name = "GamePause")
+@Table(name = "game_pause", indexes = @Index(name = "game", columnList = "game"))
+@NamedQuery(name = "GamePause.findAll", query = "FROM GamePause g")
+@NamedQuery(name = "GamePause.findBy", query = "FROM GamePause g WHERE game = :game AND g.start = :start")
+@NamedQuery(name = "GamePause.findByEnd", query = "FROM GamePause g WHERE game = :game AND g.end = :end")
 public class GamePause implements Serializable {
   @Transient
   private static final long serialVersionUID = -2398099776734029928L;
 
   //<editor-fold desc="Queries">
-  private static Set<GamePause> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<GamePause> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<GamePause>) Util.query("Playerperformance_Level"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(GamePause.class));
   }
 
-  static GamePause get(GamePause neu, Game game) {
-    get();
-    if (find(game, neu.getStart()) == null) {
-      game.getPauses().add(neu);
-      neu.setGame(game);
-      data.add(neu);
+  public static GamePause get(GamePause neu, Game game) {
+    if (has(game, neu.getStart())) {
+      final GamePause gamePause = find(game, neu.getStart());
+      gamePause.setStart(neu.getStart());
+      gamePause.setEnd(neu.getEnd());
+      return gamePause;
     }
-    return find(game, neu.getStart());
+    game.getPauses().add(neu);
+    neu.setGame(game);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Game game, long start) {
+    return HibernateUtil.has(GamePause.class, new String[]{"game", "start"}, new Object[]{game, start});
+  }
+
+  public static boolean has(int id) {
+    return HibernateUtil.has(GamePause.class, id);
+  }
+
+  public static GamePause find(int id) {
+    return HibernateUtil.find(GamePause.class, id);
   }
 
   public static GamePause find(Game game, long start) {
-    return data.stream().filter(entry -> entry.getGame().equals(game) && entry.getStart() == start).findFirst().orElse(null);
-  }
-
-  public static List<GamePause> getNotClosed() {
-    return data.stream().filter(entry -> entry.getEnd() == 0).collect(Collectors.toList());
-  }
-
-  public static List<GamePause> getNotOpened() {
-    return data.stream().filter(entry -> entry.getStart() == 0).collect(Collectors.toList());
+    return HibernateUtil.find(GamePause.class, new String[]{"game", "start"}, new Object[]{game, start});
   }
   //</editor-fold>
   
@@ -91,10 +90,6 @@ public class GamePause implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public static void setData(Set<GamePause> data) {
-    GamePause.data = data;
-  }
-
   public int getId() {
     return id;
   }

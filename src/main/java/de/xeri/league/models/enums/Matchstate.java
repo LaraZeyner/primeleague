@@ -7,12 +7,13 @@ public enum Matchstate {
   CREATED("Spiel erstellt"),
   SUGGESTED("Termin vorgeschlagen"),
   RESPONDED("offener Terminvorschlag"),
-
   SCHEDULED("Termin bestätigt"),
   LINEUP_SUBMITTED("Lineup bestätigt"),
   LINEUPS_SUBMITTED("Lineups bestätigt"),
+
   TEAM_READY("Team bereit"),
   TEAMS_READY("Teams bereit"),
+
   LOBBY_REQUESTED("Warte auf Spiel 1"),
   GAME_1_OPEN("Spiel 1 läuft"),
   GAME_1_ENDED("Warte auf Spiel 2"),
@@ -21,7 +22,7 @@ public enum Matchstate {
   GAME_3_OPEN("Spiel 3 läuft"),
   CLOSED("Endergebnis gemeldet");
 
-  private String text;
+  private final String text;
 
   Matchstate(String text) {
     this.text = text;

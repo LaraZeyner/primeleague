@@ -2,7 +2,6 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -11,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -18,41 +18,42 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.ids.PlayerperformanceLevelId;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity(name = "Playerperformance_Level")
-@Table(name = "playerperformance_level")
+@Entity(name = "PlayerperformanceLevel")
+@Table(name = "playerperformance_level", indexes = @Index(name = "level_playerperformance", columnList = "playerperformance"))
 @IdClass(PlayerperformanceLevelId.class)
+@NamedQuery(name = "PlayerperformanceLevel.findAll", query = "FROM PlayerperformanceLevel p")
+@NamedQuery(name = "PlayerperformanceLevel.findBy",
+    query = "FROM PlayerperformanceLevel p WHERE playerperformance = :playerperformance AND time = :time")
 public class PlayerperformanceLevel implements Serializable {
   @Transient
   private static final long serialVersionUID = 6147476273247281841L;
 
   //<editor-fold desc="Queries">
-  private static Set<PlayerperformanceLevel> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<PlayerperformanceLevel> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<PlayerperformanceLevel>) Util.query("Playerperformance_Level"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(PlayerperformanceLevel.class));
   }
 
-  public static PlayerperformanceLevel get(PlayerperformanceLevel neu, Playerperformance performance) {
-    get();
-    if (find(performance, neu.getLevel()) == null) {
-      performance.getLevelups().add(neu);
-      neu.setPlayerperformance(performance);
-      data.add(neu);
+  public static PlayerperformanceLevel get(PlayerperformanceLevel neu, Playerperformance playerperformance) {
+    if (has(playerperformance, neu.getLevel())) {
+      return find(playerperformance, neu.getLevel());
     }
-    return find(performance, neu.getLevel());
+    playerperformance.getLevelups().add(neu);
+    neu.setPlayerperformance(playerperformance);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Playerperformance playerperformance, int level) {
+    return HibernateUtil.has(PlayerperformanceLevel.class, new String[]{"playerperformance", "level"},
+        new Object[]{playerperformance, level});
   }
 
   public static PlayerperformanceLevel find(Playerperformance playerperformance, int level) {
-    return data.stream().filter(entry -> entry.getPlayerperformance().equals(playerperformance) && entry.getLevel() == level)
-        .findFirst().orElse(null);
+    return HibernateUtil.find(PlayerperformanceLevel.class, new String[]{"playerperformance", "level"},
+        new Object[]{playerperformance, level});
   }
   //</editor-fold>
   

@@ -2,7 +2,6 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,38 +13,42 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "ScheduledGame")
 @Table(name = "scheduledgame")
+@NamedQuery(name = "ScheduledGame.findAll", query = "FROM ScheduledGame s")
+@NamedQuery(name = "ScheduledGame.findById", query = "FROM ScheduledGame s WHERE id = :pk")
 public class ScheduledGame implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 9033305101470944563L;
 
-  private static Set<ScheduledGame> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<ScheduledGame> get() {
-    if (data == null) data = new LinkedHashSet<>((List<ScheduledGame>) Util.query("ScheduledGame"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(ScheduledGame.class));
   }
 
   public static ScheduledGame get(ScheduledGame neu) {
-    get();
-    if (find(neu.getId()) == null) data.add(neu);
-    return find(neu.getId());
+    if (has(neu.getId())) {
+      final ScheduledGame scheduledGame = find(neu.getId());
+      scheduledGame.setQueueType(neu.getQueueType());
+      return scheduledGame;
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(String id) {
+    return HibernateUtil.has(ScheduledGame.class, id);
   }
 
   public static ScheduledGame find(String id) {
-    get();
-    return data.stream().filter(entry -> entry.getId().equals(id)).findFirst().orElse(null);
+    return HibernateUtil.find(ScheduledGame.class, id);
   }
 
   @Id

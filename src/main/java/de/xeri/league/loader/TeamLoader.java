@@ -3,6 +3,8 @@ package de.xeri.league.loader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +18,7 @@ import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
+import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.riot.RiotAccountRequester;
 import de.xeri.league.util.logger.Logger;
@@ -64,8 +67,11 @@ public class TeamLoader {
     final String teamName = title.split(" \\(")[0];
     final String teamAbbr = title.split(" \\(")[1].split("\\)")[0];
     final Team team = Team.get(new Team(turnamentId, teamName, teamAbbr));
-    final String result = doc.select("ul.content-icon-info").select("li").get(1).text();
-    team.setTeamResult(result.contains("Rang: ") ? result.split("Rang: ")[1] : result);
+    final String resultString = doc.select("ul.content-icon-info").select("li").get(1).text();
+    if (resultString.contains("Ergebnis:")) {
+      final String result = resultString.split("Ergebnis:")[1];
+      team.setTeamResult(result.contains("Rang: ") ? result.split("Rang: ")[1] : result);
+    }
     return team;
   }
 
@@ -74,19 +80,12 @@ public class TeamLoader {
     for (Element playerElement : members) {
       final Elements elements = playerElement.select("a");
       final String idString = elements.attr("href").split("/users/")[1].split("-")[0];
-      final String name = elements.text();
+      final String name = elements.text().equals("") ? null : elements.text();
       final String roleString = playerElement.select("div.txt-subtitle").text();
       final String summonerName = playerElement.select("div.txt-info").select("span").get(0).text();
-      Player player = Player.find(Integer.parseInt(idString));
-      if (player == null) {
-        // Spieler neu im Team
-        player = team.addPlayer(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())));
-        final Set<Account> accounts = player.getAccounts();
-        if (accounts.stream().noneMatch(account -> account.getName().equals(summonerName))) {
-          final Account account = new Account(summonerName);
-          player.addAccount(account);
-        }
-      } else {
+
+      if (Player.has(Integer.parseInt(idString))) {
+        final Player player = Player.get(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())), team);
         if (!player.getTeam().equals(team)) {
           // Spieler hat gewechselt
           team.addPlayer(player);
@@ -114,6 +113,13 @@ public class TeamLoader {
             }
           }
         }
+      } else {
+        final Player player = team.addPlayer(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())));
+        final Set<Account> accounts = player.getAccounts();
+        if (accounts.stream().noneMatch(account -> account.getName().equals(summonerName))) {
+          final Account account = Account.get(new Account(summonerName));
+          player.addAccount(account);
+        }
       }
     }
   }
@@ -139,7 +145,7 @@ public class TeamLoader {
         try {
           final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTeamTid());
           final Document doc = Jsoup.parse(html.toString());
-          loadMatchesOfTeam(team, doc, season);
+          loadMatchesOfTeam(doc, season);
         } catch (IOException e) {
           e.printStackTrace();
         }
@@ -147,7 +153,8 @@ public class TeamLoader {
     }
   }
 
-  private static void loadMatchesOfTeam(Team team, Document doc, Season season) {
+  private static void loadMatchesOfTeam(Document doc, Season season) {
+    final Logger logger = Logger.getLogger("Load Match");
     for (Element stageElement : doc.select("section.league-team-stage")) {
       final String stageTypeString = stageElement.select("div.section-title").text();
       final StageType stageType = StageType.valueOf(stageTypeString.toUpperCase());
@@ -160,93 +167,31 @@ public class TeamLoader {
 
       final Elements matchElements = stageElement.select("ul.league-stage-matches").select("li");
       for (int i = 0; i < matchElements.size(); i++) {
+        final Elements selectTitle = matchElements.select("div.txt-info");
+        final String timeString = selectTitle.select("span.tztime").attr("data-time");
+        final Date date = new Date(Long.parseLong(timeString) * 1000L);
+        final Calendar calendar = Util.getCalendar(date);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+
+        final Calendar calendar1 = Util.getCalendar(calendar.getTime());
+        calendar1.add(Calendar.DAY_OF_YEAR, 7);
+        final String titleText = selectTitle.text();
+        final int id = titleText.contains("(Spieltag ") ?
+            Integer.parseInt(titleText.split("Spieltag ")[1].substring(0, 1)) : i + 1;
         final Element matchElement = matchElements.get(i).selectFirst("tr");
-        final Matchday matchday = stage.addMatchday(new Matchday(matchdayPrefix + (i + 1), null, null));
-        MatchLoader.loadMatch(league, matchday, matchElement);
-      }
-    }
-  }
+        final Matchday neu = new Matchday(matchdayPrefix + id, calendar.getTime(), calendar1.getTime());
+        final Matchday matchday = Matchday.get(neu, stage);
 
-
-/*
-  public static Team handleTeam(int turnamentId, Season season, Document doc, String name) {
-    final Logger logger = Logger.getLogger("Team-Erstellung");
-    try {
-      final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + turnamentId);
-      doc = Jsoup.parse(html.toString());
-      final Team team = handleTeamCore(doc, turnamentId);
-      handleSeason(season, doc);
-      return team;
-
-    } catch (FileNotFoundException exception) {
-      for (Element day : doc.select("section.league-group-matches").select("li")) {
-        for (final Element element : day.select("td.col-3")) {
-          final String teamName = element.select("img").attr("title");
-          if (Arrays.stream(name.split("-")).filter(word -> word.length() > 3).allMatch(teamName.toLowerCase()::contains)) {
-            return Team.get(new Team(turnamentId, teamName, element.text()));
-          }
-        }
-      }
-      logger.warning("Team konnte nicht gefunden werden");
-    } catch (IOException exception) {
-      logger.severe(exception.getMessage());
-    }
-    return null;
-  }
-
-  private static Team handleTeamCore(Document doc, int turnamentId) {
-    final String title = doc.select("div.page-title").text();
-    final Elements members = doc.select("section.league-team-members").select("div.section-content").select("li");
-    if (isDeleted(title, members)) {
-      return null;
-    }
-    final Team team = Team.get(new Team(turnamentId, title.split(" \\(")[0], title.split(" \\(")[1].split("\\)")[0]));
-    final String result = doc.select("ul.content-icon-info").select("li").get(1).text();
-    team.setTeamResult(result.contains("Rang: ") ? result.split("Rang: ")[1] : result);
-
-    handleMembers(members, team);
-    return team;
-  }
-
-  static void handleMembers(Elements members, Team team) {
-    for (Element playerElement : members) {
-      final Elements elements = playerElement.select("a");
-      final String idString = elements.attr("href").split("/users/")[1].split("-")[0];
-      final String name = elements.text();
-      final String roleString = playerElement.select("div.txt-subtitle").text();
-      final Player player = team.addPlayer(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())));
-      final String summonerName = playerElement.select("div.txt-info").select("span").get(0).text();
-      final Stream<Account> accountStream = player.getAccounts().stream();
-      if (player.getAccounts() == null || accountStream.noneMatch(account -> account.getName().equals(summonerName))) {
-        final Account account = RiotAccountRequester.getAccountFromName(summonerName);
-        if (player.getAccounts() != null && accountStream.noneMatch(account1 -> account1.getPuuid().equals(account.getPuuid()))) {
-          player.getAccounts().forEach(account1 -> account1.setActive(false));
-        }
-
-        if (account != null) player.addAccount(account);
-      }
-    }
-  }
-
-  private static void handleSeason(Season season, Document doc) {
-    for (Element stage : doc.select("section.league-team-stage")) {
-      if (stage.select("div.section-title").text().contains("Kalibrierung")) {
-        final String idString = stage.select("ul.content-icon-info-l").select("a").attr("href").
-            split("/group/")[1].split("-")[0];
-        final League league = League.get(new League(Short.parseShort(idString), "Kalibrierung"));
-
-        final Elements matchElements = stage.select("ul.league-stage-matches").select("li");
-        for (int i = 0; i < matchElements.size(); i++) {
-          final Element matchElement = matchElements.get(i).selectFirst("tr");
-          final Stage stage1 = Stage.find(season, StageType.KALIBRIERUNGSPHASE);
-          final Matchday matchday = Matchday.get(new Matchday(MatchdayType.valueOf("RUNDE_" + (i + 1)), null, null), stage1);
+        if (matchElement != null) {
           MatchLoader.loadMatch(league, matchday, matchElement);
+        } else {
+          logger.attention("Matchlist empty for some reason");
         }
       }
     }
   }
-
-  private static boolean isDeleted(String title, Elements members) {
-    return title.startsWith("[DELETED]") && members.size() < 5;
-  }*/
 }

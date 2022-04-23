@@ -12,17 +12,44 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
+
 @Entity(name = "Itemstyle")
 @Table(name = "itemstyle")
+@NamedQuery(name = "Itemstyle.findAll", query = "FROM Itemstyle i")
+@NamedQuery(name = "Itemstyle.findById", query = "FROM Itemstyle i WHERE name = :pk")
 public class Itemstyle implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -5751534381863311512L;
 
+  public static Set<Itemstyle> get() {
+    return new LinkedHashSet<>(HibernateUtil.findList(Itemstyle.class));
+  }
+
+  public static Itemstyle get(Itemstyle neu) {
+    if (has(neu.getName())) {
+      return find(neu.getName());
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Itemstyle.class, name);
+  }
+
+  public static Itemstyle find(String name) {
+    return HibernateUtil.find(Itemstyle.class, name);
+  }
+
   @Id
   @Column(name = "style_name", nullable = false, length = 25)
   private String name;
 
+  // default constructor
   public Itemstyle() {
   }
 

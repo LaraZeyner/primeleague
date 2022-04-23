@@ -3,7 +3,6 @@ package de.xeri.league.models.league;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -26,16 +25,11 @@ import de.xeri.league.models.enums.Matchstate;
 import de.xeri.league.models.enums.ScheduleType;
 import de.xeri.league.models.enums.StageType;
 import de.xeri.league.models.match.Game;
+import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-/**
- * Match of multiple turney games for the league
- * Construct: id, score
- * Additional Data: Startdate, Matchstate
- * Indirect Data: League, Matchday, Hometeam, Guestteam
- * Collection: Games, logEntries
- */
 @Entity(name = "TurnamentMatch")
 @Table(name = "turnament_match", indexes = {
     @Index(name = "matchday", columnList = "matchday"),
@@ -43,31 +37,35 @@ import de.xeri.league.util.Util;
     @Index(name = "home_team", columnList = "home_team"),
     @Index(name = "guest_team", columnList = "guest_team")
 })
+@NamedQuery(name = "TurnamentMatch.findAll", query = "FROM TurnamentMatch t")
+@NamedQuery(name = "TurnamentMatch.findById", query = "FROM TurnamentMatch t WHERE id = :pk")
 public class TurnamentMatch implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -5623549707585401516L;
 
-  private static Set<TurnamentMatch> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<TurnamentMatch> get() {
-    if (data == null) data = new LinkedHashSet<>((List<TurnamentMatch>) Util.query("TurnamentMatch"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(TurnamentMatch.class));
   }
 
-  public static TurnamentMatch get(TurnamentMatch neu) {
-    get();
-    if (find(neu.getId()) == null) data.add(neu);
-    return find(neu.getId());
+  public static TurnamentMatch get(TurnamentMatch neu, League league, Matchday matchday) {
+    if (has(neu.getId())) {
+      final TurnamentMatch turnamentMatch = find(neu.getId());
+      turnamentMatch.setScore(turnamentMatch.getScore());
+      return turnamentMatch;
+    }
+    league.addMatch(neu);
+    matchday.addMatch(neu);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(int id) {
+    return HibernateUtil.has(TurnamentMatch.class, id);
   }
 
   public static TurnamentMatch find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == id).findFirst().orElse(null);
+    return HibernateUtil.find(TurnamentMatch.class, id);
   }
 
   @Id
@@ -126,9 +124,8 @@ public class TurnamentMatch implements Serializable {
     game.setTurnamentmatch(this);
   }
 
-  public void addEntry(Matchlog entry) {
-    logEntries.add(entry);
-    entry.setMatch(this);
+  public Matchlog addEntry(Matchlog entry) {
+    return Matchlog.get(entry, this);
   }
 
   public int getGameAmount() {
@@ -144,11 +141,12 @@ public class TurnamentMatch implements Serializable {
   }
 
   public boolean isOpen() {
-    return getGameAmount() != games.size();
+    return getGameAmount() < games.size();
   }
 
   public boolean isNotClosed() {
-    return !state.equals(Matchstate.CLOSED);
+    final long limit = matchday.getEnd().getTime() + Const.DAYS_UNTIL_MATCH_CLOSED * Const.MILLIS_PER_DAY;
+    return !state.equals(Matchstate.CLOSED) || (isOpen() && start.before(new Date(limit)));
   }
 
   public Team getOtherTeam(Team team) {
@@ -165,6 +163,10 @@ public class TurnamentMatch implements Serializable {
       return ScheduleType.valueOf("VORRUNDE_" + s);
     }
     return null;
+  }
+
+  public boolean hasTeam(Team team) {
+    return homeTeam.equals(team) || guestTeam.equals(team);
   }
 
   //<editor-fold desc="getter and setter">

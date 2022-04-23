@@ -2,7 +2,6 @@ package de.xeri.league.models.dynamic;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,41 +18,46 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Rune")
 @Table(name = "rune", indexes = @Index(name = "idx_rune", columnList = "runetree, rune_slot", unique = true))
+@NamedQuery(name = "Rune.findAll", query = "FROM Rune r")
+@NamedQuery(name = "Rune.findById", query = "FROM Rune r WHERE id = :pk")
+@NamedQuery(name = "Rune.findBy", query = "FROM Rune r WHERE name = :name")
 public class Rune implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -7661693601692536521L;
 
-  private static Set<Rune> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Rune> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Rune>) Util.query("Rune"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Rune.class));
   }
 
-  public static Rune get(Rune neu, Playerperformance performance) {
-    get();
-    final Rune entry = find(neu.getId());
-    if (entry == null) {
-      performance.getRunes().add(neu);
-      neu.getPlayerperformances().add(performance);
-      data.add(neu);
+  public static Rune get(Rune neu) {
+    if (has(neu.getId())) {
+      return find(neu.getId());
     }
-    return find(neu.getId());
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Rune find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (short) id).findFirst().orElse(null);
+  public static boolean has(short id) {
+    return HibernateUtil.has(Rune.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Rune.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Rune find(short id) {
+    return HibernateUtil.find(Rune.class, id);
+  }
+
+  public static Rune find(String name) {
+    return HibernateUtil.find(Rune.class, new String[]{"name"}, new Object[]{name});
   }
 
   @Id

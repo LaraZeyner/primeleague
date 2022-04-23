@@ -3,7 +3,6 @@ package de.xeri.league.models.league;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,7 +22,8 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Matchday")
 @Table(name = "matchday", indexes = {
@@ -31,37 +31,42 @@ import de.xeri.league.util.Util;
     @Index(name = "matchday_end", columnList = "matchday_end", unique = true),
     @Index(name = "idx_matchday", columnList = "stage, matchday_type", unique = true)
 })
+@NamedQuery(name = "Matchday.findAll", query = "FROM Matchday m")
+@NamedQuery(name = "Matchday.findById", query = "FROM Matchday m WHERE id = :pk")
+@NamedQuery(name = "Matchday.findBy", query = "FROM Matchday m WHERE stage = :stage AND type = :type")
 public class Matchday implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 721589244740386057L;
 
-  private static Set<Matchday> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Matchday> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Matchday>) Util.query("Matchday"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Matchday.class));
   }
 
   public static Matchday get(Matchday neu, Stage stage) {
-    get();
-    final Matchday entry = find(neu.getType(), stage.getId());
-    if (entry == null) {
-      stage.getMatchdays().add(neu);
-      neu.setStage(stage);
-      data.add(neu);
+    if (has(neu.getType(), stage)) {
+      return find(neu.getType(), stage);
     }
-    return find(neu.getType(), stage.getId());
+    stage.getMatchdays().add(neu);
+    neu.setStage(stage);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Matchday find(String type, short stageId) {
-    get();
-    return data.stream().filter(entry -> entry.getType().equals(type) && entry.getStage().getId() == stageId)
-        .findFirst().orElse(null);
+  public static boolean has(String type, Stage stage) {
+    return HibernateUtil.has(Matchday.class, new String[]{"stage", "type"}, new Object[]{stage, type});
+  }
+
+  public static boolean has(short id) {
+    return HibernateUtil.has(Matchday.class, id);
+  }
+
+  public static Matchday find(String type, Stage stage) {
+    return HibernateUtil.find(Matchday.class, new String[]{"stage", "type"}, new Object[]{stage, type});
+  }
+
+  public static Matchday find(short id) {
+    return HibernateUtil.find(Matchday.class, id);
   }
 
   @Id
@@ -97,7 +102,7 @@ public class Matchday implements Serializable {
     this.end = end;
   }
 
-  public void addMatch(TurnamentMatch match) {
+  void addMatch(TurnamentMatch match) {
     matches.add(match);
     match.setMatchday(this);
   }

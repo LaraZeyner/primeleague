@@ -1,22 +1,18 @@
 package de.xeri.league.loader;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.models.dynamic.ItemStat;
-import de.xeri.league.models.dynamic.Item_Stat;
 import de.xeri.league.models.dynamic.Itemstyle;
 import de.xeri.league.models.enums.ItemType;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.io.DataType;
-import de.xeri.league.util.io.json.HTML;
-import de.xeri.league.util.io.json.JSON;
 import de.xeri.league.util.io.JSONElement;
 import de.xeri.league.util.io.JSONParser;
+import de.xeri.league.util.io.json.HTML;
+import de.xeri.league.util.io.json.JSON;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -27,31 +23,14 @@ import org.jsoup.nodes.Document;
  */
 public final class ItemLoader {
   private static final JSON json = Data.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/item.json");
-  private static final List<Item_Stat> stats = new ArrayList<>();
-
-  public static void addStat(Item_Stat stat) {
-    stats.add(stat);
-  }
 
   public static void createItems() {
-    final List<ItemStat> itemStatList = (List<ItemStat>) Data.getInstance().getSession().createQuery("from Itemstat").list();
-    final Map<String, ItemStat> databaseItemstats = itemStatList.stream()
-        .collect(Collectors.toMap(ItemStat::getId, stat -> stat, (a, b) -> b));
-
-    final List<Item> itemList = (List<Item>) Data.getInstance().getSession().createQuery("from Item").list();
-    final Map<String, Item> databaseItems = new HashMap<>();
-
-    final List<Itemstyle> itemStyleList = (List<Itemstyle>) Data.getInstance().getSession().createQuery("from Itemstyle").list();
-    final Map<String, Itemstyle> databaseItemstyles = itemStyleList.stream()
-        .collect(Collectors.toMap(Itemstyle::getName, style -> style, (a, b) -> b));
-
     final JSONObject items = ((JSONElement) JSONParser.from(json)).getObject("data");
 
-    items.keySet().forEach(id -> {
-      // create Item
+    for (String id : items.keySet()) {// create Item
       final JSONObject itemObject = items.getJSONObject(id);
       final String name = itemObject.getString("name");
-      if (!databaseItems.containsKey(name)) {
+      if (!Item.has(name) || Item.find(name).getId() == Short.parseShort(id)) {
         final String description = itemObject.getString("description");
         final String finalDescription = determineDescription(description);
         String shortDescription = itemObject.getString("plaintext");
@@ -59,57 +38,55 @@ public final class ItemLoader {
         final short cost = (short) ((int) JSONParser.from(itemObject).getSubParameter(DataType.INTEGER, "gold.total"));
         final JSONArray tags = JSONParser.from(itemObject).getArray("tags");
         final ItemType type = getItemType(description, cost, tags, itemObject);
-        final Item item = itemList.stream().filter(i -> i.getId() == Short.parseShort(id))
-            .findFirst().orElse(new Item(Short.parseShort(id), type, name, finalDescription, shortDescription, cost));
+        final Item item = Item.get(new Item(Short.parseShort(id), type, name, finalDescription, shortDescription, cost));
 
         // Stats
         final Document doc = Jsoup.parse(description);
         final String statString = doc.select("maintext").select("stats").html();
-        final List<String> stats = new HTML(statString).find("br", null, false)
-            .stream().map(HTML::toString).collect(Collectors.toList());
-        stats.forEach(stat -> stats.set(stats.indexOf(stat), stat.replace("<attention>", "")
-            .replace("</attention>", "").replace("\n", "").replace("  ", " ")));
-        stats.forEach(statId -> {
-          final String statStringOfStat = statId.split(" ")[0];
+        final List<String> stats = new HTML(statString).find("br", null, false).stream()
+            .map(HTML::toString)
+            .collect(Collectors.toList());
+
+        for (String s : stats) {
+          stats.set(stats.indexOf(s), s.replace("<attention>", "")
+              .replace("</attention>", "")
+              .replace("\n", "")
+              .replace("  ", " "));
+        }
+
+        for (String statId : stats) {
+          final String statStr = (statId.startsWith(" ")) ? statId.substring(1) : statId;
+          final String statStringOfStat = statStr.split(" ")[0];
           if (!statStringOfStat.isEmpty()) {
-            final String statNameKey = statId.substring(statStringOfStat.length() + 1);
+            final String statNameKey = statStr.substring(statStringOfStat.length() + 1);
             final double statDouble = (statStringOfStat.endsWith("%")) ?
                 Double.parseDouble(statStringOfStat.replace("%", "")) / 100 : Double.parseDouble(statStringOfStat);
 
-
-            if (!databaseItemstats.containsKey(statNameKey) ||
-                databaseItemstats.containsKey(statNameKey) && databaseItemstats.get(statNameKey).getName() == null) {
-              final JSONObject statsListing = JSONParser.from(itemObject).getObject("stats");
-              final List<String> possibleMatches = statsListing.keySet().stream()
-                  .filter(statName -> statsListing.getDouble(statName) == statDouble)
-                  .collect(Collectors.toList());
-              if (!databaseItemstats.containsKey(statNameKey)) {
-                final ItemStat stat = new ItemStat(statNameKey, null);
-                if (possibleMatches.size() == 1) stat.setName(possibleMatches.get(0));
-                databaseItemstats.put(statNameKey, stat);
-              }
-            }
-
-            item.addItemStat(databaseItemstats.get(statNameKey), statDouble);
+            final ItemStat stat = createItemStat(itemObject, statNameKey, statDouble);
+            item.addItemStat(stat, statDouble);
           }
-        });
+        }
 
         // Styles
-        tags.toList().forEach(tag -> {
+        for (Object tag : tags.toList()) {
           final String tagString = String.valueOf(tag);
-          if (!databaseItemstyles.containsKey(tagString)) {
-            databaseItemstyles.put(tagString, new Itemstyle(tagString));
-          }
-          final Itemstyle itemstyle = databaseItemstyles.get(tagString);
+          final Itemstyle itemstyle = Itemstyle.get(new Itemstyle(tagString));
           item.addItemStyle(itemstyle);
-        });
-        databaseItems.put(name, item);
+        }
       }
-    });
-    databaseItemstats.forEach((s, itemStat) -> Data.getInstance().getSession().saveOrUpdate(itemStat));
-    databaseItemstyles.forEach((s, itemstyle) -> Data.getInstance().getSession().saveOrUpdate(itemstyle));
-    databaseItems.forEach((s, item) -> Data.getInstance().getSession().saveOrUpdate(item));
-    stats.forEach(stat -> Data.getInstance().getSession().saveOrUpdate(stat));
+    }
+  }
+
+  private static ItemStat createItemStat(JSONObject itemObject, String statNameKey, double statDouble) {
+    final ItemStat stat = ItemStat.get(new ItemStat(statNameKey));
+    if (!ItemStat.has(statNameKey) || ItemStat.has(statNameKey) && ItemStat.find(statNameKey).getName() == null) {
+      final JSONObject statsListing = JSONParser.from(itemObject).getObject("stats");
+      final List<String> possibleMatches = statsListing.keySet().stream()
+          .filter(statName -> statsListing.getDouble(statName) == statDouble)
+          .collect(Collectors.toList());
+      if (possibleMatches.size() == 1 && stat.getName() == null) stat.setName(possibleMatches.get(0));
+    }
+    return stat;
   }
 
   private static String determineDescription(String description) {

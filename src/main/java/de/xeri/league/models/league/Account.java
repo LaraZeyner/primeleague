@@ -34,44 +34,68 @@ import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Account")
 @Table(name = "account", indexes = {
     @Index(name = "account_id", columnList = "account_id", unique = true),
+    @Index(name = "account_puuid", columnList = "puuid", unique = true),
     @Index(name = "account_name", columnList = "account_name", unique = true),
     @Index(name = "player", columnList = "player")
 })
+@NamedQuery(name = "Account.findAll", query = "FROM Account a")
+@NamedQuery(name = "Account.findById", query = "FROM Account a WHERE id = :pk")
+@NamedQuery(name = "Account.findByPuuid", query = "FROM Account a WHERE puuid = :puuid")
+@NamedQuery(name = "Account.findByName", query = "FROM Account a WHERE name = :name")
 public class Account implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -3036623290602783787L;
 
-  private static Set<Account> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Account> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Account>) Util.query("Account"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Account.class));
   }
 
   public static Account get(Account neu) {
-    get();
-    final Account entry = find(neu.getPuuid());
-    if (entry == null) data.add(neu);
-    entry.setIcon(neu.getIcon());
-    entry.setLevel(neu.getLevel());
-    entry.setName(neu.getName());
-    return find(neu.getPuuid());
+    if (neu.getPuuid() != null && hasPuuid(neu.getPuuid()) || hasName(neu.getName())) {
+      final Account account = neu.getPuuid() != null ? findPuuid(neu.getPuuid()) : findName(neu.getName());
+      account.setName(neu.getName());
+      if (neu.getPuuid() != null) account.setPuuid(neu.getPuuid());
+      if (neu.getSummonerId() != null) account.setSummonerId(neu.getSummonerId());
+      if (neu.getIcon() != 0) account.setIcon(neu.getIcon());
+      if (neu.getLevel() != 0) account.setLevel(neu.getLevel());
+      return account;
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Account find(String puuid) {
-    get();
-    return data.stream().filter(entry -> entry.getPuuid().equals(puuid)).findFirst().orElse(null);
+  public static boolean has(byte id) {
+    return HibernateUtil.has(Account.class, id);
   }
+
+  public static boolean hasName(String name) {
+    return HibernateUtil.has(Account.class, new String[]{"name"}, new Object[]{name}, "findByName");
+  }
+
+  public static boolean hasPuuid(String puuid) {
+    return HibernateUtil.has(Account.class, new String[]{"puuid"}, new Object[]{puuid}, "findByPuuid");
+  }
+
+  public static Account find(byte id) {
+    return HibernateUtil.find(Account.class, id);
+  }
+
+  public static Account findName(String name) {
+    return HibernateUtil.find(Account.class, new String[]{"name"}, new Object[]{name}, "findByName");
+  }
+
+  public static Account findPuuid(String puuid) {
+    return HibernateUtil.find(Account.class, new String[]{"puuid"}, new Object[]{puuid}, "findByPuuid");
+  }
+  
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "account_id", nullable = false, columnDefinition = "SMALLINT UNSIGNED NOT NULL")
@@ -83,7 +107,7 @@ public class Account implements Serializable {
   @Column(name = "summoner_id", length = 47)
   private String summonerId;
 
-  @Column(name = "account_name", nullable = false, length = 16)
+  @Column(name = "account_name", nullable = false, length = 25)
   private String name;
 
   @ManyToOne(fetch = FetchType.LAZY)
@@ -303,6 +327,14 @@ public class Account implements Serializable {
 
   public void setLastUpdate(Date lastUpdate) {
     this.lastUpdate = lastUpdate;
+  }
+
+  public int getId() {
+    return id;
+  }
+
+  public void setId(int id) {
+    this.id = id;
   }
 
   @Override

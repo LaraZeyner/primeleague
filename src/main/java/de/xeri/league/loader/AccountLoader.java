@@ -30,6 +30,7 @@ public final class AccountLoader {
     } catch (IOException exception) {
       logger.severe(exception.getMessage());
     }
+    Data.getInstance().commit();
   }
 
   public static void updateTeams() {
@@ -45,6 +46,6 @@ public final class AccountLoader {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
+    Data.getInstance().commit();
   }
 }

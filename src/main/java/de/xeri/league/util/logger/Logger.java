@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Date;
 
 import sun.misc.SharedSecrets;
-import sun.reflect.Reflection;
 
 /**
  * Created by Lara on 11.04.2022 for web
@@ -19,7 +18,7 @@ public class Logger {
   private Object[] values;
 
   public Logger() {
-    this(Reflection.getCallerClass().getName(), "method");
+    this("");
   }
 
   public Logger(String name, String method) {
@@ -31,7 +30,7 @@ public class Logger {
   public Logger(String name) {
     this.name = name;
     final StackTraceElement elem = SharedSecrets.getJavaLangAccess().getStackTraceElement(new Exception(), 0);
-    this.method = elem.getMethodName();
+    this.method = elem.getClassName() + " " + elem.getMethodName();
   }
 
   public static Logger getLogger() {
@@ -154,6 +153,10 @@ public class Logger {
     log(Level.WARNING, msg);
   }
 
+  public void warning(String msg, Throwable thrown) {
+    log(Level.WARNING, msg, thrown);
+  }
+
   public void warning(String msg, Object... values) {
     log(Level.WARNING, msg, values);
   }
@@ -217,7 +220,7 @@ public class Logger {
 
       final String dateString = new SimpleDateFormat("HH:mm:ss.SSS ").format(new Date());
       final String levelString = level.getColor().format(level.getName());
-      final String where = name + " " + method;
+      final String where = !name.equals("") ? name + " " + method : "" + method;
       final String valuesString = values != null ? "{" + Arrays.toString(values) + "}" : "";
       final String message = level.getColor().format(msg);
       final StringBuilder outputString = new StringBuilder(ColorFormat.DEFAULT.format(dateString))

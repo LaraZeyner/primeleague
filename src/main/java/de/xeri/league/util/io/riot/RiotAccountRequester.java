@@ -116,7 +116,7 @@ public final class RiotAccountRequester {
     account.setLastUpdate(new Date());
     final Date lastCompetitiveGame = account.getLastCompetitiveGame();
     account.setActive(lastCompetitiveGame == null ||
-        !lastCompetitiveGame.before(new Date(System.currentTimeMillis() - Const.ACTIVE_UNTIL * 86_400_000L)));
+        !lastCompetitiveGame.before(new Date(System.currentTimeMillis() - Const.DAYS_UNTIL_INACTIVE * 86_400_000L)));
   }
 
 

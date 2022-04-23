@@ -2,7 +2,9 @@ package de.xeri.league.models.dynamic;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,14 +17,39 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.ids.ItemStatId;
+import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Item_Stat")
 @Table(name = "item_stat")
 @IdClass(ItemStatId.class)
+@NamedQuery(name = "Item_Stat.findAll", query = "FROM Item_Stat i")
+@NamedQuery(name = "Item_Stat.findBy", query = "FROM Item_Stat i WHERE item = :name AND stat = :stat")
 public class Item_Stat implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 8386432444986700070L;
+
+  public static Set<Item_Stat> get() {
+    return new LinkedHashSet<>(HibernateUtil.findList(Item_Stat.class));
+  }
+
+  public static Item_Stat get(Item_Stat neu) {
+    if (has(neu.getItem(), neu.getStat())) {
+      return find(neu.getItem(), neu.getStat());
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Item item, ItemStat stat) {
+    return HibernateUtil.has(Item_Stat.class, new String[]{"name", "stat"}, new Object[]{item, stat});
+  }
+
+  public static Item_Stat find(Item item, ItemStat stat) {
+    return HibernateUtil.find(Item_Stat.class, new String[]{"name", "stat"}, new Object[]{item, stat});
+  }
 
   @Id
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -37,6 +64,7 @@ public class Item_Stat implements Serializable {
   @Column(name = "stat_amount", nullable = false, precision = 9, scale = 4)
   private BigDecimal statAmount;
 
+  // default constructor
   public Item_Stat() {
 
   }

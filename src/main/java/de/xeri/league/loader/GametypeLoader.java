@@ -43,6 +43,7 @@ public final class GametypeLoader {
       }
     }
 
+
     maps.forEach((s, map) -> Data.getInstance().getSession().saveOrUpdate(map));
     gameTypes.forEach((i, gametype) -> Data.getInstance().getSession().saveOrUpdate(gametype));
   }

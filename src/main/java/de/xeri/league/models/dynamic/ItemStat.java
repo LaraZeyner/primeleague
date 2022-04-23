@@ -13,12 +13,39 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
+
 @Entity(name = "Itemstat")
 @Table(name = "itemstat", indexes = @Index(name = "idx_itemstat", columnList = "itemstat_name", unique = true))
+@NamedQuery(name = "Itemstat.findAll", query = "FROM Itemstat i")
+@NamedQuery(name = "Itemstat.findById", query = "FROM Itemstat i WHERE id = :pk")
+@NamedQuery(name = "Itemstat.findBy", query = "FROM Itemstat i WHERE name = :name")
 public class ItemStat implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 8534420089380529755L;
+
+  public static Set<ItemStat> get() {
+    return new LinkedHashSet<>(HibernateUtil.findList(ItemStat.class));
+  }
+
+  public static ItemStat get(ItemStat neu) {
+    if (has(neu.getId())) {
+      return find(neu.getId());
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(String id) {
+    return HibernateUtil.has(ItemStat.class, id);
+  }
+
+  public static ItemStat find(String id) {
+    return HibernateUtil.find(ItemStat.class, id);
+  }
 
   @Id
   @Column(name = "itemstat_id", nullable = false, length = 35)
@@ -34,9 +61,8 @@ public class ItemStat implements Serializable {
   public ItemStat() {
   }
 
-  public ItemStat(String id, String name) {
+  public ItemStat(String id) {
     this.id = id;
-    this.name = name;
   }
 
   //<editor-fold desc="getter and setter">

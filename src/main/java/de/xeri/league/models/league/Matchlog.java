@@ -3,7 +3,6 @@ package de.xeri.league.models.league;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,43 +22,51 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.LogAction;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Matchlog")
 @Table(name = "matchlog", indexes = {
     @Index(name = "idx_matchlog", columnList = "turnamentmatch, log_time", unique = true),
     @Index(name = "player", columnList = "player")
 })
+@NamedQuery(name = "Matchlog.findAll", query = "FROM Matchlog m")
+@NamedQuery(name = "Matchlog.findById", query = "FROM Matchlog m WHERE id = :pk")
+@NamedQuery(name = "Matchlog.findBy", query = "FROM Matchlog m WHERE match = :match AND logTime = :time")
 public class Matchlog implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 7774556170074025328L;
 
-  private static Set<Matchlog> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
+  // match, logtime
   public static Set<Matchlog> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Matchlog>) Util.query("Matchlog"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Matchlog.class));
   }
 
   public static Matchlog get(Matchlog neu, TurnamentMatch match) {
-    get();
-    final Matchlog entry = find(neu.getLogTime(), match);
-    if (entry == null) {
-      match.addEntry(neu);
-      data.add(neu);
+    if (has(match, neu.getLogTime())) {
+      return find(match, neu.getLogTime());
     }
-    return find(neu.getLogTime(), match);
+    match.getLogEntries().add(neu);
+    neu.setMatch(match);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Matchlog find(Date logTime, TurnamentMatch match) {
-    get();
-    return data.stream().filter(entry -> entry.getLogTime().equals(logTime) && entry.getMatch().equals(match))
-        .findFirst().orElse(null);
+  public static boolean has(TurnamentMatch match, Date logTime) {
+    return HibernateUtil.has(Matchlog.class, new String[]{"match", "time"}, new Object[]{match, logTime});
+  }
+
+  public static boolean has(short id) {
+    return HibernateUtil.has(Matchlog.class, id);
+  }
+
+  public static Matchlog find(TurnamentMatch match, Date logTime) {
+    return HibernateUtil.find(Matchlog.class, new String[]{"match", "time"}, new Object[]{match, logTime});
+  }
+
+  public static Matchlog find(short id) {
+    return HibernateUtil.find(Matchlog.class, id);
   }
 
   @Id

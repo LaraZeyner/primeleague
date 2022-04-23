@@ -2,7 +2,6 @@ package de.xeri.league.models.league;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -20,36 +19,41 @@ import javax.persistence.Transient;
 import de.xeri.league.models.enums.Elo;
 import de.xeri.league.models.ids.SeasonEloId;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "SeasonElo")
 @Table(name = "season_elo", indexes = @Index(name = "season", columnList = "season"))
 @IdClass(SeasonEloId.class)
+@NamedQuery(name = "SeasonElo.findAll", query = "FROM SeasonElo s")
+@NamedQuery(name = "SeasonElo.findBy", query = "FROM SeasonElo s WHERE account = :account AND season = :season")
 public class SeasonElo implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 3295530440973862452L;
 
-  private static Set<SeasonElo> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<SeasonElo> get() {
-    if (data == null) data = new LinkedHashSet<>((List<SeasonElo>) Util.query("SeasonElo"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(SeasonElo.class));
   }
 
   public static SeasonElo get(SeasonElo neu, Season season, Account account) {
-    get();
-    if (find(season, account) == null) data.add(neu);
-    return find(season, account);
+    if (has(season, account)) {
+      final SeasonElo elo = find(season, account);
+      elo.setMmr(neu.getMmr());
+      elo.setWins(neu.getWins());
+      elo.setLosses(neu.getLosses());
+      return elo;
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Season season, Account account) {
+    return HibernateUtil.has(SeasonElo.class, new String[]{"account", "season"}, new Object[]{account, season});
   }
 
   public static SeasonElo find(Season season, Account account) {
-    get();
-    return data.stream().filter(entry -> entry.getSeason().equals(season) && entry.getAccount().equals(account)).findFirst().orElse(null);
+    return HibernateUtil.find(SeasonElo.class, new String[]{"account", "season"}, new Object[]{account, season});
   }
 
   @Id

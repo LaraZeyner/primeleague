@@ -3,7 +3,6 @@ package de.xeri.league.models.dynamic;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -31,7 +30,8 @@ import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 import org.hibernate.annotations.Type;
 
 @Entity(name = "Champion")
@@ -40,37 +40,40 @@ import org.hibernate.annotations.Type;
     @Index(name = "resource", columnList = "resource"),
     @Index(name = "champion_name", columnList = "champion_name", unique = true)
 })
+@NamedQuery(name = "Champion.findAll", query = "FROM Champion c")
+@NamedQuery(name = "Champion.findById", query = "FROM Champion c WHERE id = :pk")
+@NamedQuery(name = "Champion.findBy", query = "FROM Champion c WHERE name = :name")
 public class Champion implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 1840290655581732760L;
 
-  private static Set<Champion> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Champion> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Champion>) Util.query("Champion"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Champion.class));
   }
 
   public static Champion get(Champion neu) {
-    get();
-    final Champion entry = find(neu.getId());
-    if (entry == null) data.add(neu);
-    return find(neu.getId());
+    if (has(neu.getId())) {
+      return find(neu.getId());
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Champion find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (short) id).findFirst().orElse(null);
+  public static boolean has(short id) {
+    return HibernateUtil.has(Champion.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Champion.class, new String[]{"name"}, new Object[]{name});
   }
 
   public static Champion find(String name) {
-    get();
-    return data.stream().filter(entry -> entry.getName().equals(name)).findFirst().orElse(null);
+    return HibernateUtil.find(Champion.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Champion find(int id) {
+    return HibernateUtil.find(Champion.class, id);
   }
 
   @Id

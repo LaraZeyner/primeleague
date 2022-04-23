@@ -12,12 +12,47 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-@Entity
+import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
+
+@Entity(name = "Runetree")
 @Table(name = "runetree")
+@NamedQuery(name = "Runetree.findAll", query = "FROM Runetree r")
+@NamedQuery(name = "Runetree.findById", query = "FROM Runetree r WHERE id = :pk")
+@NamedQuery(name = "Runetree.findBy", query = "FROM Runetree r WHERE name = :name")
 public class Runetree implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 7893634102193519118L;
+
+  public static Set<Runetree> get() {
+    return new LinkedHashSet<>(HibernateUtil.findList(Runetree.class));
+  }
+
+  public static Runetree get(Runetree neu) {
+    if (has(neu.getId())) {
+      return find(neu.getId());
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(short id) {
+    return HibernateUtil.has(Runetree.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Runetree.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Runetree find(short id) {
+    return HibernateUtil.find(Runetree.class, id);
+  }
+
+  public static Runetree find(String name) {
+    return HibernateUtil.find(Runetree.class, new String[]{"name"}, new Object[]{name});
+  }
 
   @Id
   @Column(name = "runetree_id", nullable = false)

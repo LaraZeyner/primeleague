@@ -2,7 +2,6 @@ package de.xeri.league.models.league;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -21,52 +20,56 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.Teamrole;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Player")
 @Table(name = "player", indexes = @Index(name = "team", columnList = "team"))
+@NamedQuery(name = "Player.findAll", query = "FROM Player p")
+@NamedQuery(name = "Player.findById", query = "FROM Player p WHERE id = :pk")
+@NamedQuery(name = "Player.findBy", query = "FROM Player p WHERE name = :name")
 public class Player implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -2823713148714882156L;
 
-  private static Set<Player> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Player> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Player>) Util.query("Player"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Player.class));
   }
 
   public static Player get(Player neu, Team team) {
-    get();
-    final Player entry = find(neu.getId());
-    if (entry == null) {
-      team.getPlayers().add(neu);
-      neu.setTeam(team);
-      data.add(neu);
+    if (has(neu.getId())) {
+      final Player player = find(neu.getId());
+      player.setRole(neu.getRole());
+
+      final Team currentTeam = player.getTeam();
+      if (!currentTeam.equals(team)) {
+        currentTeam.getPlayers().remove(player);
+        team.getPlayers().add(player);
+        player.setTeam(team);
+      }
+      return player;
     }
-    final Player player = find(neu.getId());
-    player.setRole(neu.getRole());
-    if (!player.getTeam().equals(team)) {
-      player.getTeam().getPlayers().remove(player);
-      team.getPlayers().add(player);
-      player.setTeam(team);
-    }
-    return player;
+    team.getPlayers().add(neu);
+    neu.setTeam(team);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Player find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == id).findFirst().orElse(null);
+  public static boolean has(int id) {
+    return HibernateUtil.has(Player.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Player.class, new String[]{"name"}, new Object[]{name});
   }
 
   public static Player find(String name) {
-    get();
-    return data.stream().filter(entry -> entry.getName().equals(name)).findFirst().orElse(null);
+    return HibernateUtil.find(Player.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Player find(int id) {
+    return HibernateUtil.find(Player.class, id);
   }
 
   @Id

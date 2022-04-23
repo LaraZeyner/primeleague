@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,54 +19,75 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity(name = "Playerperformance_Item")
+@Entity(name = "PlayerperformanceItem")
 @Table(name = "playerperformance_item")
+@NamedQuery(name = "PlayerperformanceItem.findAll", query = "FROM PlayerperformanceItem p")
+@NamedQuery(name = "PlayerperformanceItem.findById", query = "FROM PlayerperformanceItem p WHERE id = :id")
+@NamedQuery(name = "PlayerperformanceItem.findBy",
+    query = "FROM PlayerperformanceItem p WHERE playerperformance = :playerperformance AND item = :item AND buyTime = :buytime")
+@NamedQuery(name = "PlayerperformanceItem.findByRemains",
+    query = "FROM PlayerperformanceItem p WHERE playerperformance = :playerperformance AND item = :item AND remains = :remains")
+@NamedQuery(name = "PlayerperformanceItem.findByItem",
+    query = "FROM PlayerperformanceItem p WHERE playerperformance = :playerperformance AND item = :item")
 public class PlayerperformanceItem implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 4729798460691317464L;
 
-  private static Set<PlayerperformanceItem> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<PlayerperformanceItem> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<PlayerperformanceItem>) Util.query("Playerperformance_Item"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(PlayerperformanceItem.class));
   }
 
   public static PlayerperformanceItem get(PlayerperformanceItem neu) {
-    get();
-    if (find(neu.getPlayerperformance(), neu.getItem(), neu.getBuyTime()) == null) {
-      neu.getPlayerperformance().getItems().add(neu);
-      neu.getItem().getPlayerperformances().add(neu);
-      data.add(neu);
+    if (has(neu.getPlayerperformance(), neu.getItem(), neu.getBuyTime())) {
+      return find(neu.getPlayerperformance(), neu.getItem(), neu.getBuyTime());
     }
-    return find(neu.getPlayerperformance(), neu.getItem(), neu.getBuyTime());
+    neu.getPlayerperformance().getItems().add(neu);
+    neu.getItem().getPlayerperformances().add(neu);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static PlayerperformanceItem find(Playerperformance playerperformance, Item item, int buyTime) {
-    return findAll(playerperformance, item).stream().filter(entry -> entry.getBuyTime() == buyTime).findFirst().orElse(null);
+  public static boolean has(Playerperformance playerperformance, Item item, int buyTime) {
+    return HibernateUtil.has(PlayerperformanceItem.class, new String[]{"playerperformance", "item", "buytime"},
+        new Object[]{playerperformance, item, buyTime});
+  }
+
+  public static boolean has(int id) {
+    return HibernateUtil.has(PlayerperformanceItem.class, id);
+  }
+
+  public static boolean has(Playerperformance playerperformance, Item item, boolean remains) {
+    return HibernateUtil.has(PlayerperformanceItem.class, new String[]{"playerperformance", "item", "remains"},
+        new Object[]{playerperformance, item, remains}, "findByRemains");
+  }
+
+  public static PlayerperformanceItem find(int id) {
+    return HibernateUtil.find(PlayerperformanceItem.class, id);
   }
 
   public static PlayerperformanceItem find(Playerperformance playerperformance, Item item, boolean remains) {
-    return findAll(playerperformance, item).stream().filter(entry -> entry.remains() == remains).findFirst().orElse(null);
+    return HibernateUtil.find(PlayerperformanceItem.class, new String[]{"playerperformance", "item", "remains"},
+        new Object[]{playerperformance, item, remains}, "findByRemains");
+  }
+
+  public static PlayerperformanceItem find(Playerperformance playerperformance, Item item, int buyTime) {
+    return HibernateUtil.find(PlayerperformanceItem.class, new String[]{"playerperformance", "item", "buytime"},
+        new Object[]{playerperformance, item, buyTime});
   }
 
   public static List<PlayerperformanceItem> findAll(Playerperformance playerperformance, Item item, boolean remains) {
-    return findAll(playerperformance, item).stream().filter(entry -> entry.remains() == remains).collect(Collectors.toList());
+    return HibernateUtil.findList(PlayerperformanceItem.class, new String[]{"playerperformance", "item", "remains"},
+        new Object[]{playerperformance, item, remains}, "findByRemains");
   }
 
   public static List<PlayerperformanceItem> findAll(Playerperformance playerperformance, Item item) {
-    get();
-    return data.stream().filter(entry -> entry.getPlayerperformance().equals(playerperformance) && entry.getItem().equals(item)).collect(Collectors.toList());
+    return HibernateUtil.findList(PlayerperformanceItem.class, new String[]{"playerperformance", "item"},
+        new Object[]{playerperformance, item}, "findByItem");
   }
-
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -105,14 +125,6 @@ public class PlayerperformanceItem implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public static Set<PlayerperformanceItem> getData() {
-    return data;
-  }
-
-  public static void setData(Set<PlayerperformanceItem> data) {
-    PlayerperformanceItem.data = data;
-  }
-
   public int getId() {
     return id;
   }

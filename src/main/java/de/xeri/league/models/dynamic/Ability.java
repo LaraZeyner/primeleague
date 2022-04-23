@@ -22,13 +22,38 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.Abilitytype;
+import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Ability")
 @Table(name = "ability", indexes = @Index(name = "uq_ability", columnList = "champion, ability_type", unique = true))
+@NamedQuery(name = "Ability.findAll", query = "FROM Ability a")
+@NamedQuery(name = "Ability.findBy", query = "FROM Ability a WHERE champion = :champion AND abilityType = :type")
 public class Ability implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -716852779822608536L;
+
+  public static Set<Ability> get() {
+    return new LinkedHashSet<>(HibernateUtil.findList(Ability.class));
+  }
+
+  public static Ability get(Ability neu) {
+    if (has(neu.getChampion(), neu.getAbilityType())) {
+      return find(neu.getChampion(), neu.getAbilityType());
+    }
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Champion champion, Abilitytype abilitytype) {
+    return HibernateUtil.has(Ability.class, new String[]{"champion", "type"}, new Object[]{champion, abilitytype});
+  }
+
+  public static Ability find(Champion champion, Abilitytype abilitytype) {
+    return HibernateUtil.find(Ability.class, new String[]{"champion", "type"}, new Object[]{champion, abilitytype});
+  }
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

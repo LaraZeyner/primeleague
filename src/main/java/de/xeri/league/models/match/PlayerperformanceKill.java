@@ -24,53 +24,57 @@ import de.xeri.league.models.enums.KillRole;
 import de.xeri.league.models.enums.KillType;
 import de.xeri.league.models.ids.PlayerperformanceKillId;
 import de.xeri.league.util.Data;
+import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
+import org.hibernate.annotations.NamedQuery;
 
-@Entity(name = "Playerperformance_Kill")
-@Table(name = "playerperformance_kill", indexes = @Index(name = "playerperformance", columnList = "playerperformance"))
+@Entity(name = "PlayerperformanceKill")
+@Table(name = "playerperformance_kill", indexes = @Index(name = "kill_playerperformance", columnList = "playerperformance"))
 @IdClass(PlayerperformanceKillId.class)
+@NamedQuery(name = "PlayerperformanceKill.findAll", query = "FROM PlayerperformanceItem p")
+@NamedQuery(name = "PlayerperformanceKill.findBy",
+    query = "FROM PlayerperformanceKill p WHERE playerperformance = :playerperformance AND time = :time")
+@NamedQuery(name = "PlayerperformanceKill.findByGame",
+    query = "FROM PlayerperformanceKill p WHERE playerperformance.teamperformance.game = :game AND time = :time")
 public class PlayerperformanceKill implements Serializable {
   @Transient
   private static final long serialVersionUID = 8813809418539948714L;
+
   //<editor-fold desc="Queries">
-  private static Set<PlayerperformanceKill> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<PlayerperformanceKill> get() {
-    if (data == null)
-      data = new LinkedHashSet<>((List<PlayerperformanceKill>) Util.query("Playerperformance_Kill"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(PlayerperformanceKill.class));
   }
 
+  public static PlayerperformanceKill get(PlayerperformanceKill neu, Playerperformance playerperformance) {
+    if (has(playerperformance, neu.getTime())) {
+      return find(playerperformance, neu.getTime());
+    }
+    playerperformance.getKillEvents().add(neu);
+    neu.setPlayerperformance(playerperformance);
+    Data.getInstance().save(neu);
+    return neu;
+  }
+
+  public static boolean has(Playerperformance playerperformance, int time) {
+    return HibernateUtil.has(PlayerperformanceKill.class, new String[]{"playerperformance", "time"}, new Object[]{playerperformance, time});
+  }
+
+  public static boolean has(Game game, int time) {
+    return HibernateUtil.has(PlayerperformanceKill.class, new String[]{"game", "time"}, new Object[]{game, time}, "findByGame");
+  }
+
+  public static PlayerperformanceKill find(Playerperformance playerperformance, int time) {
+    return HibernateUtil.find(PlayerperformanceKill.class, new String[]{"playerperformance", "time"}, new Object[]{playerperformance, time});
+  }
+
+  public static PlayerperformanceKill find(Game game, int time) {
+    return HibernateUtil.find(PlayerperformanceKill.class, new String[]{"game", "time"}, new Object[]{game, time}, "findByGame");
+  }
+  //</editor-fold>
   public static int lastId() {
     final List<PlayerperformanceKill> kills = Util.query("Playerperformance_Kills ORDER BY id DESC");
     return kills.isEmpty() ? 0 : kills.get(0).getId();
   }
-
-  public static PlayerperformanceKill get(PlayerperformanceKill neu, Playerperformance performance) {
-    get();
-    if (find(performance, neu.getTime()) == null) {
-      performance.getKillEvents().add(neu);
-      neu.setPlayerperformance(performance);
-      data.add(neu);
-    }
-    return find(performance, neu.getTime());
-  }
-
-
-  public static PlayerperformanceKill find(Game game, int killTime) {
-    return data.stream().filter(entry -> entry.getPlayerperformance().getTeamperformance().getGame().equals(game) &&
-            entry.getTime() == killTime).findFirst().orElse(null);
-  }
-
-  public static PlayerperformanceKill find(Playerperformance playerperformance, int killTime) {
-    return data.stream().filter(entry -> entry.getPlayerperformance().equals(playerperformance) && entry.getTime() == killTime)
-        .findFirst().orElse(null);
-  }
-  //</editor-fold>
 
   @Id
   @Column(name = "kill_id", nullable = false)

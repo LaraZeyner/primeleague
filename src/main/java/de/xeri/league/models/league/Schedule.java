@@ -26,50 +26,60 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.ScheduleType;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Schedule")
 @Table(name = "schedule", indexes = @Index(name = "enemy_team", columnList = "enemy_team"))
+@NamedQuery(name = "Schedule.findAll", query = "FROM Schedule p")
+@NamedQuery(name = "Schedule.findById", query = "FROM Schedule p WHERE id = :pk")
+@NamedQuery(name = "Schedule.findBy", query = "FROM Schedule p WHERE title = :title AND startTime = :start")
 public class Schedule implements Serializable {
-
   @Transient
   private static final long serialVersionUID = 3439077356822417423L;
 
-  private static Set<Schedule> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Schedule> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Schedule>) Util.query("Schedule"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Schedule.class));
   }
 
   public static Schedule get(Schedule neu) {
-    get();
-    final Schedule entry = find(neu.getTitle(), neu.getStartTime());
-    if (entry == null) data.add(neu);
-    return find(neu.getTitle(), neu.getStartTime());
+    if (has(neu.getTitle(), neu.getStartTime())) {
+      final Schedule schedule = find(neu.getTitle(), neu.getStartTime());
+      schedule.setType(neu.getType());
+      schedule.setSmallTitle(neu.getSmallTitle());
+      return schedule;
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Schedule find(String title, Date startTime) {
-    get();
-    return data.stream()
-        .filter(entry -> entry.getTitle().equals(title))
-        .filter(entry -> entry.getStartTime().equals(startTime))
-        .findFirst().orElse(null);
+  public static boolean has(int id) {
+    return HibernateUtil.has(Schedule.class, id);
+  }
+
+  public static boolean has(String title, Date start) {
+    return HibernateUtil.has(Schedule.class, new String[]{"title", "start"}, new Object[]{title, start});
+  }
+
+  public static Schedule find(String title, Date start) {
+    return HibernateUtil.find(Schedule.class, new String[]{"title", "start"}, new Object[]{title, start});
+  }
+
+  public static Schedule find(int id) {
+    return HibernateUtil.find(Schedule.class, id);
+  }
+
+
+
+  public static List<Schedule> last() {
+    return get().stream()
+        .filter(schedule -> schedule.getEnemyTeam() != null)
+        .collect(Collectors.toList());
   }
 
   public static List<Schedule> next() {
     return get().stream()
         .filter(schedule -> schedule.getEndTime().getTime() > System.currentTimeMillis() + 900_000L)
-        .filter(schedule -> schedule.getEnemyTeam() != null)
-        .collect(Collectors.toList());
-  }
-
-  public static List<Schedule> last() {
-    return get().stream()
         .filter(schedule -> schedule.getEnemyTeam() != null)
         .collect(Collectors.toList());
   }
@@ -151,6 +161,10 @@ public class Schedule implements Serializable {
 
   void setEnemyTeam(Team enemyTeam) {
     this.enemyTeam = enemyTeam;
+  }
+
+  public void setSmallTitle(String smallTitle) {
+    this.smallTitle = smallTitle;
   }
 
   public String getTitle() {

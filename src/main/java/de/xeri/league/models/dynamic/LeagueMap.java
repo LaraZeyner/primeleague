@@ -26,7 +26,7 @@ public class LeagueMap implements Serializable {
   private String name;
 
   @OneToMany(mappedBy = "leagueMap")
-  private Set<Gametype> gametypes = new LinkedHashSet<>();
+  private final Set<Gametype> gametypes = new LinkedHashSet<>();
 
   public LeagueMap() {
   }
@@ -43,10 +43,6 @@ public class LeagueMap implements Serializable {
   //<editor-fold desc="getter and setter">
   public Set<Gametype> getGametypes() {
     return gametypes;
-  }
-
-  private void setGametypes(Set<Gametype> gametypes) {
-    this.gametypes = gametypes;
   }
 
   public String getName() {

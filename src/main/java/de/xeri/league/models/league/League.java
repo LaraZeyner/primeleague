@@ -1,10 +1,14 @@
 package de.xeri.league.models.league;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,40 +24,47 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "League")
 @Table(name = "league", indexes = @Index(name = "idx_league_name", columnList = "stage, league_name", unique = true))
+@NamedQuery(name = "League.findAll", query = "FROM League l")
+@NamedQuery(name = "League.findById", query = "FROM League l WHERE id = :pk")
+@NamedQuery(name = "League.findBy", query = "FROM League l WHERE stage = :stage AND name = :name")
 public class League implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 7621013514942624366L;
 
-  private static Set<League> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<League> get() {
-    if (data == null) data = new LinkedHashSet<>((List<League>) Util.query("League"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(League.class));
   }
 
   public static League get(League neu, Stage stage) {
-    get();
-    final League entry = find(neu.getId());
-    if (entry == null) {
-      stage.getLeagues().add(neu);
-      neu.setStage(stage);
-      data.add(neu);
+    if (has(neu.getId())) {
+      return find(neu.getId());
     }
-    return find(neu.getId());
+    stage.getLeagues().add(neu);
+    neu.setStage(stage);
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static League find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (short) id).findFirst().orElse(null);
+  public static boolean has(Stage stage, String name) {
+    return HibernateUtil.has(League.class, new String[]{"stage", "name"}, new Object[]{stage, name});
+  }
+
+  public static boolean has(short id) {
+    return HibernateUtil.has(League.class, id);
+  }
+
+  public static League find(Stage stage, String name) {
+    return HibernateUtil.find(League.class, new String[]{"stage", "name"}, new Object[]{stage, name});
+  }
+
+  public static League find(short id) {
+    return HibernateUtil.find(League.class, id);
   }
 
   @Id
@@ -64,7 +75,7 @@ public class League implements Serializable {
   @JoinColumn(name = "stage")
   private Stage stage;
 
-  @Column(name = "league_name", nullable = false, length = 13)
+  @Column(name = "league_name", nullable = false, length = 25)
   private String name;
 
   @ManyToMany
@@ -90,9 +101,19 @@ public class League implements Serializable {
     team.getLeagues().add(this);
   }
 
-  public void addMatch(TurnamentMatch match) {
+  void addMatch(TurnamentMatch match) {
     matches.add(match);
     match.setLeague(this);
+  }
+
+  public Team atPlace(int place) {
+    final Set<Team> teamList = teams.stream()
+        .collect(Collectors.toMap(team -> team, team -> new TeamLeaguePerformance(this, team).getScore(), (a, b) -> b))
+        .entrySet().stream()
+        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new))
+        .keySet();
+    return new ArrayList<>(teamList).get(place - 1);
   }
 
   //<editor-fold desc="getter and setter">

@@ -23,6 +23,6 @@ public final class ScheduleLoader {
   }
 
   public static void load() {
-    Data.getInstance().save();
+    Data.getInstance().commit();
   }
 }

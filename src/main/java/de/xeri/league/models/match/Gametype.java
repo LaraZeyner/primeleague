@@ -2,7 +2,6 @@ package de.xeri.league.models.match;
 
 import java.io.Serializable;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -20,36 +19,47 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.dynamic.LeagueMap;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
+import de.xeri.league.util.HibernateUtil;
+import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Gametype")
 @Table(name = "gametype", indexes = @Index(name = "idx_gametype", columnList = "gametype_name, map", unique = true))
+@NamedQuery(name = "Gametype.findAll", query = "FROM Gametype g")
+@NamedQuery(name = "Gametype.findById", query = "FROM Gametype g WHERE id = :pk")
+@NamedQuery(name = "Gametype.findBy", query = "FROM Gametype g WHERE name = :name")
 public class Gametype implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -8925136115533930187L;
 
-  private static Set<Gametype> data;
-
-  public static void save() {
-    if (data != null) data.forEach(Data.getInstance().getSession()::saveOrUpdate);
-  }
-
   public static Set<Gametype> get() {
-    if (data == null) data = new LinkedHashSet<>((List<Gametype>) Util.query("Gametype"));
-    return data;
+    return new LinkedHashSet<>(HibernateUtil.findList(Gametype.class));
   }
 
   public static Gametype get(Gametype neu) {
-    get();
-    final Gametype entry = find(neu.getId());
-    if (entry == null) data.add(neu);
-    return find(neu.getId());
+    if (has(neu.getId())) {
+      final Gametype gametype = find(neu.getId());
+      gametype.setName(neu.getName());
+      return gametype;
+    }
+    Data.getInstance().save(neu);
+    return neu;
   }
 
-  public static Gametype find(int id) {
-    get();
-    return data.stream().filter(entry -> entry.getId() == (short) id).findFirst().orElse(null);
+  public static boolean has(short id) {
+    return HibernateUtil.has(Gametype.class, id);
+  }
+
+  public static boolean has(String name) {
+    return HibernateUtil.has(Gametype.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Gametype find(String name) {
+    return HibernateUtil.find(Gametype.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static Gametype find(short id) {
+    return HibernateUtil.find(Gametype.class, id);
   }
 
   @Id
