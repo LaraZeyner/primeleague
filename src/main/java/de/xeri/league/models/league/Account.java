@@ -60,7 +60,7 @@ public class Account implements Serializable {
 
   public static Account get(Account neu) {
     if (neu.getPuuid() != null && hasPuuid(neu.getPuuid()) || hasName(neu.getName())) {
-      final Account account = neu.getPuuid() != null ? findPuuid(neu.getPuuid()) : findName(neu.getName());
+      final Account account = hasPuuid(neu.getPuuid()) ? findPuuid(neu.getPuuid()) : findName(neu.getName());
       account.setName(neu.getName());
       if (neu.getPuuid() != null) account.setPuuid(neu.getPuuid());
       if (neu.getSummonerId() != null) account.setSummonerId(neu.getSummonerId());
@@ -104,7 +104,7 @@ public class Account implements Serializable {
   @Column(name = "puuid", length = 78)
   private String puuid;
 
-  @Column(name = "summoner_id", length = 47)
+  @Column(name = "summoner_id", length = 75)
   private String summonerId;
 
   @Column(name = "account_name", nullable = false, length = 25)

@@ -33,8 +33,8 @@ import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Game")
 @Table(name = "game", indexes = @Index(name = "turnamentmatch", columnList = "turnamentmatch"))
-@NamedQuery(name = "Game.findAll", query = "FROM Team t")
-@NamedQuery(name = "Game.findById", query = "FROM Team t WHERE id = :pk")
+@NamedQuery(name = "Game.findAll", query = "FROM Game g")
+@NamedQuery(name = "Game.findById", query = "FROM Game g WHERE id = :pk")
 public class Game implements Serializable {
 
   @Transient

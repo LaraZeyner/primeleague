@@ -1,11 +1,11 @@
 package de.xeri.league.models.match.stat;
 
-import de.xeri.league.models.match.stat.neu.Operator;
-
 /**
  * Created by Lara on 22.04.2022 for web
  */
 public class Limitation {
+
+
   private final String column;
   private final Operator operator;
   private final Object value;

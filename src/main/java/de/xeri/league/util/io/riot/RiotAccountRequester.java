@@ -16,6 +16,7 @@ import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.io.json.JSON;
+import de.xeri.league.util.logger.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -56,6 +57,9 @@ public final class RiotAccountRequester {
     final String summonerName = summoner.getString("name");
     final short iconId = (short) summoner.getInt("profileIconId");
     final short level = (short) summoner.getInt("summonerLevel");
+    if (id.length() > 75) {
+      Logger.getLogger("Account").severe("Summoner ID too long");
+    }
     return Account.get(new Account(puuid, id, summonerName, iconId, level));
   }
 

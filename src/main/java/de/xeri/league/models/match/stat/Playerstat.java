@@ -1,4 +1,4 @@
-package de.xeri.league.models.match.stat.neu;
+package de.xeri.league.models.match.stat;
 
 import de.xeri.league.models.match.Playerperformance;
 
@@ -6,7 +6,9 @@ import de.xeri.league.models.match.Playerperformance;
  * Created by Lara on 22.04.2022 for web
  */
 public class Playerstat extends Stat {
-  public static final Playerstat KILLS = new Playerstat("Kills", Playerperformance.class, "kill", 0, true, false);
+  public static final Playerstat ASSISTS = new Playerstat("Assists", Playerperformance.class, "assists", 0, true, false);
+  public static final Playerstat DEATHS = new Playerstat("Deaths", Playerperformance.class, "deaths", 0, true, false);
+  public static final Playerstat KILLS = new Playerstat("Kills", Playerperformance.class, "kills", 0, true, false);
 
   private final boolean timeQuery;
 

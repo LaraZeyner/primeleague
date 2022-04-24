@@ -1,4 +1,4 @@
-package de.xeri.league.models.match.stat.neu;
+package de.xeri.league.models.match.stat;
 
 /**
  * Created by Lara on 23.04.2022 for web

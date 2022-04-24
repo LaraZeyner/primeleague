@@ -3,8 +3,6 @@ package de.xeri.league.loader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -18,7 +16,6 @@ import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.riot.RiotAccountRequester;
 import de.xeri.league.util.logger.Logger;
@@ -95,16 +92,20 @@ public class TeamLoader {
         if (accounts.stream().noneMatch(account -> account.getName().equals(summonerName))) {
           // Account hat sich geändert
           final Account account = RiotAccountRequester.getAccountFromName(summonerName);
-          if (accounts.stream().noneMatch(account1 -> account1.getPuuid().equals(account.getPuuid()))) {
-            accounts.forEach(account1 -> account1.setActive(false));
-            player.addAccount(account);
+          if (account != null) {
+            if (accounts.stream().noneMatch(account1 -> account1.getPuuid().equals(account.getPuuid()))) {
+              accounts.forEach(account1 -> account1.setActive(false));
+              player.addAccount(account);
+            }
           }
         } else {
           // erweiterte Initialisierung
           for (Account account1 : player.getAccounts()) {
             if (account1.getPuuid() == null) {
               final Account account = RiotAccountRequester.getAccountFromName(summonerName);
-              if (accounts.stream().noneMatch(account2 -> account2.getPuuid().equals(account.getPuuid()))) {
+              if (accounts.stream()
+                  .filter(account2 -> account2.getPuuid() != null )
+                  .noneMatch(account2 -> account2.getPuuid().equals(account.getPuuid()))) {
                 accounts.forEach(account2 -> account1.setActive(false));
               }
               // Gleich geblieben
@@ -141,7 +142,7 @@ public class TeamLoader {
 
   static void loadMatches(List<Team> teams, Season season) {
     for (Team team : teams) {
-      if (team.getTeamTid() != 0) {
+      if (team != null && team.getTeamTid() != 0) {
         try {
           final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTeamTid());
           final Document doc = Jsoup.parse(html.toString());
@@ -168,32 +169,22 @@ public class TeamLoader {
       final Elements matchElements = stageElement.select("ul.league-stage-matches").select("li");
       for (int i = 0; i < matchElements.size(); i++) {
         final Elements selectTitle = matchElements.select("div.txt-info");
-        final String timeString = selectTitle.select("span.tztime").attr("data-time");
-        final Date date = new Date(Long.parseLong(timeString) * 1000L);
-        final Calendar calendar = Util.getCalendar(date);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-
-        final Calendar calendar1 = Util.getCalendar(calendar.getTime());
-        calendar1.add(Calendar.DAY_OF_YEAR, 7);
         final String titleText = selectTitle.text();
         final int id = titleText.contains("(Spieltag ") ?
             Integer.parseInt(titleText.split("Spieltag ")[1].substring(0, 1)) : i + 1;
         final Element matchElement = matchElements.get(i).selectFirst("tr");
-        final Matchday neu = new Matchday(matchdayPrefix + id, calendar.getTime(), calendar1.getTime());
-        if (!Matchday.has(neu.getType(), neu.getStage())) {
-          System.err.println("ERROR");
-        }
-        final Matchday matchday = Matchday.get(neu, stage);
-
-        if (matchElement != null) {
-          MatchLoader.loadMatch(league, matchday, matchElement);
+        if (Matchday.has(matchdayPrefix + id, stage)) {
+          final Matchday matchday = Matchday.find(matchdayPrefix + id, stage);
+          if (matchElement != null) {
+            MatchLoader.loadMatch(league, matchday, matchElement);
+          } else {
+            logger.attention("Matchlist empty for some reason");
+          }
         } else {
-          logger.attention("Matchlist empty for some reason");
+          logger.severe("Matchday was not created.");
         }
+
+
       }
     }
   }

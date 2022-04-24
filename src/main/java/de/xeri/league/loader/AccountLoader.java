@@ -23,7 +23,7 @@ public final class AccountLoader {
       for (Player player : Player.get().stream().filter(player -> player.getAccounts().isEmpty()).collect(Collectors.toList())) {
         final int teamTid = player.getTeam().getTeamTid();
         final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + teamTid);
-        TeamLoader.handleMembers(Jsoup.parse(html.toString()), Team.find(teamTid));
+        TeamLoader.handleMembers(Jsoup.parse(html.toString()), Team.findTid(teamTid));
       }
     } catch (FileNotFoundException exception) {
       logger.warning("Account konnte nicht gefunden werden");
@@ -35,17 +35,11 @@ public final class AccountLoader {
 
   public static void updateTeams() {
     Team.get().stream().filter(Team::isValueable).forEach(AccountLoader::updateAccounts);
+    Data.getInstance().commit();
   }
 
   private static void updateAccounts(Team team) {
     final int id = team.getTeamTid();
-    try {
-      final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + id);
-      TeamLoader.handleTeamCore(Jsoup.parse(html.toString()), id);
-      TeamLoader.handleMembers(Jsoup.parse(html.toString()), team);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-    Data.getInstance().commit();
+    TeamLoader.handleTeam(id);
   }
 }

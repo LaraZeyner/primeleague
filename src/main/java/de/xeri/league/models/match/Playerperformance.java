@@ -32,6 +32,7 @@ import de.xeri.league.models.league.Account;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Playerperformance")
@@ -42,12 +43,35 @@ import org.hibernate.annotations.NamedQuery;
     @Index(name = "champion_own", columnList = "champion_own"),
     @Index(name = "account", columnList = "account"),
 })
+@Filter(name = "team_filter", condition = "team= :team")
+@Filter(name = "account_filter", condition = "account= :account")
+@Filter(name = "filter_lane", condition = "lane= :lane")
+@Filter(name = "filter_champion_own", condition = "championOwn= :champion")
+@Filter(name = "filter_champion_enemy", condition = "championEnemy= :champion")
+@Filter(name = "filter_gametype", condition = "gametype= :gametype")
+@Filter(name = "filter_since", condition = "gameStart >= :minDate")
 @NamedQuery(name = "Playerperformance.findAll", query = "FROM Playerperformance p")
 @NamedQuery(name = "Playerperformance.findById", query = "FROM Playerperformance p WHERE id = :pk")
-@NamedQuery(name = "Playerperformance.findBy",
-    query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND account = :account")
-@NamedQuery(name = "Playerperformance.findByLane",
-    query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND lane = :lane")
+@NamedQuery(name = "Playerperformance.findBy", query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND account = :account")
+@NamedQuery(name = "Playerperformance.findByLane", query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND lane = :lane")
+/*
+@NamedQuery(name = "Playerperformance.kda", query = "SELECT ((sum(p.kills) + sum(p.assists)) / sum(p.deaths)) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.kdalong", query = "SELECT avg(p.kills), avg(p.deaths), avg(p.assists) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.lead", query = "SELECT avg(p.laneLead) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.leadEarly", query = "SELECT avg(p.earlyLaneLead) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.goldPerMinute", query = "SELECT sum(p.goldTotal)*60/sum(p.teamperformance.game.duration) FROM " +
+    "Playerperformance p")
+@NamedQuery(name = "Playerperformance.bounty", query = "SELECT avg(p.bountyGold) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.timeAlive", query = "SELECT avg(p.timeIngame) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.killParticipation", query = "SELECT avg((p.kills + p.assists)/p.teamperformance.totalKills) FROM " +
+    "Playerperformance p")
+@NamedQuery(name = "Playerperformance.games", query = "SELECT count(p.id) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.winrate", query = "SELECT (sum(CASE p.teamperformance.win WHEN true THEN 0 ELSE 1 END)" +
+    "/count(p.id)) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.cs", query = "SELECT avg(p.creepsTotal) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.csPerMinute", query = "SELECT sum(p.creepsTotal)*60/sum(p.teamperformance.game.duration) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.csInvaded", query = "SELECT avg(p.creepsInvade) FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.csEarly", query = "SELECT avg(p.creepsEarly) FROM Playerperformance p")*/
 public class Playerperformance implements Serializable {
 
   @Transient
@@ -448,7 +472,7 @@ public class Playerperformance implements Serializable {
     this.turretTakedowns = turretTakedowns;
   }
 
-  public double timeIngame() {
+  public double getTimeIngame() {
     return timeDead / (teamperformance.getGame().getDuration() + 0.0);
   }
 
@@ -537,6 +561,43 @@ public class Playerperformance implements Serializable {
 
   public boolean hasMythic() {
     return getMythic() != null;
+  }
+
+  public Gametype getGameType() {
+    return teamperformance.getGame().getGametype();
+  }
+
+  public Playerperformance getLaneOpponent() {
+    return teamperformance.getOtherTeamperformance().getPlayerperformances().stream()
+        .filter(playerperformance -> playerperformance.getLane().equals(lane))
+        .findFirst().orElse(null);
+  }
+
+  public short getCSAt(int minute) {
+    for (PlayerperformanceInfo info : infos) {
+      if (info.getMinute() == minute) {
+        return info.getCreepScore();
+      }
+    }
+    return creepsEarly;
+  }
+
+  // Only in Competitive Games
+  public Short getCSAdvantageAt(int minute) {
+    if (getLaneOpponent() != null && getCSAt(minute) != 0) {
+      if (getCSAt(minute) != 0) {
+        return (short) (getCSAt(minute) - getLaneOpponent().getCSAt(minute));
+      }
+      return (short) (creepsEarly - getLaneOpponent().getCreepsEarly());
+    }
+    return null;
+  }
+
+  public Short getCSAdvantage() {
+    if (getLaneOpponent() != null) {
+      return (short) (creepsTotal - getLaneOpponent().getCreepsTotal());
+    }
+    return null;
   }
 
   // TODO: 12.04.2022 Group stats in embeddables

@@ -38,7 +38,7 @@ import org.hibernate.annotations.NamedQuery;
     @Index(name = "team_name", columnList = "team_name")
 })
 @NamedQuery(name = "Team.findAll", query = "FROM Team t")
-@NamedQuery(name = "Team.findById", query = "FROM Team t WHERE id = :pk")
+@NamedQuery(name = "Team.findById", query = "FROM Team t WHERE teamId = :pk")
 @NamedQuery(name = "Team.findBy", query = "FROM Team t WHERE teamName = :name")
 @NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE teamTid = :tid")
 public class Team implements Serializable {
@@ -99,7 +99,7 @@ public class Team implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "team_id", nullable = false)
-  private short id;
+  private short teamId;
 
   @Column(name = "team_tId")
   private int teamTid;
@@ -215,7 +215,8 @@ public class Team implements Serializable {
   }
 
   public boolean isValueable() {
-    return getLastLeague() != null && getLastLeague().getId() == find(142116).getLastLeague().getId() || scrims;
+    final League lastLeague = findTid(142116).getLastLeague();
+    return getLastLeague() != null && lastLeague != null && getLastLeague().getId() == lastLeague.getId() || scrims;
   }
 
   public String getLogoUrl() {
@@ -289,12 +290,12 @@ public class Team implements Serializable {
     this.teamTid = teamTid;
   }
 
-  public short getId() {
-    return id;
+  public short getTId() {
+    return teamId;
   }
 
-  public void setId(short id) {
-    this.id = id;
+  public void setTId(short id) {
+    this.teamId = id;
   }
 
   public boolean isScrims() {
@@ -310,18 +311,18 @@ public class Team implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Team)) return false;
     final Team team = (Team) o;
-    return getId() == team.getId() && getTeamTid() == team.getTeamTid() && getTeamName().equals(team.getTeamName()) && getTeamAbbr().equals(team.getTeamAbbr()) && Objects.equals(getLeagues(), team.getLeagues()) && Objects.equals(getTeamResult(), team.getTeamResult()) && getTeamperformances().equals(team.getTeamperformances()) && getSchedules().equals(team.getSchedules()) && getMatchesHome().equals(team.getMatchesHome()) && getMatchesGuest().equals(team.getMatchesGuest()) && getPlayers().equals(team.getPlayers());
+    return getTId() == team.getTId() && getTeamTid() == team.getTeamTid() && getTeamName().equals(team.getTeamName()) && getTeamAbbr().equals(team.getTeamAbbr()) && Objects.equals(getLeagues(), team.getLeagues()) && Objects.equals(getTeamResult(), team.getTeamResult()) && getTeamperformances().equals(team.getTeamperformances()) && getSchedules().equals(team.getSchedules()) && getMatchesHome().equals(team.getMatchesHome()) && getMatchesGuest().equals(team.getMatchesGuest()) && getPlayers().equals(team.getPlayers());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getTeamTid(), getTeamName(), getTeamAbbr(), getLeagues(), getTeamResult());
+    return Objects.hash(getTId(), getTeamTid(), getTeamName(), getTeamAbbr(), getLeagues(), getTeamResult());
   }
 
   @Override
   public String toString() {
     return "Team{" +
-        "id=" + id +
+        "id=" + teamId +
         ", teamTid=" + teamTid +
         ", teamName='" + teamName + '\'' +
         ", teamAbbr='" + teamAbbr + '\'' +

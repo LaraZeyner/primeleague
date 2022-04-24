@@ -16,7 +16,7 @@ public class StatQuery {
   private final Set<Limitation> limitations = new HashSet<>();
   private final Class aClass;
   private final StringBuilder selects = new StringBuilder("SELECT ");
-  private final StringBuilder joins = new StringBuilder(" INNER JOIN ");
+  private final StringBuilder joins = new StringBuilder(" INNER JOIN Teamperformance t INNER JOIN Game g ");
   private final StringBuilder limits = new StringBuilder(" WHERE ");
 
   public StatQuery(Class aClass) {
@@ -67,7 +67,7 @@ public class StatQuery {
   public String query(int limit) {
     final String name = Data.getInstance().getSession().getMetamodel().entity(aClass).getName();
     final String limitString = limitations.isEmpty() ? "" : limits.toString();
-    return selects + " FROM " + name + joins + limitString + (limit > 0 ? " LIMIT " + limit : "");
+    return selects + " FROM " + name + " a" + joins + limitString + (limit > 0 ? " LIMIT " + limit : "");
   }
 
   public String queryTime(Stat stat, OutputType type, int limit) {

@@ -300,7 +300,7 @@ CREATE TABLE `account`
 (
     account_id     SMALLINT(5) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     puuid          VARCHAR(78)          NULL UNIQUE,
-    summoner_id    VARCHAR(47)          NULL UNIQUE,
+    summoner_id    VARCHAR(75)          NULL UNIQUE,
     account_name   VARCHAR(25)          NOT NULL UNIQUE,
     player         INTEGER(7) UNSIGNED  NULL,
     icon           SMALLINT(5)          NULL,

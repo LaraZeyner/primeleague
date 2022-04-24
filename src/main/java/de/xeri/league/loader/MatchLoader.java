@@ -39,11 +39,14 @@ public class MatchLoader {
     final int matchId = Integer.parseInt(matchData.attr("href").split("/matches/")[1].split("-")[0]);
     if (TurnamentMatch.has(matchId)) {
       final String score = matchData.text().contains(":") ? matchData.text() : "-:-";
+      boolean b = TurnamentMatch.has(matchId);
       final TurnamentMatch turnamentMatch = TurnamentMatch.get(new TurnamentMatch(matchId, score), league, matchday);
 
       handleTeam(match, turnamentMatch, true);
       handleTeam(match, turnamentMatch, false);
-      analyseMatchPage(turnamentMatch);
+      if (!b) {
+        analyseMatchPage(turnamentMatch);
+      }
     }
   }
 

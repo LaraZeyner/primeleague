@@ -40,8 +40,11 @@ public final class SeasonLoader {
 
       final String[] split = doc.select("body").attr("class").split("body-");
       final short id = Short.parseShort(split[split.length - 1].split("-")[0]);
-      loadSeason(id, true);
+      loadSeasonStages(id, true);
+      Data.getInstance().commit();
+
       updateSeason(Season.current().getId());
+      Data.getInstance().commit();
 
       PlayerLoader.load();
 
@@ -67,12 +70,12 @@ public final class SeasonLoader {
     for (Element season : doc.select("li.breadcrumbs-subs").select("ul").select("li")) {
       final short id = Short.parseShort(season.select("a").attr("href").split("/prm/")[1].split("-")[0]);
       if (!Season.has(id)) {
-        loadSeason(id, false);
+        loadSeasonStages(id, false);
       }
     }
   }
 
-  private static void loadSeason(short id, boolean last) {
+  private static void loadSeasonStages(short id, boolean last) {
     final Logger logger = Logger.getLogger("Season-Erstellung");
     try {
       final HTML seasonHTML = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/" + id);
@@ -95,11 +98,8 @@ public final class SeasonLoader {
         loadCalibration(season, dates);
         loadGroups(dates, season, group, playoffs);
         loadPlayoffs(dates, season, playoffs);
-
-        final List<Team> teams = loadTeams(season);
-        TeamLoader.loadMatches(teams, season);
+        loadTeams(season);
       }
-
 
       logger.info("Season erstellt");
     } catch (FileNotFoundException exception) {
@@ -166,7 +166,7 @@ public final class SeasonLoader {
 
   private static void loadGroups(Map<String, Date> dates, Season season, Calendar group, Calendar playoffs) {
     final Stage groupStage = season.addStage(new Stage(StageType.GRUPPENPHASE, group, playoffs));
-    loadMatchdaysOf(groupStage, dates, 161, 7);
+    loadMatchdaysOfGroup(groupStage, dates);
   }
 
   private static void loadPlayoffs(Map<String, Date> dates, Season season, Calendar playoffs) {
@@ -175,17 +175,18 @@ public final class SeasonLoader {
     playoffsEnd.set(Calendar.HOUR_OF_DAY, 0);
     playoffsEnd.set(Calendar.MINUTE, 0);
     final Stage playOffStage = season.addStage(new Stage(StageType.PLAYOFFS, playoffs, playoffsEnd));
-    loadMatchdaysOf(playOffStage, dates, 0, 3);
+
+    loadMatchdaysOfPlayoffs(playOffStage, dates);
   }
 
-  private static void loadMatchdaysOf(Stage stage, Map<String, Date> dates, int backward, int forward) {
+  private static void loadMatchdaysOfGroup(Stage stage, Map<String, Date> dates) {
     final Map<String, Date> dateMap = getDatesOfStage(stage, dates);
     for (Map.Entry<String, Date> entry : dateMap.entrySet()) {
       final String name = entry.getKey();
       final Date date = entry.getValue();
       if (name.startsWith("Spieltag") || name.startsWith("Runde")) {
-        final Date start = new Date(date.getTime() - backward * 3_600_000L);
-        final Date end = new Date(date.getTime() + forward * 3_600_000L);
+        final Date start = new Date(date.getTime() - 161 * 3_600_000L);
+        final Date end = new Date(date.getTime() + 7 * 3_600_000L);
         final Matchday matchday = new Matchday(name, start, end);
         stage.addMatchday(matchday);
       }
@@ -196,6 +197,45 @@ public final class SeasonLoader {
     return dates.entrySet().stream().filter(entry -> entry.getValue().compareTo(stage.getStageStart().getTime()) >= 0 &&
             entry.getValue().compareTo(stage.getStageEnd().getTime()) <= 0)
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b));
+  }
+
+
+  private static void loadMatchdaysOfPlayoffs(Stage stage, Map<String, Date> dates) {
+    final Map<String, Date> dateMap = getDatesOfStage(stage, dates);
+    for (Map.Entry<String, Date> entry : dateMap.entrySet()) {
+      final String name = entry.getKey();
+
+
+      if (name.contains("Start")) {
+        final Date startDate = entry.getValue();
+        final Calendar start = Util.getCalendar(startDate);
+        start.set(Calendar.MINUTE, 0);
+        start.set(Calendar.SECOND, 0);
+        start.set(Calendar.MILLISECOND, 0);
+
+        final Matchday m1 = addMatchday(start, Calendar.SATURDAY, 14, "Runde 1");
+        stage.addMatchday(m1);
+
+        final Matchday m2 = addMatchday(start, Calendar.SATURDAY, 18, "Runde 2");
+        stage.addMatchday(m2);
+
+        final Matchday m3 = addMatchday(start, Calendar.SUNDAY, 14, "Runde 3");
+        stage.addMatchday(m3);
+
+        final Matchday m4 = addMatchday(start, Calendar.SUNDAY, 18, "Runde 4");
+        stage.addMatchday(m4);
+
+        final Matchday m5 = addMatchday(start, Calendar.MONDAY, 20, "Runde 5");
+        stage.addMatchday(m5);
+      }
+    }
+  }
+
+  private static Matchday addMatchday(Calendar start, int dayOfWeek, int hour, String roundName) {
+    final Calendar round = Util.getCalendar(start.getTime());
+    round.set(Calendar.DAY_OF_WEEK, dayOfWeek);
+    round.set(Calendar.HOUR_OF_DAY, hour);
+    return new Matchday(roundName, round.getTime(), new Date(round.getTime().getTime() + 3_600_000 * 3));
   }
 
 }

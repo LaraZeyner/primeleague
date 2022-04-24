@@ -46,12 +46,13 @@ public final class Main {
   }
 
   private static void loadPrimeLeague() {
+    // Load Season
+    SeasonLoader.load();
     // Search for players of Team without account
     AccountLoader.load();
-    // Search for players of Team with accountchange
+    // Search for valueable Teams
     AccountLoader.updateTeams();
 
-    SeasonLoader.load();
     TeamLoader.handleTeam(Const.TEAMID);
     ScheduleLoader.load();
     System.out.println("PRM LOADED");

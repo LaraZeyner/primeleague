@@ -144,6 +144,11 @@ public class TurnamentMatch implements Serializable {
     return getGameAmount() < games.size();
   }
 
+  public boolean isRecently() {
+    final long openingDate = matchday.getStart().getTime() - 7 * Const.MILLIS_PER_DAY;
+    return !state.equals(Matchstate.CLOSED) && (isOpen() && new Date().after(new Date(openingDate)) || !state.equals(Matchstate.CREATED));
+  }
+
   public boolean isNotClosed() {
     final long limit = matchday.getEnd().getTime() + Const.DAYS_UNTIL_MATCH_CLOSED * Const.MILLIS_PER_DAY;
     return !state.equals(Matchstate.CLOSED) || (isOpen() && start.before(new Date(limit)));

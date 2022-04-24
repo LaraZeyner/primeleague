@@ -4,10 +4,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.json.JSON;
+import de.xeri.league.util.logger.Logger;
 
 /**
  * Created by Lara on 29.03.2022 for TRUES
@@ -38,6 +38,7 @@ public class RequestManager {
       try {
         return handleJSONString(urlString.replace(" ", "%20"));
       } catch (FileNotFoundException ex) {
+        // TODO Look for Name change
         logger.warning(logName.equals("Account-Request") ? "Name wurde geändert" : logName.split("-")[0] + " nicht gefunden");
       } catch (IOException ex) {
         if (ex.getMessage().contains("Server returned HTTP response code: 429 for URL")) {

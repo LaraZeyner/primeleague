@@ -69,13 +69,18 @@ public class Provider {
           requests.remove(0);
         } else {
           final long half = requests.get(range / 2 - 1);
-          final long waitingTime = timeframe - (current + 1000 - half);
-          System.out.println(Const.TIMEOUT_MESSAGE + "(" + (waitingTime / 1000) + "s)");
-          final long until = waitingTime + System.currentTimeMillis();
-          while (System.currentTimeMillis() <= until) {
-            System.out.println(BreakManager.loop());
+          long waitingTime = (timeframe * 1000) - (current + 1000 - half);
+          if (waitingTime > 0) {
+            System.out.println(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
+            final long until = waitingTime + System.currentTimeMillis();
+            if (System.currentTimeMillis() <= until) {
+              System.out.println("noch " + BreakManager.loop(waitingTime/1000) + " Spiele - ");
+            }
+            waitingTime = until - System.currentTimeMillis();
+            System.out.print(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
+            TimeUnit.SECONDS.sleep(waitingTime / 1000);
           }
-          TimeUnit.SECONDS.sleep(waitingTime / 1000);
+
           requests = requests.subList(range / 2, requests.size() - 1);
         }
       }

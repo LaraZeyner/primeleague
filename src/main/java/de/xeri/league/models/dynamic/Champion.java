@@ -423,10 +423,6 @@ public class Champion implements Serializable {
     return this.classes;
   }
 
-  private void setClasses(Set<Championclass> classes) {
-    this.classes = classes;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
