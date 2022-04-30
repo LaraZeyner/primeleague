@@ -1,5 +1,6 @@
 package de.xeri.league.models.match;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -19,6 +20,9 @@ import javax.persistence.Transient;
 import de.xeri.league.models.ids.PlayerperformanceInfoId;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "PlayerperformanceInfo")
@@ -27,6 +31,9 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "PlayerperformanceInfo.findAll", query = "FROM PlayerperformanceInfo p")
 @NamedQuery(name = "PlayerperformanceInfo.findBy",
     query = "FROM PlayerperformanceInfo p WHERE playerperformance = :playerperformance AND minute = :minute")
+@Getter
+@Setter
+@NoArgsConstructor
 public class PlayerperformanceInfo extends Position {
   @Transient
   private static final long serialVersionUID = -1481745323015710010L;
@@ -68,8 +75,8 @@ public class PlayerperformanceInfo extends Position {
   @Column(name = "info_gold_current", nullable = false)
   private short currentGold;
 
-  @Column(name = "enemy_controlled", nullable = false)
-  private short enemyControlled;
+  @Column(name = "enemy_controlled", nullable = false, precision = 9, scale = 4)
+  private BigDecimal enemyControlled;
 
   @Embedded
   private PlayerPosition position;
@@ -77,66 +84,35 @@ public class PlayerperformanceInfo extends Position {
   @Column(name = "info_experience", columnDefinition = "SMALLINT UNSIGNED NOT NULL")
   private int experience;
 
+  @Column(name = "info_lead")
+  private short lead;
+
   @Column(name = "info_creep_score", nullable = false)
   private short creepScore;
 
   @Column(name = "info_damage_total", nullable = false)
   private int totalDamage;
 
-  // default constructor
-  public PlayerperformanceInfo() {
-  }
-
-  public PlayerperformanceInfo(short minute, int totalGold, short currentGold, short enemyControlled, Position position, int experience, short creepScore, int totalDamage) {
+  public PlayerperformanceInfo(short minute, int totalGold, short currentGold, double enemyControlled, Position position, int experience,
+                               short lead, short creepScore, int totalDamage) {
     this.minute = minute;
     this.totalGold = totalGold;
     this.currentGold = currentGold;
-    this.enemyControlled = enemyControlled;
+    this.enemyControlled = BigDecimal.valueOf(enemyControlled);
     this.position = new PlayerPosition(position.getX(), position.getY());
     this.experience = experience;
+    this.lead = lead;
     this.creepScore = creepScore;
     this.totalDamage = totalDamage;
   }
 
   //<editor-fold desc="getter and setter">
-  public Playerperformance getPlayerperformance() {
-    return playerperformance;
-  }
-
-  public void setPlayerperformance(Playerperformance playerperformance) {
-    this.playerperformance = playerperformance;
-  }
-
-  public short getMinute() {
-    return minute;
-  }
-
-  public int getTotalGold() {
-    return totalGold;
-  }
-
-  public short getCurrentGold() {
-    return currentGold;
-  }
-
-  public short getEnemyControlled() {
-    return enemyControlled;
-  }
-
   public Position getPosition() {
     return new Position(position.getX(), position.getY());
   }
 
-  public int getExperience() {
-    return experience;
-  }
-
-  public short getCreepScore() {
-    return creepScore;
-  }
-
-  public int getTotalDamage() {
-    return totalDamage;
+  public double getEnemyControlled() {
+    return enemyControlled.doubleValue();
   }
 
   @Override

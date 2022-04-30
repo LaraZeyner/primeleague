@@ -130,6 +130,10 @@ public class Game implements Serializable {
     return gametype.getId() == queueType.getQueueId() || gametype.getId() == -1 && queueType.equals(QueueType.TOURNEY);
   }
 
+  public boolean isCompetitive() {
+    return gametype.getId() == 0 || gametype.getId() == -1 || gametype.getId() == 700;
+  }
+
   public Teamperformance getPerformanceOf(Team team) {
     return teamperformances.stream().filter(teamperformance -> teamperformance.getTeam().equals(team)).findFirst().orElse(null);
   }

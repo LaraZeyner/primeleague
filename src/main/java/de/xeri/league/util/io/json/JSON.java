@@ -3,8 +3,9 @@ package de.xeri.league.util.io.json;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Scanner;
-import java.util.logging.Logger;
 
+import de.xeri.league.util.logger.Logger;
+import lombok.val;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -16,25 +17,37 @@ public class JSON {
   private JSONType type;
 
   public JSON(String url) throws IOException {
-    final Scanner scanner = new Scanner(new URL(url).openStream(), "UTF-8").useDelimiter("\\A");
+    val scanner = new Scanner(new URL(url).openStream(), "UTF-8").useDelimiter("\\A");
     validate(scanner.hasNext() ? scanner.next() : "");
     scanner.close();
   }
 
   private void validate(String json) {
+    val logger = Logger.getLogger("JSON");
     if (json.isEmpty()) {
-      Logger.getLogger("JSON").severe("Data not found!");
-    } else {
+      logger.warning("Data not found!");
+
+    } else if (json.length() > 2) {
       final char lastChar = json.charAt(json.length() - 3);
+
       if (json.startsWith("[") && (json.endsWith("]") || lastChar ==']')) {
         this.json = json;
         this.type = JSONType.JSONArray;
+
       } else if (json.startsWith("{") && (json.endsWith("}") || lastChar =='}')) {
         this.json = json;
         this.type = JSONType.JSONObject;
+
       } else {
-        Logger.getLogger("JSON").severe("Data not a JSON!");
+        logger.severe("Data not a JSON!", json);
       }
+
+    } else if (json.equals("[]")) {
+      this.json = json;
+      this.type = JSONType.JSONArray;
+
+    } else {
+      logger.severe("Data not a JSON!", json);
     }
   }
 

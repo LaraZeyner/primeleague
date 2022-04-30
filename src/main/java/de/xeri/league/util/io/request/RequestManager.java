@@ -39,7 +39,7 @@ public class RequestManager {
         return handleJSONString(urlString.replace(" ", "%20"));
       } catch (FileNotFoundException ex) {
         // TODO Look for Name change
-        logger.warning(logName.equals("Account-Request") ? "Name wurde geändert" : logName.split("-")[0] + " nicht gefunden");
+        logger.config(logName.equals("Account-Request") ? "Name wurde geändert" : logName.split("-")[0] + " nicht gefunden");
       } catch (IOException ex) {
         if (ex.getMessage().contains("Server returned HTTP response code: 429 for URL")) {
           logger.severe("Rate limit exceeded");
@@ -68,7 +68,11 @@ public class RequestManager {
 
   public HTML requestHTML(String urlString) throws IOException {
     if (urlString.startsWith("http")) {
-      return handleHTMLString(urlString);
+      final HTML html = handleHTMLString(urlString);
+      if (html.toString().contains("webmaster has already been notified")) {
+        return handleHTMLString(urlString);
+      }
+      return html;
     } else {
       Logger.getLogger("HTML").severe("No URL requested");
     }

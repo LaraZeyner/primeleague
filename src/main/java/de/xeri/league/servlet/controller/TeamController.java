@@ -35,7 +35,7 @@ public class TeamController {
   public String doLookup(String string) {
     if (string.equals("live")) {
       final Team team = Team.findNext();
-      return doLookup(team.getTId());
+      return doLookup(team.getId());
     }
     return doLookup();
   }

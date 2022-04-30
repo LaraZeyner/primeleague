@@ -6,7 +6,7 @@ import java.util.Objects;
 public class SeasonEloId implements Serializable {
   private static final long serialVersionUID = 8396135638998617448L;
 
-  private short account;
+  private int account;
   private short season;
 
   // default constructor
@@ -27,11 +27,11 @@ public class SeasonEloId implements Serializable {
     this.season = season;
   }
 
-  public short getAccount() {
+  public int getAccount() {
     return account;
   }
 
-  public void setAccount(short account) {
+  public void setAccount(int account) {
     this.account = account;
   }
 

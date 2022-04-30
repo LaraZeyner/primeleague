@@ -134,7 +134,7 @@ CREATE TABLE `gametype`
 
 CREATE TABLE `scheduledgame`
 (
-    game_id   VARCHAR(16) PRIMARY KEY CHECK ( game_id REGEXP ('^EUW') ),
+    game_id   VARCHAR(16) PRIMARY KEY,
     queuetype VARCHAR(7) NOT NULL
 );
 
@@ -228,7 +228,7 @@ CREATE TABLE `teamperformance`
 (
     teamperformance_id INTEGER(7) AUTO_INCREMENT PRIMARY KEY,
     game               VARCHAR(16)          NOT NULL,
-    team               SMALLINT(4)          NULL,                             -- not null = team round (custom, clash as 3+ or others as 5)
+    team               SMALLINT(4)          NULL,                             -- not NULL = team round (custom, clash as 3+ or others as 5)
     first_pick         BOOLEAN              NOT NULL,
     win                BOOLEAN              NOT NULL,
     total_damage       INTEGER(6) UNSIGNED  NOT NULL,
@@ -298,10 +298,10 @@ CREATE TABLE `matchlog`
 
 CREATE TABLE `account`
 (
-    account_id     SMALLINT(5) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    account_id     INTEGER(6) UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     puuid          VARCHAR(78)          NULL UNIQUE,
     summoner_id    VARCHAR(75)          NULL UNIQUE,
-    account_name   VARCHAR(25)          NOT NULL UNIQUE,
+    account_name   VARCHAR(25)          NOT NULL,
     player         INTEGER(7) UNSIGNED  NULL,
     icon           SMALLINT(5)          NULL,
     account_level  SMALLINT(4) UNSIGNED NULL,
@@ -313,7 +313,7 @@ CREATE TABLE `account`
 
 CREATE TABLE `season_elo`
 (
-    account SMALLINT(5) UNSIGNED NOT NULL,
+    account INTEGER(6) UNSIGNED  NOT NULL,
     season  SMALLINT(5) UNSIGNED NOT NULL,
     mmr     SMALLINT(4) UNSIGNED NOT NULL DEFAULT 25,
     wins    SMALLINT(4) UNSIGNED NOT NULL,
@@ -360,6 +360,7 @@ CREATE TABLE `item`
 (
     item_id           SMALLINT(4) UNSIGNED PRIMARY KEY,
     itemtype          VARCHAR(10)   NOT NULL,
+    item_subtype      VARCHAR(15)   NULL,
     item_name         VARCHAR(50)   NOT NULL UNIQUE,
     item_description  VARCHAR(1250) NOT NULL,
     short_description VARCHAR(250)  NULL,
@@ -393,94 +394,149 @@ CREATE TABLE `item_style`
 
 CREATE TABLE `playerperformance`
 (
-    playerperformance_id   INTEGER(8) AUTO_INCREMENT PRIMARY KEY,
-    teamperformance        INTEGER(6)           NOT NULL,
-    account                SMALLINT(5) UNSIGNED NOT NULL,
-    lane                   VARCHAR(7)           NOT NULL,
-    champion_own           SMALLINT(4)          NOT NULL,
-    champion_enemy         SMALLINT(4)          NULL,
-    q_usages               SMALLINT(4) UNSIGNED NOT NULL, -- 1301
-    w_usages               SMALLINT(4) UNSIGNED NOT NULL, -- 545
-    e_usages               SMALLINT(4) UNSIGNED NOT NULL, -- 815
-    r_usages               SMALLINT(3) UNSIGNED NOT NULL, -- 585
-    spells_hit             SMALLINT(4) UNSIGNED NULL,     -- 652
-    spells_dodged          SMALLINT(4) UNSIGNED NULL,     -- 995
-    quick_dodged           SMALLINT(4) UNSIGNED NULL,     -- 796
-    damage_magical         INTEGER(6) UNSIGNED  NOT NULL, -- 134629
-    damage_physical        INTEGER(6) UNSIGNED  NOT NULL, -- 95709
-    damage_total           INTEGER(6) UNSIGNED  NOT NULL, -- 137957
-    damage_taken           INTEGER(6) UNSIGNED  NOT NULL, -- 134720
-    damage_mitigated       INTEGER(6) UNSIGNED  NOT NULL,
-    damage_healed          INTEGER(6) UNSIGNED  NOT NULL,
-    damage_shielded        INTEGER(6) UNSIGNED  NOT NULL,
-    kills                  TINYINT(3) UNSIGNED  NOT NULL,
-    deaths                 TINYINT(3) UNSIGNED  NOT NULL,
-    assists                TINYINT(3) UNSIGNED  NOT NULL,
-    kills_solo             TINYINT(2) UNSIGNED  NULL,
-    allin_levelup          TINYINT(1) UNSIGNED  NULL CHECK ( allin_levelup < 18 ),
-    kills_multi_double     TINYINT(2) UNSIGNED  NOT NULL,
-    kills_multi_triple     TINYINT(2) UNSIGNED  NOT NULL,
-    kills_multi_quadra     TINYINT(2) UNSIGNED  NOT NULL,
-    kills_multi_penta      TINYINT(2) UNSIGNED  NOT NULL,
-    flash_aggressive       TINYINT(1) UNSIGNED  NULL,
-    time_alive             SMALLINT(4) UNSIGNED NOT NULL,
-    time_dead              SMALLINT(4) UNSIGNED NOT NULL, -- Percentage calc
-    kills_teleport         TINYINT(2) UNSIGNED  NULL,
-    immobilizations        TINYINT(3) UNSIGNED  NULL,
-    wards_control          TINYINT(2) UNSIGNED  NOT NULL,
-    wards_control_coverage TINYINT(3) UNSIGNED  NULL,
-    wards_placed           TINYINT(3) UNSIGNED  NOT NULL,
-    wards_cleared          TINYINT(3) UNSIGNED  NOT NULL,
-    wards_guarded          TINYINT(2) UNSIGNED  NULL,
-    visionscore            TINYINT(3) UNSIGNED  NOT NULL,
-    visionscore_advantage  TINYINT(3)           NULL,
-    objectives_stolen      TINYINT(1) UNSIGNED  NOT NULL,
-    firstturret_advantage  SMALLINT(4)          NULL,
-    objectives_damage      INTEGER(6) UNSIGNED  NOT NULL,
-    baron_executes         TINYINT(1) UNSIGNED  NULL,
-    baron_kills            TINYINT(1) UNSIGNED  NOT NULL,
-    buffs_stolen           TINYINT(2) UNSIGNED  NULL,
-    scuttles_initial       TINYINT(1) UNSIGNED  NULL CHECK ( scuttles_initial <= 2),
-    scuttles_total         TINYINT(2) UNSIGNED  NULL,
-    turrets_splitpushed    TINYINT(2) UNSIGNED  NULL CHECK ( turrets_splitpushed <= 11 ),
-    team_invading          TINYINT(2) UNSIGNED  NULL,
-    ganks_early            TINYINT(2) UNSIGNED  NULL,
-    ganks_total            TINYINT(2) UNSIGNED  NOT NULL,
-    ganks_top              TINYINT(2) UNSIGNED  NOT NULL,
-    ganks_mid              TINYINT(2) UNSIGNED  NOT NULL,
-    ganks_bot              TINYINT(2) UNSIGNED  NOT NULL,
-    dives_done             TINYINT(2) UNSIGNED  NULL,
-    dives_successful       TINYINT(2) UNSIGNED  NULL,
-    dives_gotten           TINYINT(2) UNSIGNED  NULL,
-    dives_protected        TINYINT(2) UNSIGNED  NULL,
-    gold_total             SMALLINT(5) UNSIGNED NOT NULL,
-    gold_bounty            SMALLINT(4) UNSIGNED NULL,
-    experience_total       SMALLINT(5) UNSIGNED NOT NULL,
-    creeps_total           SMALLINT(4) UNSIGNED NOT NULL,
-    creeps_early           TINYINT(3) UNSIGNED  NULL,
-    creeps_invade          TINYINT(3) UNSIGNED  NOT NULL,
-    early_lane_lead        SMALLINT(5)          NULL,
-    lane_lead              SMALLINT(5)          NULL,
-    turretplates           TINYINT(2) UNSIGNED  NULL CHECK ( turretplates <= 15 ),
-    flamehorizon_advantage SMALLINT(3)          NULL,
-    items_amount           TINYINT(3) UNSIGNED  NOT NULL,
-    mejais_completed       SMALLINT(4) UNSIGNED NULL,
-    first_blood            BOOLEAN              NOT NULL,
-    outplayed_opponent     TINYINT(2) UNSIGNED  NULL,
-    turret_takedowns       TINYINT(2) UNSIGNED  NOT NULL,
-    dragon_takedowns       TINYINT(1) UNSIGNED  NULL,
-    fastest_legendary      SMALLINT(4) UNSIGNED NULL,
-    gank_setups            TINYINT(1) UNSIGNED  NULL,
-    buffs_initial          TINYINT(1) UNSIGNED  NULL CHECK ( buffs_initial BETWEEN 0 AND 2 ),
-    kills_early            TINYINT(2) UNSIGNED  NULL,
-    objective_junglerkill  TINYINT(1) UNSIGNED  NULL,
-    ambush_kill            TINYINT(2) UNSIGNED  NULL,
-    turrets_early          TINYINT(1) UNSIGNED  NULL,
-    experience_advantage   TINYINT(1) UNSIGNED  NULL,
-    pick_kill              TINYINT(2) UNSIGNED  NULL,
-    assassination          TINYINT(2) UNSIGNED  NULL,
-    guard_ally             TINYINT(2) UNSIGNED  NULL,
-    survived_close         TINYINT(2) UNSIGNED  NULL,
+    playerperformance_id             INTEGER(8) AUTO_INCREMENT PRIMARY KEY,
+    teamperformance                  INTEGER(6)           NOT NULL,
+    account                          INTEGER(6) UNSIGNED  NOT NULL,
+    lane                             VARCHAR(7)           NOT NULL,
+    champion_own                     SMALLINT(4)          NOT NULL,
+    champion_enemy                   SMALLINT(4)          NULL,
+    q_usages                         SMALLINT(4) UNSIGNED NOT NULL, -- 1301
+    w_usages                         SMALLINT(4) UNSIGNED NOT NULL, -- 545
+    e_usages                         SMALLINT(4) UNSIGNED NOT NULL, -- 815
+    r_usages                         SMALLINT(3) UNSIGNED NOT NULL, -- 585
+    spells_hit                       SMALLINT(4) UNSIGNED NULL,     -- 652
+    spells_dodged                    SMALLINT(4) UNSIGNED NULL,     -- 995
+    quick_dodged                     SMALLINT(4) UNSIGNED NULL,     -- 796
+    damage_magical                   INTEGER(6) UNSIGNED  NOT NULL, -- 134629
+    damage_physical                  INTEGER(6) UNSIGNED  NOT NULL, -- 95709
+    damage_total                     INTEGER(6) UNSIGNED  NOT NULL, -- 137957
+    damage_taken                     INTEGER(6) UNSIGNED  NOT NULL, -- 134720
+    damage_mitigated                 INTEGER(6) UNSIGNED  NOT NULL,
+    damage_healed                    INTEGER(6) UNSIGNED  NOT NULL,
+    damage_shielded                  INTEGER(6) UNSIGNED  NOT NULL,
+    kills                            TINYINT(3) UNSIGNED  NOT NULL,
+    deaths                           TINYINT(3) UNSIGNED  NOT NULL,
+    assists                          TINYINT(3) UNSIGNED  NOT NULL,
+    kills_solo                       TINYINT(2) UNSIGNED  NULL,
+    allin_levelup                    TINYINT(1) UNSIGNED  NULL CHECK ( allin_levelup < 18 ),
+    kills_multi_double               TINYINT(2) UNSIGNED  NOT NULL,
+    kills_multi_triple               TINYINT(2) UNSIGNED  NOT NULL,
+    kills_multi_quadra               TINYINT(2) UNSIGNED  NOT NULL,
+    kills_multi_penta                TINYINT(2) UNSIGNED  NOT NULL,
+    flash_aggressive                 TINYINT(1) UNSIGNED  NULL,
+    time_alive                       SMALLINT(4) UNSIGNED NOT NULL,
+    time_dead                        SMALLINT(4) UNSIGNED NOT NULL, -- Percentage calc
+    kills_teleport                   TINYINT(2) UNSIGNED  NULL,
+    immobilizations                  TINYINT(3) UNSIGNED  NULL,
+    wards_control                    TINYINT(2) UNSIGNED  NOT NULL,
+    wards_control_coverage           TINYINT(3) UNSIGNED  NULL,
+    wards_placed                     TINYINT(3) UNSIGNED  NOT NULL,
+    wards_cleared                    TINYINT(3) UNSIGNED  NOT NULL,
+    wards_guarded                    TINYINT(2) UNSIGNED  NULL,
+    visionscore                      TINYINT(3) UNSIGNED  NOT NULL,
+    visionscore_advantage            TINYINT(3)           NULL,
+    objectives_stolen                TINYINT(1) UNSIGNED  NOT NULL,
+    firstturret_advantage            SMALLINT(4)          NULL,
+    objectives_damage                INTEGER(6) UNSIGNED  NOT NULL,
+    baron_executes                   TINYINT(1) UNSIGNED  NULL,
+    baron_kills                      TINYINT(1) UNSIGNED  NOT NULL,
+    buffs_stolen                     TINYINT(2) UNSIGNED  NULL,
+    scuttles_initial                 TINYINT(1) UNSIGNED  NULL CHECK ( scuttles_initial <= 2),
+    scuttles_total                   TINYINT(2) UNSIGNED  NULL,
+    turrets_splitpushed              TINYINT(2) UNSIGNED  NULL CHECK ( turrets_splitpushed <= 11 ),
+    team_invading                    TINYINT(2) UNSIGNED  NULL,
+    ganks_early                      TINYINT(2) UNSIGNED  NULL,
+    ganks_total                      TINYINT(2) UNSIGNED  NOT NULL,
+    ganks_top                        TINYINT(2) UNSIGNED  NOT NULL,
+    ganks_mid                        TINYINT(2) UNSIGNED  NOT NULL,
+    ganks_bot                        TINYINT(2) UNSIGNED  NOT NULL,
+    dives_done                       TINYINT(2) UNSIGNED  NULL,
+    dives_successful                 TINYINT(2) UNSIGNED  NULL,
+    dives_gotten                     TINYINT(2) UNSIGNED  NULL,
+    dives_protected                  TINYINT(2) UNSIGNED  NULL,
+    gold_total                       SMALLINT(5) UNSIGNED NOT NULL,
+    gold_bounty                      SMALLINT(4) UNSIGNED NULL,
+    experience_total                 SMALLINT(5) UNSIGNED NOT NULL,
+    creeps_total                     SMALLINT(4) UNSIGNED NOT NULL,
+    creeps_early                     TINYINT(3) UNSIGNED  NULL,
+    creeps_invade                    TINYINT(3) UNSIGNED  NOT NULL,
+    early_lane_lead                  SMALLINT(5)          NULL,
+    lane_lead                        SMALLINT(5)          NULL,
+    turretplates                     TINYINT(2) UNSIGNED  NULL CHECK ( turretplates <= 15 ),
+    flamehorizon_advantage           SMALLINT(3)          NULL,
+    items_amount                     TINYINT(3) UNSIGNED  NOT NULL,
+    mejais_completed                 SMALLINT(4) UNSIGNED NULL,
+    first_blood                      BOOLEAN              NOT NULL,
+    outplayed_opponent               TINYINT(2) UNSIGNED  NULL,
+    turret_takedowns                 TINYINT(2) UNSIGNED  NOT NULL,
+    dragon_takedowns                 TINYINT(1) UNSIGNED  NULL,
+    fastest_legendary                SMALLINT(4) UNSIGNED NULL,
+    gank_setups                      TINYINT(1) UNSIGNED  NULL,
+    buffs_initial                    TINYINT(1) UNSIGNED  NULL CHECK ( buffs_initial BETWEEN 0 AND 2 ),
+    kills_early                      TINYINT(2) UNSIGNED  NULL,
+    objective_junglerkill            TINYINT(1) UNSIGNED  NULL,
+    ambush_kill                      TINYINT(2) UNSIGNED  NULL,
+    turrets_early                    TINYINT(1) UNSIGNED  NULL,
+    experience_advantage             TINYINT(1) UNSIGNED  NULL,
+    pick_kill                        TINYINT(2) UNSIGNED  NULL,
+    assassination                    TINYINT(2) UNSIGNED  NULL,
+    guard_ally                       TINYINT(2) UNSIGNED  NULL,
+    survived_close                   TINYINT(2) UNSIGNED  NULL,
+    objectives_stolen_contested      DECIMAL(9, 7)        NULL,
+    objectives_killed_jungler_before DECIMAL(9, 7)        NULL,
+    objectives_baron_attempts        DECIMAL(9, 7)        NULL,
+    trinket_swap_first               SMALLINT(4) UNSIGNED NULL,
+    ward_placed_first                SMALLINT(4) UNSIGNED NULL,
+    ward_placed_first_control        SMALLINT(4) UNSIGNED NULL,
+    ward_control_inventory_time      SMALLINT(4) UNSIGNED NULL,
+    turret_participation             DECIMAL(9, 7)        NULL,
+    invading_buffs                   DECIMAL(9, 7)        NULL,
+    dives_own_rate                   DECIMAL(9, 7)        NULL,
+    dives_enemy_rate                 DECIMAL(9, 7)        NULL,
+    dives_died                       TINYINT(2) UNSIGNED  NULL,
+    team_damage_share                DECIMAL(9, 7)        NULL,
+    team_damage_taken                DECIMAL(9, 7)        NULL,
+    team_damage_mitigated            DECIMAL(9, 7)        NULL,
+    bounty_difference                SMALLINT(4)          NULL,
+    duel_win_rate                    DECIMAL(9, 7)        NULL,
+    duel_wins                        TINYINT(2) UNSIGNED  NULL,
+    ahead                            BOOLEAN              NULL,
+    kd_early                         TINYINT(2)           NULL,
+    deaths_early                     TINYINT(2) UNSIGNED  NULL,
+    behind                           BOOLEAN              NULL,
+    ahead_extend                     BOOLEAN              NULL,
+    comeback                         BOOLEAN              NULL,
+    xp_advantage                     SMALLINT(5)          NULL,
+    early_aces_clean                 TINYINT(2) UNSIGNED  NULL,
+    first_full_item                  SMALLINT(4) UNSIGNED NULL,
+    efficiency_cs_early              DECIMAL(9, 7)        NULL,
+    cs_per_minute                    DECIMAL(9, 6)        NULL,
+    xp_per_minute                    DECIMAL(9, 5)        NULL,
+    gold_per_minute                  DECIMAL(9, 5)        NULL,
+    cs_advantage                     SMALLINT(3) UNSIGNED NULL,
+    legendarys_amount                TINYINT(2) UNSIGNED  NULL,
+    grievous_wounds_time             SMALLINT(4) UNSIGNED NULL,
+    penetration_time                 SMALLINT(4) UNSIGNED NULL,
+    amplifier_time                   SMALLINT(4) UNSIGNED NULL,
+    start_item_sold                  SMALLINT(4) UNSIGNED NULL,
+    time_alive_percentage            DECIMAL(9, 7)        NULL,
+    kills_solo_advantage             TINYINT(2)           NULL,
+    first_kill_time                  SMALLINT(4) UNSIGNED NULL,
+    first_kill_death_time            SMALLINT(4)          NULL,
+    gold_lead_early                  SMALLINT(5)          NULL,
+    objectives_advantage_early       TINYINT(2)           NULL,
+    objectives_taken_early           TINYINT(2) UNSIGNED  NULL,
+    turretplate_advantage            TINYINT(2)           NULL,
+    enemy_under_control_advantage    DECIMAL(9, 4)        NULL,
+    enemy_under_control              DECIMAL(9, 4)        NULL,
+    keyspells_used                   SMALLINT(4) UNSIGNED NULL,
+    spell_bilance                    DECIMAL(9, 7)        NULL,
+    hit_bilance                      DECIMAL(9, 7)        NULL,
+    dodge_bilance                    DECIMAL(9, 7)        NULL,
+    reaction_bilance                 SMALLINT(4)          NULL,
+    enemy_reaction                   SMALLINT(4) UNSIGNED NULL,
+    lead_diff_after_death_early      SMALLINT(5)          NULL,
+    kill_participation               DECIMAL(9, 7)        NULL,
     FOREIGN KEY (teamperformance) REFERENCES `teamperformance` (teamperformance_id)
         ON DELETE RESTRICT ON UPDATE CASCADE,
     FOREIGN KEY (account) REFERENCES `account` (account_id)
@@ -647,19 +703,29 @@ CREATE TABLE `playerperformance_kill`
 
 CREATE TABLE `playerperformance_info`
 (
-    playerperformance INTEGER(7)           NOT NULL,
-    info_minute       TINYINT(3) UNSIGNED  NOT NULL,
-    info_gold_total   SMALLINT(5) UNSIGNED NOT NULL,
-    info_gold_current SMALLINT(5) UNSIGNED NOT NULL,
-    enemy_controlled  SMALLINT(4) UNSIGNED NOT NULL,
-    position_x        SMALLINT(5) UNSIGNED NOT NULL,
-    position_y        SMALLINT(5) UNSIGNED NOT NULL,
-    info_experience   SMALLINT(5) UNSIGNED NOT NULL,
-    info_creep_score  SMALLINT(4) UNSIGNED NOT NULL,
-    info_damage_total INTEGER(6) UNSIGNED  NOT NULL,
+    playerperformance INTEGER(7)             NOT NULL,
+    info_minute       TINYINT(3) UNSIGNED    NOT NULL,
+    info_gold_total   SMALLINT(5) UNSIGNED   NOT NULL,
+    info_gold_current SMALLINT(5) UNSIGNED   NOT NULL,
+    enemy_controlled  DECIMAL(9, 4) UNSIGNED NOT NULL,
+    position_x        SMALLINT(5) UNSIGNED   NOT NULL,
+    position_y        SMALLINT(5) UNSIGNED   NOT NULL,
+    info_experience   SMALLINT(5) UNSIGNED   NOT NULL,
+    info_lead         SMALLINT(5)            NOT NULL,
+    info_creep_score  SMALLINT(4) UNSIGNED   NOT NULL,
+    info_damage_total INTEGER(6) UNSIGNED    NOT NULL,
     PRIMARY KEY (playerperformance, info_minute),
     FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
         ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE `rating`
+(
+    rating_category VARCHAR(25) NOT NULL,
+    rating_type     VARCHAR(8)  NOT NULL,
+    rating_subtype  VARCHAR(9)  NOT NULL,
+    rating_value    SMALLINT(3) NOT NULL DEFAULT 300 CHECK ( rating_value <= 750 ),
+    PRIMARY KEY (rating_category, rating_type, rating_subtype)
 );
 
 INSERT INTO input (input_category)

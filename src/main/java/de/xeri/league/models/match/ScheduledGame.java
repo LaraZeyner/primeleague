@@ -13,11 +13,10 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
-import org.hibernate.annotations.Check;
+import de.xeri.league.util.logger.Logger;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "ScheduledGame")
@@ -39,8 +38,17 @@ public class ScheduledGame implements Serializable {
       scheduledGame.setQueueType(neu.getQueueType());
       return scheduledGame;
     }
-    Data.getInstance().save(neu);
-    return neu;
+    if (!Game.has(neu.getId())) {
+      if (neu.getId().startsWith("EUW")) {
+        Data.getInstance().save(neu);
+        return neu;
+      } else {
+        Logger.getLogger("Scheduled-Game-Creation").attention("Spiel auf anderem Server", neu.getId());
+        return null;
+      }
+
+    }
+    return null;
   }
 
   public static boolean has(String id) {
@@ -52,7 +60,6 @@ public class ScheduledGame implements Serializable {
   }
 
   @Id
-  @Check(constraints = "game_id REGEXP ('^EUW')")
   @Column(name = "game_id", nullable = false, length = 16)
   private String id;
 

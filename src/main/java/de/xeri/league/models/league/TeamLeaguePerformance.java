@@ -86,7 +86,7 @@ public class TeamLeaguePerformance {
   }
 
   public long getScore() {
-    final short idScore = team.getTId();                                      //                -10.000   10.000
+    final int idScore = team.getId();                                      //                -10.000   10.000
     final int csScore = getCreepDiff() * 10_000;                             //             10.000.000    1.000
     final long goldScore = getGoldDiff() * 10_000_000L;                      //      1.000.000.000.000  100.000
     final long killScore = getKillDiff() * 1_000_000_000_000L;               //    100.000.000.000.000      100

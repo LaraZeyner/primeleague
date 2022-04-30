@@ -48,6 +48,7 @@ import de.xeri.league.models.match.PlayerperformanceSummonerspell;
 import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.models.match.TeamperformanceBounty;
+import de.xeri.league.models.match.neu.Rating;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
 import de.xeri.league.util.logger.Logger;
@@ -74,6 +75,7 @@ public final class HibernateUtil {
           Champion.class,
           ChampionRelationship.class,
           ChampionSelection.class,
+          Rating.class,
           Game.class,
           GamePause.class,
           Gametype.class,

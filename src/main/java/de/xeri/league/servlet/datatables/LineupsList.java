@@ -19,18 +19,18 @@ public class LineupsList {
 
   public String getSelected(String type, String lane) {
     if (type.equals("live")) {
-      return getLaners(Team.findNext().getTeamTid(), lane).isEmpty() ? "null" :
-          getLaners(Team.findNext().getTeamTid(), lane).get(0).getDisplayName(Lane.findLane(lane));
+      return getLaners(Team.findNext().getTurneyId(), lane).isEmpty() ? "null" :
+          getLaners(Team.findNext().getTurneyId(), lane).get(0).getDisplayName(Lane.findLane(lane));
     }
-    return getLaners(Team.find(Const.TEAMID).getTeamTid(), lane).isEmpty() ? "null" :
-        getLaners(Team.find(Const.TEAMID).getTeamTid(), lane).get(0).getDisplayName(Lane.findLane(lane));
+    return getLaners(Team.find(Const.TEAMID).getTurneyId(), lane).isEmpty() ? "null" :
+        getLaners(Team.find(Const.TEAMID).getTurneyId(), lane).get(0).getDisplayName(Lane.findLane(lane));
   }
 
   public List<Account> getLaners(String type, String lane) {
     if (type.equals("live")) {
-      return getLaners(Team.findNext().getTeamTid(), lane);
+      return getLaners(Team.findNext().getTurneyId(), lane);
     }
-    return getLaners(Team.find(Const.TEAMID).getTeamTid(), lane);
+    return getLaners(Team.find(Const.TEAMID).getTurneyId(), lane);
   }
 
   public String getSelected(int teamId, String lane) {

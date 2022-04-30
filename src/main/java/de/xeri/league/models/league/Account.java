@@ -33,22 +33,29 @@ import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Account")
 @Table(name = "account", indexes = {
     @Index(name = "account_id", columnList = "account_id", unique = true),
     @Index(name = "account_puuid", columnList = "puuid", unique = true),
-    @Index(name = "account_name", columnList = "account_name", unique = true),
+    @Index(name = "account_name", columnList = "account_name"),
     @Index(name = "player", columnList = "player")
 })
 @NamedQuery(name = "Account.findAll", query = "FROM Account a")
 @NamedQuery(name = "Account.findById", query = "FROM Account a WHERE id = :pk")
 @NamedQuery(name = "Account.findByPuuid", query = "FROM Account a WHERE puuid = :puuid")
 @NamedQuery(name = "Account.findByName", query = "FROM Account a WHERE name = :name")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Account implements Serializable {
 
   @Transient
@@ -66,6 +73,7 @@ public class Account implements Serializable {
       if (neu.getSummonerId() != null) account.setSummonerId(neu.getSummonerId());
       if (neu.getIcon() != 0) account.setIcon(neu.getIcon());
       if (neu.getLevel() != 0) account.setLevel(neu.getLevel());
+      if (account.getLastUpdate() == null) account.setLastUpdate(new Date(System.currentTimeMillis() - 15_552_000_000L));
       return account;
     }
     Data.getInstance().save(neu);
@@ -132,10 +140,6 @@ public class Account implements Serializable {
 
   @OneToMany(mappedBy = "account")
   private final Set<SeasonElo> seasonElos = new LinkedHashSet<>();
-
-  // default constructor
-  public Account() {
-  }
 
   public Account(String name) {
     this.name = name;
@@ -256,87 +260,12 @@ public class Account implements Serializable {
     return "images/ranked/position/Position_" + getMostRecentElo().getElo().getTier() + "-" + lane.getDisplayName() + ".png";
   }
 
+  public boolean isPlaying() {
+    return getLastCompetitiveGame() != null &&
+        !getLastCompetitiveGame().after(new Date(System.currentTimeMillis() - Const.DAYS_UNTIL_INACTIVE * 86_400_000L));
+  }
+
   //<editor-fold desc="getter and setter">
-  public Set<SeasonElo> getSeasonElos() {
-    return seasonElos;
-  }
-
-  public Set<Playerperformance> getPlayerperformances() {
-    return playerperformances;
-  }
-
-  public boolean isActive() {
-    return active;
-  }
-
-  public void setActive(boolean active) {
-    this.active = active;
-  }
-
-  public Player getPlayer() {
-    return player;
-  }
-
-  void setPlayer(Player player) {
-    this.player = player;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String accountName) {
-    this.name = accountName;
-  }
-
-  public String getSummonerId() {
-    return summonerId;
-  }
-
-  public void setSummonerId(String accountId) {
-    this.summonerId = accountId;
-  }
-
-  public String getPuuid() {
-    return puuid;
-  }
-
-  public void setPuuid(String id) {
-    this.puuid = id;
-  }
-
-  public short getIcon() {
-    return icon;
-  }
-
-  public void setIcon(short icon) {
-    this.icon = icon;
-  }
-
-  public short getLevel() {
-    return level;
-  }
-
-  public void setLevel(short level) {
-    this.level = level;
-  }
-
-  public Date getLastUpdate() {
-    return lastUpdate;
-  }
-
-  public void setLastUpdate(Date lastUpdate) {
-    this.lastUpdate = lastUpdate;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

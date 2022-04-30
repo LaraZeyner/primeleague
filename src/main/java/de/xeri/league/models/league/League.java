@@ -80,8 +80,9 @@ public class League implements Serializable {
 
   @ManyToMany
   @JoinTable(name = "league_team",
-      joinColumns = @JoinColumn(name = "league"),
-      inverseJoinColumns = @JoinColumn(name = "team"))
+      joinColumns = @JoinColumn(name = "league", referencedColumnName = "league_id"),
+      inverseJoinColumns = @JoinColumn(name = "team", referencedColumnName = "team_id"),
+      indexes = @Index(name = "idx_teamleagues", columnList = "league, team", unique = true))
   private final Set<Team> teams = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "league")
@@ -97,13 +98,19 @@ public class League implements Serializable {
   }
 
   public void addTeam(Team team) {
-    teams.add(team);
-    team.getLeagues().add(this);
+    if (teams.stream().noneMatch(team1 -> team1.getTurneyId() == team.getTurneyId())) {
+      teams.add(team);
+      team.getLeagues().add(this);
+      Data.getInstance().save(team);
+      Data.getInstance().save(this);
+    }
   }
 
   void addMatch(TurnamentMatch match) {
-    matches.add(match);
-    match.setLeague(this);
+    if (!matches.contains(match)) {
+      matches.add(match);
+      match.setLeague(this);
+    }
   }
 
   public Team atPlace(int place) {

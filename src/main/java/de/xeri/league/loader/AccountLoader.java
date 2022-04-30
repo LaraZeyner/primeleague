@@ -21,7 +21,7 @@ public final class AccountLoader {
   public static void load() {
     try {
       for (Player player : Player.get().stream().filter(player -> player.getAccounts().isEmpty()).collect(Collectors.toList())) {
-        final int teamTid = player.getTeam().getTeamTid();
+        final int teamTid = player.getTeam().getTurneyId();
         final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + teamTid);
         TeamLoader.handleMembers(Jsoup.parse(html.toString()), Team.findTid(teamTid));
       }
@@ -39,7 +39,7 @@ public final class AccountLoader {
   }
 
   private static void updateAccounts(Team team) {
-    final int id = team.getTeamTid();
+    final int id = team.getTurneyId();
     TeamLoader.handleTeam(id);
   }
 }

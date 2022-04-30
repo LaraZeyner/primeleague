@@ -18,10 +18,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.ItemSubType;
 import de.xeri.league.models.enums.ItemType;
 import de.xeri.league.models.match.PlayerperformanceItem;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Item")
@@ -29,6 +33,9 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Item.findAll", query = "FROM Item i")
 @NamedQuery(name = "Item.findById", query = "FROM Item i WHERE id = :pk")
 @NamedQuery(name = "Item.findBy", query = "FROM Item i WHERE itemName = :name")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Item implements Serializable {
 
   @Transient
@@ -68,7 +75,11 @@ public class Item implements Serializable {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "itemtype", nullable = false, length = 10)
-  private ItemType itemtype;
+  private ItemType type;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "item_subtype", nullable = false, length = 15)
+  private ItemSubType subtype;
 
   @Column(name = "item_name", nullable = false, length = 50)
   private String itemName;
@@ -94,13 +105,9 @@ public class Item implements Serializable {
   @OneToMany(mappedBy = "item")
   private final Set<Item_Stat> itemStats = new LinkedHashSet<>();
 
-  // default constructor
-  public Item() {
-  }
-
-  public Item(short id, ItemType itemtype, String itemName, String itemDescription, String shortDescription, short cost) {
+  public Item(short id, ItemType type, String itemName, String itemDescription, String shortDescription, short cost) {
     this.id = id;
-    this.itemtype = itemtype;
+    this.type = type;
     this.itemName = itemName;
     this.itemDescription = itemDescription;
     this.shortDescription = shortDescription;
@@ -125,80 +132,24 @@ public class Item implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public Set<Item_Stat> getItemStats() {
-    return itemStats;
-  }
-
-  public Set<PlayerperformanceItem> getPlayerperformances() {
-    return playerperformances;
-  }
-
-  public Set<Itemstyle> getItemstyles() {
-    return itemstyles;
-  }
-
-  public short getCost() {
-    return cost;
-  }
-
-  public void setCost(short cost) {
-    this.cost = cost;
-  }
-
-  public String getItemDescription() {
-    return itemDescription;
-  }
-
-  public void setItemDescription(String itemDescription) {
-    this.itemDescription = itemDescription;
-  }
-
-  public String getShortDescription() {
-    return shortDescription;
-  }
-
-  public void setShortDescription(String shortDescription) {
-    this.shortDescription = shortDescription;
-  }
-
-  public String getItemName() {
-    return itemName;
-  }
-
-  public void setItemName(String itemName) {
-    this.itemName = itemName;
-  }
-
-  public ItemType getItemtype() {
-    return itemtype;
-  }
-
-  public void setItemtype(ItemType itemtype) {
-    this.itemtype = itemtype;
-  }
-
-  public short getId() {
-    return id;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Item)) return false;
     final Item item = (Item) o;
-    return getId() == item.getId() && getCost() == item.getCost() && getItemtype() == item.getItemtype() && getItemName().equals(item.getItemName()) && getItemDescription().equals(item.getItemDescription()) && Objects.equals(getShortDescription(), item.getShortDescription());
+    return getId() == item.getId() && getCost() == item.getCost() && getType() == item.getType() && getItemName().equals(item.getItemName()) && getItemDescription().equals(item.getItemDescription()) && Objects.equals(getShortDescription(), item.getShortDescription());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getItemtype(), getItemName(), getItemDescription(), getShortDescription(), getCost());
+    return Objects.hash(getId(), getType(), getItemName(), getItemDescription(), getShortDescription(), getCost());
   }
 
   @Override
   public String toString() {
     return "Item{" +
         "id=" + id +
-        ", itemtype=" + itemtype +
+        ", itemtype=" + type +
         ", itemName='" + itemName + '\'' +
         ", itemDescription='" + itemDescription + '\'' +
         ", shortDescription='" + shortDescription + '\'' +

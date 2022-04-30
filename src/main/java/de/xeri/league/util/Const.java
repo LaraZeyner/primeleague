@@ -7,6 +7,7 @@ public final class Const {
   public static final int DAYS_UNTIL_INACTIVE = 180;
   public static final int DAYS_UNTIL_MATCH_CLOSED = 7;
   public static final int LOG_LEVEL = 500;
+  public static final int AHEAD_XPGOLD = 1500;
   public static final int TEAMID = 142116;
 
   public static final long MILLIS_PER_DAY = 86_400_000L;

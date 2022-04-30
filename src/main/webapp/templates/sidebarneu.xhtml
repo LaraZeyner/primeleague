@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<body>
+<ui:composition>
+    <ui:fragment>
+        <h:form>
+            <div class="card">
+                <h3 class="first">Aktuelle Draftsituation</h3>
+                <p:dataTable var="pickBan" value="#{picksAndBans.pickBans}" size="small">
+                    <p:column headerText="Picks">
+                        <h:outputText value="#{pickBan.pick}"/>
+                    </p:column>
+
+                    <p:column headerText="Bans">
+                        <h:outputText value="#{pickBan.ban}"/>
+                    </p:column>
+
+                    <p:column headerText="Picks">
+                        <h:outputText value="#{pickBan.pickOtherTeam}"/>
+                    </p:column>
+                </p:dataTable>
+            </div>
+
+            <p:divider/>
+
+            <div class="card">
+                <h3 class="first">Komposition TRUEs</h3>
+                <div class="p-grid">
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                    <div class="p-col-4">6</div>
+                </div>
+
+
+                <p:panelGrid columns="3" layout="grid" styleClass="showcase-text-align-center">
+                    <h:outputText styleClass="product-badge status-#{product.inventoryStatus.name().toLowerCase()}"
+                                  value="#{product.inventoryStatus.text}"/>
+                    <p:tag styleClass="p-mr-2" severity="success" icon="pi pi-check" value="Composition Strength"
+                           rounded="true"/>
+                    <p:tag styleClass="p-mr-2" severity="danger" icon="pi pi-exclamation-triangle"
+                           value="Composition Weakness" rounded="true"/>
+                    <p:tag styleClass="p-mr-2" icon="pi pi-exclamation-triangle" severity="warning"
+                           value="Expected Pick/Composition" rounded="true"/>
+                    <p:tag styleClass="p-mr-2" icon="pi pi-info-circle" severity="info" value="Composition Info"
+                           rounded="true"/>
+                </p:panelGrid>
+            </div>
+        </h:form>
+
+
+    </ui:fragment>
+
+</ui:composition>
+</body>
+</html>

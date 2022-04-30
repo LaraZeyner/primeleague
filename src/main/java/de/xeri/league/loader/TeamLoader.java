@@ -3,7 +3,11 @@ package de.xeri.league.loader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import de.xeri.league.models.enums.StageType;
@@ -16,6 +20,7 @@ import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
+import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.riot.RiotAccountRequester;
 import de.xeri.league.util.logger.Logger;
@@ -30,29 +35,49 @@ import org.jsoup.select.Elements;
 public class TeamLoader {
   private static int amount = 0;
   public static final List<Integer> notFoundTeams = new ArrayList<>();
+  private static final Map<Team, Long> updated = new HashMap<>();
 
   public static Team handleTeam(int turnamentId) {
-    return handleTeam(turnamentId, Season.current());
+    return handleTeam(turnamentId, Season.current(), true, null);
   }
 
-  public static Team handleTeam(int turnamentId, Season season) {
+  public static Team handleTeam(int turnamentId, Season season, boolean updateMatches, String name) {
     final Logger logger = Logger.getLogger("Team-Erstellung");
     try {
       final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + turnamentId);
-      final Document doc = Jsoup.parse(html.toString());
-      final Team team = handleTeamCore(doc, turnamentId);
-      handleMembers(doc, team);
-      handleSeason(season, doc, team);
-      amount++;
-      logger.info(amount + ". Team " + team.getTeamName() + " hinzugefügt");
-      return team;
+      if (!html.toString().contains("webmaster has already been notified")) {
+        final Document doc = Jsoup.parse(html.toString());
+        final Team team = handleTeamCore(doc, turnamentId);
+        handleMembers(doc, team);
+        handleSeason(season, doc, team);
+        if (updateMatches) {
+          loadMatchesOfTeam(doc, season);
+          logger.info("Team " + team.getId() + ": " + team.getTeamName() + " aktualisiert");
+        } else {
+          amount++;
+          if (amount % 10 == 0) {
+            logger.info(amount + " Teams hinzugefügt");
+          }
+        }
+        return team;
+      }
+      handleTeampageEmpty(turnamentId, name, logger);
     } catch (FileNotFoundException exception) {
-      notFoundTeams.add(turnamentId);
-      logger.warning("Team konnte nicht gefunden werden");
+      handleTeampageEmpty(turnamentId, name, logger);
     } catch (IOException exception) {
       logger.severe(exception.getMessage());
     }
     return null;
+  }
+
+  private static void handleTeampageEmpty(int turnamentId, String name, Logger logger) {
+    if (name != null) {
+      final Team team = Team.get(new Team(turnamentId, name, name.length() >= 3 ? name.substring(0, 3) : name));
+      team.setTeamResult("GELÖSCHT");
+    } else {
+      notFoundTeams.add(turnamentId);
+      logger.warning("Team konnte nicht gefunden werden");
+    }
   }
 
   static Team handleTeamCore(Document doc, int turnamentId) {
@@ -61,15 +86,20 @@ public class TeamLoader {
     if (title.startsWith("[DELETED]") && members.size() < 5) {
       return null;
     }
-    final String teamName = title.split(" \\(")[0];
-    final String teamAbbr = title.split(" \\(")[1].split("\\)")[0];
-    final Team team = Team.get(new Team(turnamentId, teamName, teamAbbr));
-    final String resultString = doc.select("ul.content-icon-info").select("li").get(1).text();
-    if (resultString.contains("Ergebnis:")) {
-      final String result = resultString.split("Ergebnis:")[1];
-      team.setTeamResult(result.contains("Rang: ") ? result.split("Rang: ")[1] : result);
+    try {
+      final String teamName = title.split(" \\(")[0];
+      final String teamAbbr = title.split(" \\(")[1].split("\\)")[0];
+      final Team team = Team.get(new Team(turnamentId, teamName, teamAbbr));
+      final String resultString = doc.select("ul.content-icon-info").select("li").get(1).text();
+      if (resultString.contains("Ergebnis:")) {
+        final String result = resultString.split("Ergebnis:")[1];
+        team.setTeamResult(result.contains("Rang: ") ? result.split("Rang: ")[1] : result);
+      }
+      return team;
+    } catch (ArrayIndexOutOfBoundsException ex) {
+      ex.printStackTrace();
     }
-    return team;
+    return null;
   }
 
   static void handleMembers(Document doc, Team team) {
@@ -91,9 +121,9 @@ public class TeamLoader {
         final Set<Account> accounts = player.getAccounts();
         if (accounts.stream().noneMatch(account -> account.getName().equals(summonerName))) {
           // Account hat sich geändert
-          final Account account = RiotAccountRequester.getAccountFromName(summonerName);
+          final Account account = RiotAccountRequester.fromName(summonerName);
           if (account != null) {
-            if (accounts.stream().noneMatch(account1 -> account1.getPuuid().equals(account.getPuuid()))) {
+            if (accounts.stream().noneMatch(account1 -> account1.getPuuid() != null && account1.getPuuid().equals(account.getPuuid()))) {
               accounts.forEach(account1 -> account1.setActive(false));
               player.addAccount(account);
             }
@@ -102,15 +132,17 @@ public class TeamLoader {
           // erweiterte Initialisierung
           for (Account account1 : player.getAccounts()) {
             if (account1.getPuuid() == null) {
-              final Account account = RiotAccountRequester.getAccountFromName(summonerName);
-              if (accounts.stream()
-                  .filter(account2 -> account2.getPuuid() != null )
+              final Account account = RiotAccountRequester.fromName(summonerName);
+              if (account != null && accounts.stream()
+                  .filter(account2 -> account2.getPuuid() != null)
                   .noneMatch(account2 -> account2.getPuuid().equals(account.getPuuid()))) {
-                accounts.forEach(account2 -> account1.setActive(false));
+                accounts.forEach(account2 -> account1.setActive(true));
               }
+
               // Gleich geblieben
-            } else if (account1.isValueable()) {
-              RiotAccountRequester.getAccountFromName(summonerName);
+            } else if (account1.isValueable() || account1.getLastUpdate() != null &&
+                Util.getCalendar(account1.getLastUpdate()).get(Calendar.MONTH) != Util.getCalendar(new Date()).get(Calendar.MONTH)) {
+              RiotAccountRequester.fromName(summonerName);
             }
           }
         }
@@ -123,6 +155,27 @@ public class TeamLoader {
         }
       }
     }
+  }
+
+  public static Team handleSeason(Team team) {
+    final Logger logger = Logger.getLogger("Team-Erstellung");
+    final long last = updated.containsKey(team) ? updated.get(team) : 0;
+    if (System.currentTimeMillis() - last > 300_000L) {
+      try {
+        final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
+        final Document doc = Jsoup.parse(html.toString());
+        handleSeason(Season.current(), doc, team);
+        updated.put(team, System.currentTimeMillis());
+        logger.info("Team " + team.getId() + ": " + team.getTeamName() + " aktualisiert");
+        return team;
+      } catch (FileNotFoundException exception) {
+        logger.attention("Team wurde nicht gefunden.");
+      } catch (IOException exception) {
+        logger.severe(exception.getMessage());
+      }
+      return null;
+    }
+    return team;
   }
 
 
@@ -142,9 +195,9 @@ public class TeamLoader {
 
   static void loadMatches(List<Team> teams, Season season) {
     for (Team team : teams) {
-      if (team != null && team.getTeamTid() != 0) {
+      if (team != null && team.getTurneyId() != 0) {
         try {
-          final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTeamTid());
+          final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
           final Document doc = Jsoup.parse(html.toString());
           loadMatchesOfTeam(doc, season);
         } catch (IOException e) {
@@ -168,14 +221,17 @@ public class TeamLoader {
 
       final Elements matchElements = stageElement.select("ul.league-stage-matches").select("li");
       for (int i = 0; i < matchElements.size(); i++) {
-        final Elements selectTitle = matchElements.select("div.txt-info");
+        final Element matchElement = matchElements.get(i);
+        final Elements selectTitle = matchElement.select("div.txt-info");
         final String titleText = selectTitle.text();
-        final int id = titleText.contains("(Spieltag ") ?
+        int id = titleText.contains("(Spieltag ") ?
             Integer.parseInt(titleText.split("Spieltag ")[1].substring(0, 1)) : i + 1;
-        final Element matchElement = matchElements.get(i).selectFirst("tr");
+        if (titleText.contains("Tiebreak")) {
+          id = 8;
+        }
         if (Matchday.has(matchdayPrefix + id, stage)) {
           final Matchday matchday = Matchday.find(matchdayPrefix + id, stage);
-          if (matchElement != null) {
+          if (matchElement.selectFirst("tr") != null) {
             MatchLoader.loadMatch(league, matchday, matchElement);
           } else {
             logger.attention("Matchlist empty for some reason");

@@ -11,7 +11,7 @@ import static de.xeri.league.util.logger.jcolor.Attribute.DIM;
 public class ColorFormat {
   private final AnsiFormat format;
 
-  public static final ColorFormat DEFAULT = new ColorFormat(Color.VIOLET.darker(0.5).text(), DIM());
+  public static final ColorFormat DEFAULT = new ColorFormat(Color.VIOLET.lighter(0.5).text(), DIM());
   public static final ColorFormat OFF = new ColorFormat(Color.RED.text(), BOLD());
   public static final ColorFormat SEVERE = new ColorFormat(Color.RED.text(), BOLD());
   public static final ColorFormat WARNING = new ColorFormat(Color.ORANGE.text(), BOLD());

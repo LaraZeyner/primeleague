@@ -114,9 +114,11 @@ public class TurnamentMatch implements Serializable {
    * @param id matchID
    * @param score matchEndscore
    */
-  public TurnamentMatch(int id, String score) {
+  public TurnamentMatch(int id, String score, Date start) {
     this.id = id;
     this.score = score;
+    this.start = start;
+    this.state = Matchstate.CREATED;
   }
 
   public void addGame(Game game) {
@@ -141,7 +143,7 @@ public class TurnamentMatch implements Serializable {
   }
 
   public boolean isOpen() {
-    return getGameAmount() < games.size();
+    return getGameAmount() < games.size() || matchday.getStage().getStageType().equals(StageType.PLAYOFFS) && !score.contains("2") ;
   }
 
   public boolean isRecently() {
@@ -171,7 +173,7 @@ public class TurnamentMatch implements Serializable {
   }
 
   public boolean hasTeam(Team team) {
-    return homeTeam.equals(team) || guestTeam.equals(team);
+    return homeTeam != null && homeTeam.equals(team) || guestTeam != null && guestTeam.equals(team);
   }
 
   //<editor-fold desc="getter and setter">

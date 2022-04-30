@@ -1,23 +1,15 @@
 package de.xeri.league.util.io.riot;
 
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import de.xeri.league.models.enums.Elo;
-import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.enums.EloQueueType;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.SeasonElo;
-import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.io.json.JSON;
-import de.xeri.league.util.logger.Logger;
-import org.json.JSONArray;
+import lombok.val;
 import org.json.JSONObject;
 
 /**
@@ -35,75 +27,91 @@ public final class RiotAccountRequester {
    * "summonerLevel": 674
    * }
    */
-
-  public static Account getAccountFromPuuid(String puuid) {
-    final JSON json = Data.getInstance().getRequester()
+// TODO Update in larger Time Distances
+  public static Account fromPuuid(String puuid) {
+    val json = Data.getInstance().getRequester()
         .requestRiotJSON("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/" + puuid + Const.API_KEY);
     if (json == null) return null;
-    return getAccountFromRiot(puuid, json.getJSONObject());
+    return fromRiot(puuid, json.getJSONObject());
   }
 
-  public static Account getAccountFromName(String name) {
-    final JSON json = Data.getInstance().getRequester()
+  public static Account fromName(String name) {
+    val json = Data.getInstance().getRequester()
         .requestRiotJSON("https://euw1.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + name + Const.API_KEY);
     if (json == null) return null;
-    final JSONObject summoner = json.getJSONObject();
+    val summoner = json.getJSONObject();
     final String puuid = summoner.getString("puuid");
-    return getAccountFromRiot(puuid, summoner);
+    return fromRiot(puuid, summoner);
   }
 
-  private static Account getAccountFromRiot(String puuid, JSONObject summoner) {
+  private static Account fromRiot(String puuid, JSONObject summoner) {
     final String id = summoner.getString("id");
     final String summonerName = summoner.getString("name");
     final short iconId = (short) summoner.getInt("profileIconId");
     final short level = (short) summoner.getInt("summonerLevel");
-    if (id.length() > 75) {
-      Logger.getLogger("Account").severe("Summoner ID too long");
-    }
     return Account.get(new Account(puuid, id, summonerName, iconId, level));
   }
 
   public static void loadElo(Account account) {
-    for (Season season : Season.get()) {
-      if (season.getSeasonStart().getTime().getTime() <= new Date().getTime() && season.getSeasonEnd().getTime().getTime() >= new Date().getTime()) {
-        final JSON json = Data.getInstance().getRequester().requestRiotJSON(
-            "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/" + account.getSummonerId() + Const.API_KEY);
-        if (json != null) {
-          final JSONArray rankedLeagues = json.getJSONArray();
-          final Map<String, SeasonElo> elos = new HashMap<>();
-          for (int i = 0; i < rankedLeagues.length(); i++) {
-            final JSONObject league = rankedLeagues.getJSONObject(i);
-            final String wins = league.getString("wins");
-            final String losses = league.getString("losses");
-            final String tier = league.getString("tier");
-            final String rank = league.getString("rank");
-            final short lp = (short) league.getInt("leaguePoints");
-            final short mmr = determineMMR(tier, rank, lp);
-            elos.put(league.getString("queueType"), SeasonElo.get(new SeasonElo(mmr, Short.parseShort(wins),
-                Short.parseShort(losses)), season, account));
-          }
-          SeasonElo seasonElo = null;
-          if (elos.get(Const.QUEUE_SOLO).getGames() >= 40) {
-            seasonElo = elos.get(Const.QUEUE_SOLO);
-          } else if (elos.get(Const.QUEUE_FLEX).getGames() >= 40) {
-            seasonElo = elos.get(Const.QUEUE_FLEX);
-          } else if (elos.get(Const.QUEUE_SOLO).getGames() + elos.get(Const.QUEUE_FLEX).getGames() >= 50) {
-            seasonElo = add(elos.get(Const.QUEUE_FLEX), elos.get(Const.QUEUE_SOLO), account, season);
-          }
+    if (account != null && account.getSummonerId() != null) {
+      val season = Season.current();
+      val json = Data.getInstance().getRequester().requestRiotJSON(
+          "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/" + account.getSummonerId() + Const.API_KEY);
+      if (json != null) {
+        val rankedLeagues = json.getJSONArray();
+        val elos = new HashMap<String, SeasonElo>();
 
-          if (seasonElo != null) {
-            account.addSeasonElo(seasonElo);
-            season.addSeaonElo(seasonElo);
+        for (int i = 0; i < rankedLeagues.length(); i++) {
+          val league = rankedLeagues.getJSONObject(i);
+          val queueType = league.getString("queueType");
+          if (EloQueueType.has(queueType)) {
+            handleQueue(elos, league, queueType);
           }
+        }
+
+        val neu = determineSeasonElo(elos);
+        if (neu != null) {
+          val seasonElo = SeasonElo.get(neu, season, account);
+          account.addSeasonElo(seasonElo);
+          season.addSeaonElo(seasonElo);
         }
       }
     }
   }
 
-  private static SeasonElo add(SeasonElo elo, SeasonElo elo2, Account account, Season season) {
+  private static void handleQueue(HashMap<String, SeasonElo> elos, JSONObject league, String queueType) {
+    val tier = league.getString("tier");
+    val rank = league.getString("rank");
+    final short lp = (short) league.getInt("leaguePoints");
+
+    final short mmr = determineMMR(tier, rank, lp);
+    final short wins = (short) league.getInt("wins");
+    final short losses = (short) league.getInt("losses");
+    val elo = new SeasonElo(mmr, wins, losses);
+    elos.put(queueType, elo);
+  }
+
+  private static SeasonElo determineSeasonElo(HashMap<String, SeasonElo> elos) {
+    val solo = elos.get(EloQueueType.RANKED_SOLO_5x5.name());
+    val flex = elos.get(EloQueueType.RANKED_FLEX_SR.name());
+
+    if (solo != null && solo.getGames() >= 40) {
+      return elos.get(Const.QUEUE_SOLO);
+
+    } else if (flex != null && flex.getGames() >= 40) {
+      return elos.get(Const.QUEUE_FLEX);
+
+    } else if ((solo == null ? 0 : solo.getGames()) + (flex == null ? 0 : flex.getGames()) >= 50) {
+      // kann nie null sein
+      return add(solo, flex);
+    }
+
+    return null;
+  }
+
+  private static SeasonElo add(SeasonElo elo, SeasonElo elo2) {
     final float mmr = (elo.getMmr() * 1f * elo.getGames() + elo2.getMmr() * 1f * elo2.getGames()) / (elo.getGames() * 1f + elo2.getGames());
-    return SeasonElo.get(new SeasonElo((short) mmr, (short) (elo.getWins() + elo2.getWins()),
-        (short) (elo.getLosses() + elo2.getLosses())), season, account);
+    return new SeasonElo((short) mmr, (short) (elo.getWins() + elo2.getWins()), (short) (elo.getLosses() + elo2.getLosses()));
   }
 
   private static short determineMMR(String tier, String rank, short lp) {
@@ -112,55 +120,5 @@ public final class RiotAccountRequester {
     if (elo.equals(Elo.GRANDMASTER)) mmr -= 500;
     if (elo.equals(Elo.CHALLENGER)) mmr -= 1000;
     return mmr;
-  }
-
-  public static void loadAll(Account account) {
-    loadCompetitive(account);
-    load(QueueType.OTHER, account);
-    account.setLastUpdate(new Date());
-    final Date lastCompetitiveGame = account.getLastCompetitiveGame();
-    account.setActive(lastCompetitiveGame == null ||
-        !lastCompetitiveGame.before(new Date(System.currentTimeMillis() - Const.DAYS_UNTIL_INACTIVE * 86_400_000L)));
-  }
-
-
-  public static void loadCompetitive(Account account) {
-    load(QueueType.TOURNEY, account);
-    load(QueueType.CLASH, account); // TODO: 15.04.2022 Only if not to much
-  }
-
-
-  public static List<ScheduledGame> load(QueueType queueType, Account account) {
-    final List<ScheduledGame> scheduledGames = new ArrayList<>();
-    int start = 0;
-    while (true) {
-      final List<ScheduledGame> scheduled = load(queueType, account, start);
-      start += 100;
-      if (scheduled != null) {
-        scheduledGames.addAll(scheduled);
-        if (scheduled.size() == 100) continue;
-        break;
-      }
-      if (start > 10_000) break;
-    }
-    return scheduledGames;
-  }
-
-
-  private static List<ScheduledGame> load(QueueType queueType, Account account, int start) {
-    final JSON json = determineJSON(queueType, account, start);
-    if (json != null) {
-      final List<String> gameIds = json.getJSONArray().toList().stream().map(String::valueOf).collect(Collectors.toList());
-      return gameIds.stream().map(id -> ScheduledGame.get(new ScheduledGame(id, queueType)))
-          .collect(Collectors.toList());
-    }
-    return null;
-
-  }
-
-  private static JSON determineJSON(QueueType queueType, Account account, int start) {
-    return queueType.getQueueId() == -2 ?
-        RiotURLGenerator.getMatch().getMatchList(account, start) :
-        RiotURLGenerator.getMatch().getMatchList(account, queueType.getQueueId(), start);
   }
 }

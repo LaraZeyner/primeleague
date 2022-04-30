@@ -4,6 +4,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import de.xeri.league.models.league.League;
 import de.xeri.league.util.io.request.RequestManager;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
@@ -25,6 +26,7 @@ public class Data {
   private final EntityManager manager;
   private final Transaction transaction;
   private final int statLimit = 180;
+  private League currentGroup;
 
   public Data() {
     this.requester = new RequestManager();
@@ -39,6 +41,16 @@ public class Data {
   }
 
   //<editor-fold desc="getter and setter">
+
+
+  public League getCurrentGroup() {
+    return currentGroup;
+  }
+
+  public void setCurrentGroup(League currentGroup) {
+    this.currentGroup = currentGroup;
+  }
+
   public RequestManager getRequester() {
     return requester;
   }
@@ -66,6 +78,10 @@ public class Data {
 
   public void save(Object object) {
     session.saveOrUpdate(object);
+  }
+
+  public void flush() {
+    session.flush();
   }
 
   // </editor-fold>

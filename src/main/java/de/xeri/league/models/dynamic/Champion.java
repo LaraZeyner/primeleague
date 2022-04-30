@@ -2,9 +2,14 @@ package de.xeri.league.models.dynamic;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -21,6 +26,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.models.enums.Abilitytype;
 import de.xeri.league.models.enums.Championclass;
 import de.xeri.league.models.enums.FightStyle;
 import de.xeri.league.models.enums.FightType;
@@ -232,6 +238,23 @@ public class Champion implements Serializable {
       this.championRelationshipsTo.add(relationship);
       relationship.setToChampion(this);
     }
+  }
+
+  public List<Abilitytype> getKeyspells()  {
+    return abilities.stream()
+        .filter(ability -> !ability.getAbilityType().equals(Abilitytype.PASSIVE) && ability.getCooldown() != null)
+        .collect(Collectors.toMap(
+            Ability::getAbilityType,
+            ability -> ability.getCooldown().contains("/") ? Arrays.stream(ability.getCooldown().split("/"))
+                .mapToDouble(Double::parseDouble)
+                .max().orElse(0) :
+                Double.parseDouble(ability.getCooldown()),
+            (a, b) -> b))
+        .entrySet().stream()
+        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+        .map(Map.Entry::getKey)
+        .collect(Collectors.toList())
+        .subList(0, 2);
   }
 
   //<editor-fold desc="getter and setter">

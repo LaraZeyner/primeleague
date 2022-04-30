@@ -5,12 +5,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
 import de.xeri.league.util.BreakManager;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.json.JSON;
+import de.xeri.league.util.logger.Logger;
 
 /**
  * Created by Lara on 29.03.2022 for TRUES
@@ -39,19 +39,21 @@ public class Provider {
   }
 
   public JSON requestJSON(String urlString) throws IOException {
+    final Logger logger = Logger.getLogger("Request-Riot");
     try {
-      if (isAllowed()) {
+      if (isAllowed(logger)) {
         return new JSON(urlString);
       }
     } catch (InterruptedException exception) {
-      Logger.getLogger("Requester").severe(exception.getMessage());
+      logger.severe(exception.getMessage());
     }
     return null;
   }
 
   public HTML requestHTML(String urlString) throws IOException {
+    final Logger logger = Logger.getLogger("Request-PRM");
     try {
-      if (isAllowed()) {
+      if (isAllowed(logger)) {
         if (requests != null) requests.add(System.currentTimeMillis());
         return new HTML(new URL(urlString));
       }
@@ -61,7 +63,7 @@ public class Provider {
     return null;
   }
 
-  private boolean isAllowed() throws InterruptedException {
+  private boolean isAllowed(Logger logger) throws InterruptedException {
     if (checkRequestLimit()) {
       long current = System.currentTimeMillis();
       if (requests.size() == range) {
@@ -74,10 +76,10 @@ public class Provider {
             System.out.println(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
             final long until = waitingTime + System.currentTimeMillis();
             if (System.currentTimeMillis() <= until) {
-              System.out.println("noch " + BreakManager.loop(waitingTime/1000) + " Spiele - ");
+              logger.attention("noch " + BreakManager.loop(waitingTime/1000) + " Spiele - ");
             }
             waitingTime = until - System.currentTimeMillis();
-            System.out.print(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
+            logger.attention(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
             TimeUnit.SECONDS.sleep(waitingTime / 1000);
           }
 

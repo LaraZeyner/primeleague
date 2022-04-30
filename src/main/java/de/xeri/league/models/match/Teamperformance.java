@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.Column;
@@ -27,6 +26,9 @@ import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NamedQuery;
 
@@ -39,6 +41,9 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Teamperformance.findAll", query = "FROM Teamperformance t")
 @NamedQuery(name = "Teamperformance.findById", query = "FROM Teamperformance t WHERE id = :pk")
 @NamedQuery(name = "Teamperformance.findBy", query = "FROM Teamperformance t WHERE game = :game AND firstPick = :first")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Teamperformance implements Serializable {
 
   @Transient
@@ -181,7 +186,7 @@ public class Teamperformance implements Serializable {
   private short inhibitorsTime;
 
   @Column(name = "ace_flawless")
-  private byte flawlessAce;
+  private byte flawlessAces;
 
   @Column(name = "rift_multiturret")
   private byte riftOnMultipleTurrets;
@@ -203,10 +208,6 @@ public class Teamperformance implements Serializable {
   private final Set<TeamperformanceBounty> bounties = new LinkedHashSet<>();
 
   // TODO: 14.04.2022 Determine deprecated attributes + remove
-  // default constructor
-  public Teamperformance() {
-  }
-
   public Teamperformance(boolean firstPick, boolean win, int totalDamage, int totalDamageTaken, int totalGold, int totalCs, int totalKills,
                          int towers, int drakes, int inhibs, int heralds, int barons, boolean firstTower, boolean firstDrake) {
     this.firstPick = firstPick;
@@ -259,155 +260,6 @@ public class Teamperformance implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public Game getGame() {
-    return game;
-  }
-
-  public void setGame(Game game) {
-    this.game = game;
-  }
-
-  public Team getTeam() {
-    return team;
-  }
-
-  /**
-   * Only inside of models
-   *
-   * @param team Team
-   */
-  public void setTeam(Team team) {
-    this.team = team;
-  }
-
-  public boolean isFirstPick() {
-    return firstPick;
-  }
-
-  public void setFirstPick(boolean firstPick) {
-    this.firstPick = firstPick;
-  }
-
-  public boolean isWin() {
-    return win;
-  }
-
-  public void setWin(boolean win) {
-    this.win = win;
-  }
-
-  public int getTotalDamage() {
-    return totalDamage;
-  }
-
-  public void setTotalDamage(int totalDamage) {
-    this.totalDamage = totalDamage;
-  }
-
-  public int getTotalDamageTaken() {
-    return totalDamageTaken;
-  }
-
-  public void setTotalDamageTaken(int totalDamageTaken) {
-    this.totalDamageTaken = totalDamageTaken;
-  }
-
-  public int getTotalGold() {
-    return totalGold;
-  }
-
-  public void setTotalGold(int totalGold) {
-    this.totalGold = totalGold;
-  }
-
-  public short getTotalCs() {
-    return totalCs;
-  }
-
-  public void setTotalCs(short totalCs) {
-    this.totalCs = totalCs;
-  }
-
-  public short getTotalKills() {
-    return totalKills;
-  }
-
-  public void setTotalKills(short totalKills) {
-    this.totalKills = totalKills;
-  }
-
-  public byte getTowers() {
-    return towers;
-  }
-
-  public void setTowers(byte towers) {
-    this.towers = towers;
-  }
-
-  public byte getDrakes() {
-    return drakes;
-  }
-
-  public void setDrakes(byte drakes) {
-    this.drakes = drakes;
-  }
-
-  public byte getInhibs() {
-    return inhibs;
-  }
-
-  public void setInhibs(byte inhibs) {
-    this.inhibs = inhibs;
-  }
-
-  public byte getHeralds() {
-    return heralds;
-  }
-
-  public void setHeralds(byte heralds) {
-    this.heralds = heralds;
-  }
-
-  public byte getBarons() {
-    return barons;
-  }
-
-  public void setBarons(byte barons) {
-    this.barons = barons;
-  }
-
-  public boolean isFirstTower() {
-    return firstTower;
-  }
-
-  public void setFirstTower(boolean firstTower) {
-    this.firstTower = firstTower;
-  }
-
-  public boolean isFirstDrake() {
-    return firstDrake;
-  }
-
-  public void setFirstDrake(boolean firstDrake) {
-    this.firstDrake = firstDrake;
-  }
-
-  public boolean isPerfectSoul() {
-    return perfectSoul;
-  }
-
-  public void setPerfectSoul(boolean perfectSoul) {
-    this.perfectSoul = perfectSoul;
-  }
-
   public double getRiftTurrets() {
     return riftTurrets.doubleValue();
   }
@@ -416,190 +268,6 @@ public class Teamperformance implements Serializable {
     this.riftTurrets = new BigDecimal(riftTurrets);
   }
 
-  public short getElderTime() {
-    return elderTime;
-  }
-
-  public void setElderTime(short elderTime) {
-    this.elderTime = elderTime;
-  }
-
-  public short getBaronPowerplay() {
-    return baronPowerplay;
-  }
-
-  public void setSurrendered(boolean surrender) {
-    this.surrendered = surrender;
-  }
-
-  public boolean isSurrendered() {
-    return surrendered;
-  }
-
-  public void setBaronPowerplay(short baronPowerplay) {
-    this.baronPowerplay = baronPowerplay;
-  }
-
-  public Set<Playerperformance> getPlayerperformances() {
-    return playerperformances;
-  }
-
-  public byte getEarlyAces() {
-    return earlyAces;
-  }
-
-  public void setEarlyAces(byte earlyAces) {
-    this.earlyAces = earlyAces;
-  }
-
-  public short getBaronTime() {
-    return baronTime;
-  }
-
-  public void setBaronTime(short baronTime) {
-    this.baronTime = baronTime;
-  }
-
-  public short getFirstDragonTime() {
-    return firstDragonTime;
-  }
-
-  public void setFirstDragonTime(short firstDragonTime) {
-    this.firstDragonTime = firstDragonTime;
-  }
-
-  public byte getObjectiveAtSpawn() {
-    return objectiveAtSpawn;
-  }
-
-  public void setObjectiveAtSpawn(byte objectiveAtSpawn) {
-    this.objectiveAtSpawn = objectiveAtSpawn;
-  }
-
-  public byte getObjectiveContests() {
-    return objectiveContests;
-  }
-
-  public void setObjectiveContests(byte objectiveContests) {
-    this.objectiveContests = objectiveContests;
-  }
-
-  public boolean isQuestCompletedFirst() {
-    return questCompletedFirst;
-  }
-
-  public void setQuestCompletedFirst(boolean questCompletedFirst) {
-    this.questCompletedFirst = questCompletedFirst;
-  }
-
-  public short getInhibitorsTime() {
-    return inhibitorsTime;
-  }
-
-  public void setInhibitorsTime(short inhibitorsTime) {
-    this.inhibitorsTime = inhibitorsTime;
-  }
-
-  public byte getFlawlessAce() {
-    return flawlessAce;
-  }
-
-  public void setFlawlessAce(byte flawlessAce) {
-    this.flawlessAce = flawlessAce;
-  }
-
-  public byte getRiftOnMultipleTurrets() {
-    return riftOnMultipleTurrets;
-  }
-
-  public void setRiftOnMultipleTurrets(byte riftOnMultipleTurrets) {
-    this.riftOnMultipleTurrets = riftOnMultipleTurrets;
-  }
-
-  public short getFastestAcetime() {
-    return fastestAcetime;
-  }
-
-  public void setFastestAcetime(short fastestAcetime) {
-    this.fastestAcetime = fastestAcetime;
-  }
-
-  public byte getKillDeficit() {
-    return killDeficit;
-  }
-
-  public void setKillDeficit(byte killDeficit) {
-    this.killDeficit = killDeficit;
-  }
-
-  public DragonSoul getSoul() {
-    return soul;
-  }
-
-  public void setSoul(DragonSoul soul) {
-    this.soul = soul;
-  }
-
-  public Set<TeamperformanceBounty> getBounties() {
-    return bounties;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Teamperformance)) return false;
-    final Teamperformance teamperformance = (Teamperformance) o;
-    return getId() == teamperformance.getId() && isFirstPick() == teamperformance.isFirstPick() && isWin() == teamperformance.isWin() && getTotalDamage() == teamperformance.getTotalDamage() && getTotalDamageTaken() == teamperformance.getTotalDamageTaken() && getTotalGold() == teamperformance.getTotalGold() && getTotalCs() == teamperformance.getTotalCs() && getTotalKills() == teamperformance.getTotalKills() && getTowers() == teamperformance.getTowers() && getDrakes() == teamperformance.getDrakes() && getInhibs() == teamperformance.getInhibs() && getHeralds() == teamperformance.getHeralds() && getBarons() == teamperformance.getBarons() && isFirstTower() == teamperformance.isFirstTower() && isFirstDrake() == teamperformance.isFirstDrake() && isPerfectSoul() == teamperformance.isPerfectSoul() && getElderTime() == teamperformance.getElderTime() && getBaronPowerplay() == teamperformance.getBaronPowerplay() && isSurrendered() == teamperformance.isSurrendered() && getEarlyAces() == teamperformance.getEarlyAces() && getBaronTime() == teamperformance.getBaronTime() && getFirstDragonTime() == teamperformance.getFirstDragonTime() && getObjectiveAtSpawn() == teamperformance.getObjectiveAtSpawn() && getObjectiveContests() == teamperformance.getObjectiveContests() && isQuestCompletedFirst() == teamperformance.isQuestCompletedFirst() && getInhibitorsTime() == teamperformance.getInhibitorsTime() && getFlawlessAce() == teamperformance.getFlawlessAce() && getRiftOnMultipleTurrets() == teamperformance.getRiftOnMultipleTurrets() && getFastestAcetime() == teamperformance.getFastestAcetime() && getGame().equals(teamperformance.getGame()) && getKillDeficit() == teamperformance.getKillDeficit() && getTeam().equals(teamperformance.getTeam()) && Objects.equals(getRiftTurrets(), teamperformance.getRiftTurrets());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getId(), getGame(), getTeam(), isFirstPick(), isWin(), getTotalDamage(), getTotalDamageTaken(), getTotalGold(),
-        getTotalCs(), getTotalKills(), getTowers(), getDrakes(), getInhibs(), getHeralds(), getBarons(), isFirstTower(), isFirstDrake(),
-        isPerfectSoul(), getRiftTurrets(), getElderTime(), getBaronPowerplay(), isSurrendered(), getEarlyAces(), getBaronTime(),
-        getFirstDragonTime(), getObjectiveAtSpawn(), getObjectiveContests(), isQuestCompletedFirst(), getInhibitorsTime(),
-        getFlawlessAce(), getRiftOnMultipleTurrets(), getFastestAcetime(), getKillDeficit());
-  }
-
-  @Override
-  public String toString() {
-    return "Teamperformance{" +
-        "id=" + id +
-        ", game=" + game +
-        ", team=" + team +
-        ", firstPick=" + firstPick +
-        ", win=" + win +
-        ", totalDamage=" + totalDamage +
-        ", totalDamageTaken=" + totalDamageTaken +
-        ", totalGold=" + totalGold +
-        ", totalCs=" + totalCs +
-        ", totalKills=" + totalKills +
-        ", towers=" + towers +
-        ", drakes=" + drakes +
-        ", inhibs=" + inhibs +
-        ", heralds=" + heralds +
-        ", barons=" + barons +
-        ", firstTower=" + firstTower +
-        ", firstDrake=" + firstDrake +
-        ", perfectSoul=" + perfectSoul +
-        ", riftTurrets=" + riftTurrets +
-        ", elderTime=" + elderTime +
-        ", baronPowerplay=" + baronPowerplay +
-        ", surrendered=" + surrendered +
-        ", earlyAces=" + earlyAces +
-        ", baronTime=" + baronTime +
-        ", firstDragonTime=" + firstDragonTime +
-        ", objectiveAtSpawn=" + objectiveAtSpawn +
-        ", objectiveContests=" + objectiveContests +
-        ", questCompletedFirst=" + questCompletedFirst +
-        ", inhibitorsTime=" + inhibitorsTime +
-        ", flawlessAce=" + flawlessAce +
-        ", riftOnMultipleTurrets=" + riftOnMultipleTurrets +
-        ", fastestAcetime=" + fastestAcetime +
-        ", killDeficit=" + killDeficit +
-        ", playerperformances=" + playerperformances.size() +
-        '}';
-  }
   //</editor-fold>
 
 }

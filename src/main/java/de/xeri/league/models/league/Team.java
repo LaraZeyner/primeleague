@@ -3,7 +3,6 @@ package de.xeri.league.models.league;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -21,14 +20,20 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.loader.TeamLoader;
 import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.enums.StageType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
+import de.xeri.league.util.logger.Logger;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Team")
@@ -38,9 +43,12 @@ import org.hibernate.annotations.NamedQuery;
     @Index(name = "team_name", columnList = "team_name")
 })
 @NamedQuery(name = "Team.findAll", query = "FROM Team t")
-@NamedQuery(name = "Team.findById", query = "FROM Team t WHERE teamId = :pk")
+@NamedQuery(name = "Team.findById", query = "FROM Team t WHERE id = :pk")
 @NamedQuery(name = "Team.findBy", query = "FROM Team t WHERE teamName = :name")
-@NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE teamTid = :tid")
+@NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE turneyId = :tid")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Team implements Serializable {
 
   @Transient
@@ -51,8 +59,8 @@ public class Team implements Serializable {
   }
 
   public static Team get(Team neu) {
-    if (hasTId(neu.getTeamTid())) {
-      final Team team = findTid(neu.getTeamTid());
+    if (hasTId(neu.getTurneyId())) {
+      final Team team = findTid(neu.getTurneyId());
       team.setTeamAbbr(neu.teamAbbr);
       team.setTeamName(neu.teamName);
       return team;
@@ -74,8 +82,36 @@ public class Team implements Serializable {
     return HibernateUtil.has(Team.class, new String[]{"name"}, new Object[]{name});
   }
 
+  public static boolean has(String name, League league) {
+    return findAll(name).stream().anyMatch(team -> team.getLeagues().contains(league));
+  }
+
+  public static Team find(String name, League league) {
+    final Logger logger = Logger.getLogger("Team-Finder");
+    if (has(name, league)) {
+      final List<Team> teams = findAll(name).stream()
+          .filter(team -> team.getLeagues().contains(league))
+          .collect(Collectors.toList());
+      if (teams.size() > 1) {
+        logger.config("Meherere Teams gefunden");
+      }
+      return teams.get(0);
+    }
+
+    if (has(name)) {
+      return find(name);
+    } else {
+      logger.warning("Team konnte nicht gefunden werden", name);
+      return null;
+    }
+  }
+
   public static Team find(String name) {
     return HibernateUtil.find(Team.class, new String[]{"name"}, new Object[]{name});
+  }
+
+  public static List<Team> findAll(String name) {
+    return HibernateUtil.findList(Team.class, new String[]{"name"}, new Object[]{name});
   }
 
   public static Team findTid(int tid) {
@@ -90,7 +126,7 @@ public class Team implements Serializable {
   public static Team findNext() {
     final List<Schedule> next = Schedule.next();
     if (!next.isEmpty()) {
-       return next.get(0).getEnemyTeam();
+      return next.get(0).getEnemyTeam();
     }
     final List<Schedule> last = Schedule.last();
     return last.get(last.size() - 1).getEnemyTeam();
@@ -99,10 +135,10 @@ public class Team implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "team_id", nullable = false)
-  private short teamId;
+  private short id;
 
   @Column(name = "team_tId")
-  private int teamTid;
+  private int turneyId;
 
   @Column(name = "team_name", nullable = false, length = 100)
   private String teamName;
@@ -137,12 +173,8 @@ public class Team implements Serializable {
   @OneToMany(mappedBy = "player")
   private final Set<Matchlog> logEntries = new LinkedHashSet<>();
 
-  // default constructor
-  public Team() {
-  }
-
-  public Team(int teamTid, String teamName, String teamAbbr) {
-    this.teamTid = teamTid;
+  public Team(int turneyId, String teamName, String teamAbbr) {
+    this.turneyId = turneyId;
     this.teamName = teamName;
     this.teamAbbr = teamAbbr;
   }
@@ -172,8 +204,11 @@ public class Team implements Serializable {
   }
 
   public List<Clash> getClashDays() {
-    final List<Game> clashGames = teamperformances.stream().filter(teamperformance -> teamperformance.getGame().isQueue(QueueType.CLASH))
-        .map(Teamperformance::getGame).sorted(Comparator.comparingLong(game -> game.getGameStart().getTime())).collect(Collectors.toList());
+    final List<Game> clashGames = teamperformances.stream()
+        .map(Teamperformance::getGame)
+        .filter(game -> game.isQueue(QueueType.CLASH))
+        .sorted(Comparator.comparingLong(game -> game.getGameStart().getTime()))
+        .collect(Collectors.toList());
     final List<Clash> clashes = new ArrayList<>();
     long millis = 0;
     for (Game game : clashGames) {
@@ -210,17 +245,33 @@ public class Team implements Serializable {
   }
 
   public League getLastLeague() {
-    final Date date = leagues.stream().map(league -> league.getStage().getStageStart().getTime()).max(Date::compareTo).orElse(null);
-    return leagues.stream().filter(league -> league.getStage().getStageStart().getTime().equals(date)).findFirst().orElse(null);
+    final League league = leagues.stream()
+        .filter(league1 -> league1.getStage().getStageType().equals(StageType.GRUPPENPHASE))
+        .max(Comparator.comparingLong(l -> l.getStage().getStageEnd().getTimeInMillis()))
+        .orElse(null);
+    if (league == null) {
+      final Team team = TeamLoader.handleSeason(this);
+      if (team == null) {
+        return null;
+      }
+      return team.getLastLeague(1);
+    }
+    return league;
+
+  }
+
+  private League getLastLeague(int loop) {
+    return leagues.stream()
+        .max(Comparator.comparingLong(l -> l.getStage().getStageEnd().getTimeInMillis()))
+        .orElse(null);
   }
 
   public boolean isValueable() {
-    final League lastLeague = findTid(142116).getLastLeague();
-    return getLastLeague() != null && lastLeague != null && getLastLeague().getId() == lastLeague.getId() || scrims;
+    return Data.getInstance().getCurrentGroup().getTeams().contains(this) || scrims;
   }
 
   public String getLogoUrl() {
-    return "https://cdn0.gamesports.net/league_team_logos/" + teamTid / 1000 + "000/" + teamTid + ".jpg";
+    return "https://cdn0.gamesports.net/league_team_logos/" + turneyId / 1000 + "000/" + turneyId + ".jpg";
   }
 
   public Set<TurnamentMatch> getTurnamentMatches() {
@@ -230,100 +281,25 @@ public class Team implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public Set<Matchlog> getLogEntries() {
-    return logEntries;
-  }
-
-  public Set<Player> getPlayers() {
-    return players;
-  }
-
-  public Set<TurnamentMatch> getMatchesGuest() {
-    return matchesGuest;
-  }
-
-  public Set<TurnamentMatch> getMatchesHome() {
-    return matchesHome;
-  }
-
-  public Set<Schedule> getSchedules() {
-    return schedules;
-  }
-
-  public Set<Teamperformance> getTeamperformances() {
-    return teamperformances;
-  }
-
-  public String getTeamResult() {
-    return teamResult;
-  }
-
-  public void setTeamResult(String teamResult) {
-    this.teamResult = teamResult;
-  }
-
-  public Set<League> getLeagues() {
-    return leagues;
-  }
-
-  public String getTeamAbbr() {
-    return teamAbbr;
-  }
-
-  public void setTeamAbbr(String teamAbbr) {
-    this.teamAbbr = teamAbbr;
-  }
-
-  public String getTeamName() {
-    return teamName;
-  }
-
-  public void setTeamName(String teamName) {
-    this.teamName = teamName;
-  }
-
-  public int getTeamTid() {
-    return teamTid;
-  }
-
-  void setTeamTid(int teamTid) {
-    this.teamTid = teamTid;
-  }
-
-  public short getTId() {
-    return teamId;
-  }
-
-  public void setTId(short id) {
-    this.teamId = id;
-  }
-
-  public boolean isScrims() {
-    return scrims;
-  }
-
-  public void setScrims(boolean scrims) {
-    this.scrims = scrims;
-  }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof Team)) return false;
     final Team team = (Team) o;
-    return getTId() == team.getTId() && getTeamTid() == team.getTeamTid() && getTeamName().equals(team.getTeamName()) && getTeamAbbr().equals(team.getTeamAbbr()) && Objects.equals(getLeagues(), team.getLeagues()) && Objects.equals(getTeamResult(), team.getTeamResult()) && getTeamperformances().equals(team.getTeamperformances()) && getSchedules().equals(team.getSchedules()) && getMatchesHome().equals(team.getMatchesHome()) && getMatchesGuest().equals(team.getMatchesGuest()) && getPlayers().equals(team.getPlayers());
+    return getId() == team.getId() && getTurneyId() == team.getTurneyId();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getTId(), getTeamTid(), getTeamName(), getTeamAbbr(), getLeagues(), getTeamResult());
+    return Objects.hash(getId(), getTurneyId(), getTeamName(), getTeamAbbr(), getLeagues(), getTeamResult());
   }
 
   @Override
   public String toString() {
     return "Team{" +
-        "id=" + teamId +
-        ", teamTid=" + teamTid +
+        "id=" + id +
+        ", teamTid=" + turneyId +
         ", teamName='" + teamName + '\'' +
         ", teamAbbr='" + teamAbbr + '\'' +
         ", leagues='" + leagues.size() + '\'' +

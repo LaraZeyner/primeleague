@@ -11,11 +11,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.xeri.league.models.enums.Matchstate;
 import de.xeri.league.models.enums.StageType;
+import de.xeri.league.models.league.Account;
+import de.xeri.league.models.league.League;
 import de.xeri.league.models.league.Matchday;
+import de.xeri.league.models.league.Player;
 import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
+import de.xeri.league.models.league.TurnamentMatch;
+import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
@@ -24,6 +30,7 @@ import de.xeri.league.util.logger.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 /**
  * Created by Lara on 05.04.2022 for web
@@ -43,10 +50,9 @@ public final class SeasonLoader {
       loadSeasonStages(id, true);
       Data.getInstance().commit();
 
+      //TODO Do this at night
       updateSeason(Season.current().getId());
-      Data.getInstance().commit();
-
-      PlayerLoader.load();
+      logger.info("Season wurde aktualisiert.");
 
     } catch (FileNotFoundException exception) {
       logger.warning("konnte nicht gefunden werden");
@@ -56,13 +62,46 @@ public final class SeasonLoader {
   }
 
   private static void updateSeason(short id) {
+    //TODO (Abgie) 28.04.2022: Re-add later
     final Season season = Season.find(id);
-    final List<Team> teams = loadTeams(season);
-    TeamLoader.loadMatches(teams, season);
+    //final List<Team> teams = loadTeams(season);
+    //TeamLoader.loadMatches(teams, season);
 
+    for (TurnamentMatch match : TurnamentMatch.get()) {
+      if (!match.getState().equals(Matchstate.CLOSED) && !match.isOpen()) {
+        match.setState(Matchstate.CLOSED);
+      }
+    }
+
+    for (League league : League.get()) {
+      for (TurnamentMatch match : league.getMatches()) {
+        if (match.getHomeTeam() != null && !league.getTeams().contains(match.getHomeTeam())) {
+          league.addTeam(match.getHomeTeam());
+        }
+        if (match.getGuestTeam() != null && !league.getTeams().contains(match.getGuestTeam())) {
+          league.addTeam(match.getGuestTeam());
+        }
+      }
+    }
+
+    Data.getInstance().commit();
   }
 
   public static void load() {
+
+    Team.get().stream().filter(Team::isValueable).forEach(team -> {
+          if (!team.isScrims()) {
+            for (Player player : team.getPlayers()) {
+              for (Account account : player.getAccounts()) {
+                account.setLastUpdate(new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
+              }
+
+            }
+            team.setScrims(true);
+          }
+        }
+    );
+
     Data.getInstance().commit();
   }
 
@@ -98,7 +137,6 @@ public final class SeasonLoader {
         loadCalibration(season, dates);
         loadGroups(dates, season, group, playoffs);
         loadPlayoffs(dates, season, playoffs);
-        loadTeams(season);
       }
 
       logger.info("Season erstellt");
@@ -116,9 +154,10 @@ public final class SeasonLoader {
       final HTML html = requester.requestHTML("https://www.primeleague.gg/leagues/prm/" + season.getId() + "/participants");
       final Document doc = Jsoup.parse(html.toString());
       for (Element element : doc.select("section.league-participants").select("tbody").select("tr")) {
-        element.select("td").select("a.table-cell-container");
-        final String id = element.select("td").select("a.table-cell-container").attr("href").split("/teams/")[1].split("-")[0];
-        final Team team = TeamLoader.handleTeam(Integer.parseInt(id), season);
+        final Elements teamElement = element.select("td");
+        final String id = teamElement.select("a.table-cell-container").attr("href").split("/teams/")[1].split("-")[0];
+        final String name = teamElement.select("span").get(2).text();
+        final Team team = TeamLoader.handleTeam(Integer.parseInt(id), season, false, name);
         teams.add(team);
       }
     } catch (IOException e) {

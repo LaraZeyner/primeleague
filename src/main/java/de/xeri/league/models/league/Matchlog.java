@@ -18,6 +18,8 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.LogAction;
@@ -78,6 +80,7 @@ public class Matchlog implements Serializable {
   @JoinColumn(name = "turnamentmatch", nullable = false)
   private TurnamentMatch match;
 
+  @Temporal(TemporalType.TIMESTAMP)
   @Column(name = "log_time", nullable = false)
   private Date logTime;
 
@@ -100,8 +103,10 @@ public class Matchlog implements Serializable {
   public Matchlog() {
   }
 
-  public Matchlog(Date logTime) {
+  public Matchlog(Date logTime, LogAction logAction, String logDetails) {
     this.logTime = logTime;
+    this.logAction = logAction;
+    this.logDetails = logDetails;
   }
 
   //<editor-fold desc="getter and setter">

@@ -2,6 +2,7 @@ package de.xeri.league.loader;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -18,8 +19,9 @@ import de.xeri.league.models.league.Player;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.logger.Logger;
+import lombok.val;
+import lombok.var;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -28,58 +30,69 @@ import org.jsoup.select.Elements;
 /**
  * Created by Lara on 11.04.2022 for web
  */
-public class MatchLoader {
+public final class MatchLoader {
+  private static int amount = 0;
+  private final static List<Integer> matchesLoaded = new ArrayList<>();
 
   public static void handleMatch(League league, Elements days, int i, Matchday matchday) {
     days.get(i).select("tr").forEach(match -> loadMatch(league, matchday, match));
   }
 
   public static void loadMatch(League league, Matchday matchday, Element match) {
-    final Elements matchData = match.select("td").get(1).select("a");
-    final int matchId = Integer.parseInt(matchData.attr("href").split("/matches/")[1].split("-")[0]);
-    if (TurnamentMatch.has(matchId)) {
-      final String score = matchData.text().contains(":") ? matchData.text() : "-:-";
-      boolean b = TurnamentMatch.has(matchId);
-      final TurnamentMatch turnamentMatch = TurnamentMatch.get(new TurnamentMatch(matchId, score), league, matchday);
+    val logger = Logger.getLogger("Match-Erstellung");
+    val millisString = match.select("span").attr("data-time");
+    val matchElement = match.selectFirst("tr");
+    val matchData = matchElement.select("td").get(1).select("a");
+    val matchIdString = matchData.attr("href").split("/matches/")[1].split("-")[0];
+    final int matchId = Integer.parseInt(matchIdString);
 
-      handleTeam(match, turnamentMatch, true);
-      handleTeam(match, turnamentMatch, false);
-      if (!b) {
-        analyseMatchPage(turnamentMatch);
+    if (!matchesLoaded.contains(matchId) || !TurnamentMatch.has(matchId)) {
+      val score = matchData.text().contains(":") ? matchData.text() : "-:-";
+      val turnamentMatch = TurnamentMatch.get(new TurnamentMatch(matchId, score, new Date(Long.parseLong(millisString))), league, matchday);
+
+      handleTeam(matchElement, turnamentMatch, true, league);
+      handleTeam(matchElement, turnamentMatch, false, league);
+      analyseMatchPage(turnamentMatch);
+
+      matchesLoaded.add(matchId);
+      amount++;
+      if (amount % 10 == 0) {
+        logger.info(amount + " Matches hinzugefügt");
       }
     }
   }
 
-  private static void handleTeam(Element match, TurnamentMatch turnamentMatch, boolean home) {
-    final Element team2Placeholder = match.select("td").get(home ? 0 : 2);
-    if (!team2Placeholder.text().equals("")) {
-      final String teamName = team2Placeholder.select("img").attr("title");
-      final String teamAbbr = team2Placeholder.text();
-      final String teamIdString = team2Placeholder.select("img").attr("data-src");
-      final String teamString = teamIdString.split("/")[5].split("\\.")[0];
+  private static void handleTeam(Element match, TurnamentMatch turnamentMatch, boolean home, League league) {
+    val teamPlaceholder = match.select("td").get(home ? 0 : 2);
+    if (!teamPlaceholder.text().equals("")) {
+      val teamName = teamPlaceholder.select("img").attr("title");
+      val teamAbbr = teamPlaceholder.text();
+      val teamIdString = teamPlaceholder.select("img").attr("data-src");
+      val teamString = teamIdString.split("/")[5].split("\\.")[0];
+      Team team = null;
       try {
         if (!TeamLoader.notFoundTeams.contains(Integer.parseInt(teamString))) {
-          final Team team = Team.get(new Team(Integer.parseInt(teamString), teamName, teamAbbr));
-          team.addMatch(turnamentMatch, home);
+          team = Team.get(new Team(Integer.parseInt(teamString), teamName, teamAbbr));
         }
       } catch (NumberFormatException ex) {
-        de.xeri.league.util.logger.Logger.getLogger("Match Creation").warning("Match RIP");
+        team = Team.find(teamName, league);
+      }
+      if (team != null) {
+        team.addMatch(turnamentMatch, home);
       }
     }
   }
 
   public static void analyseMatchPage(TurnamentMatch match) {
-    final Logger logger = Logger.getLogger("Match-Erstellung");
+    val logger = Logger.getLogger("Match-Erstellung");
     try {
-      final HTML html = Data.getInstance().getRequester()
-          .requestHTML("https://www.primeleague.gg/leagues/matches/" + match.getId());
-      final Document doc = Jsoup.parse(html.toString());
+      val html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/matches/" + match.getId());
+      val doc = Jsoup.parse(html.toString());
 
-      final String timeString = doc.select("div#league-match-time").select("span").attr("data-time");
+      val timeString = doc.select("div#league-match-time").select("span").attr("data-time");
       match.setStart(new Date(Long.parseLong(timeString) * 1000L));
 
       handleMatchlog(match, doc);
-      logger.info("Match erstellt");
     } catch (FileNotFoundException exception) {
       logger.warning("Match konnte nicht gefunden werden");
     } catch (IOException exception) {
@@ -89,20 +102,23 @@ public class MatchLoader {
 
   private static void handleMatchlog(TurnamentMatch match, Document doc) {
     for (Element entry : doc.select("section.league-match-logs").select("tbody").select("tr")) {
-      final Elements column = entry.select("span.table-cell-container");
-      // get Date
-      final String stampString = column.first().select("span").attr("data-time");
-      final Date date = new Date(Long.parseLong(stampString) * 1000L);
-      final Matchlog logEntry = match.addEntry(new Matchlog(date));
+      val column = entry.select("span.table-cell-container");
+      val stampString = column.first().select("span").attr("data-time");
+      val date = new Date(Long.parseLong(stampString) * 1000L);
 
-      final String userString = column.get(1).select("span").text();
-      String userName = userString.split("\\(")[userString.split("\\(").length - 2];
+
+      val userString = column.get(1).select("span").text();
+      val logAction = LogAction.getAction(column.get(2).select("span").text());
+      val logDetails = column.get(3).select("span").text();
+      var logEntry = match.addEntry(new Matchlog(date, logAction, logDetails));
+
+      var userName = userString.split("\\(")[userString.split("\\(").length - 2];
       if (userName.endsWith(" ")) userName = userName.substring(0, userName.length() - 1);
-      String teamIdString = userString.split("\\(")[userString.split("\\(").length - 1].replace(")", "");
+      var teamIdString = userString.split("\\(")[userString.split("\\(").length - 1].replace(")", "");
       if (teamIdString.contains("Team")) {
         if (!userName.equals("System")) {
-          final Player player = Player.find(userName);
-          if (player != null) {
+          if (Player.has(userName)) {
+            val player = Player.find(userName);
             player.addLogEntry(logEntry);
           }
         }
@@ -112,23 +128,25 @@ public class MatchLoader {
           match.getHomeTeam().addLogEntry(logEntry);
         } else if (isTeam(teamId, 2, match.getGuestTeam())) {
           match.getGuestTeam().addLogEntry(logEntry);
-        } else if (Team.find(teamId) != null) {
-          Team.find(teamId).addLogEntry(logEntry);
+        } else if (Team.hasTId(teamId)) {
+          Team.findTid(teamId).addLogEntry(logEntry);
         }
       }
-      logEntry.setLogAction(LogAction.getAction(column.get(2).select("span").text()));
-      logEntry.setLogDetails(column.get(3).select("span").text());
     }
-    final List<Matchlog> logs = match.getLogEntries().stream()
+    val logs = match.getLogEntries().stream()
         .sorted((o1, o2) -> (int) (o1.getLogTime().getTime() - o2.getLogTime().getTime()))
         .collect(Collectors.toList());
 
-    final Matchstate matchstate = determineMatchstate(match, logs);
-    match.setState(matchstate);
+    if (!logs.isEmpty()) {
+      val matchstate = determineMatchstate(match, logs);
+      match.setState(matchstate);
+    } else {
+      match.setState(Matchstate.CREATED);
+    }
   }
 
   private static Matchstate determineMatchstate(TurnamentMatch match, List<Matchlog> logs) {
-    final Logger logger = Logger.getLogger("Update Matchstate");
+    val logger = Logger.getLogger("Update Matchstate");
 
     if (doesHappenXTimes(logs, LogAction.PLAYED, 1)) return Matchstate.CLOSED;
 
@@ -155,7 +173,7 @@ public class MatchLoader {
     for (Matchlog log : logs) {
       final Team team = log.getTeam();
       if (team != null && match.hasTeam(team)) {
-        final boolean home = match.getHomeTeam().equals(team);
+        final boolean home = match.getHomeTeam() != null && match.getHomeTeam().equals(team);
         final int idInGame = home ? 0 : 1;
         if (log.getLogAction().equals(LogAction.SUBMIT)) {
           readyTeams.get(idInGame).clear();
@@ -170,7 +188,7 @@ public class MatchLoader {
     if (teamsReady == 2) return Matchstate.TEAMS_READY;
     if (teamsReady == 1) return Matchstate.TEAM_READY;
 
-    final Set<Team> teamReady = logs.stream()
+    val teamReady = logs.stream()
         .filter(log -> log.getLogAction().equals(LogAction.SUBMIT))
         .map(Matchlog::getTeam)
         .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -181,7 +199,7 @@ public class MatchLoader {
       return Matchstate.SCHEDULED;
     }
 
-    for (final Matchlog matchlog1 : logs) {
+    for (Matchlog matchlog1 : logs) {
       if (matchlog1.getLogAction() != null) {
         if (matchlog1.getLogAction().equals(LogAction.SUGGEST)) {
           if (matchlog1.getTeam() != null && matchlog1.getTeam().equals(match.getGuestTeam())) return Matchstate.RESPONDED;
@@ -191,7 +209,6 @@ public class MatchLoader {
         logger.severe("Log Action nicht aufgezeichnet.");
       }
     }
-
 
     return Matchstate.CREATED;
   }

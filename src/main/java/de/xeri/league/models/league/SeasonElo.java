@@ -44,6 +44,8 @@ public class SeasonElo implements Serializable {
       elo.setLosses(neu.getLosses());
       return elo;
     }
+    season.addSeaonElo(neu);
+    account.addSeasonElo(neu);
     Data.getInstance().save(neu);
     return neu;
   }

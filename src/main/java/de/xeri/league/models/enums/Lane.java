@@ -12,7 +12,7 @@ public enum Lane {
   JUNGLE("JGL", "none"),
   MIDDLE("MID", "MID_LANE"),
   BOTTOM("BOT", "BOT_LANE"),
-  UTILITY("SUP", "none");
+  UTILITY("SUP", "BOT_LANE");
 
   private String abbreviation;
   private String type;

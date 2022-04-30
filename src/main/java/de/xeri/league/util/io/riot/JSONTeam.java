@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.league.Team;
+import org.json.JSONObject;
 
 /**
  * Created by Lara on 09.04.2022 for web
@@ -16,6 +17,7 @@ import de.xeri.league.models.league.Team;
 public class JSONTeam {
   private final int id;
   private final List<JSONPlayer> allPlayers = new ArrayList<>();
+  private JSONObject teamObject;
 
   public JSONTeam(int id) {
     this.id = id;
@@ -29,8 +31,35 @@ public class JSONTeam {
     return allPlayers;
   }
 
+  public JSONPlayer getPlayer(int id, JSONTeam otherTeam) {
+    return allPlayers.stream().filter(player -> player.getId() == id).findFirst()
+        .orElse(otherTeam.getAllPlayers().stream().filter(player -> player.getId() == id).findFirst().orElse(null));
+  }
+
+  public JSONPlayer getPlayer(String puuid, JSONTeam otherTeam) {
+    return allPlayers.stream().filter(player -> player.getPuuid().equals(puuid)).findFirst()
+        .orElse(otherTeam.getAllPlayers().stream().filter(player -> player.getPuuid().equals(puuid)).findFirst()
+            .orElse(null));
+  }
+
   public void addPlayer(JSONPlayer player) {
     allPlayers.add(player);
+  }
+
+  public boolean hasPlayer(int id) {
+    return allPlayers.stream().anyMatch(player -> player.getId() == id);
+  }
+
+  public boolean hasPlayer(String puuid) {
+    return allPlayers.stream().anyMatch(player -> player.getPuuid().equals(puuid));
+  }
+
+  public JSONObject getTeamObject() {
+    return teamObject;
+  }
+
+  public void setTeamObject(JSONObject teamObject) {
+    this.teamObject = teamObject;
   }
 
   public Map<Team, List<JSONPlayer>> getTeams() {

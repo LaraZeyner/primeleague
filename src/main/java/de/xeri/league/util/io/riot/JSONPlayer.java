@@ -5,6 +5,7 @@ import java.util.List;
 import de.xeri.league.models.enums.StoredStat;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
+import lombok.Getter;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -17,16 +18,18 @@ import org.json.JSONObject;
  * INTEGER(10) : -2.147.483.648 → 2.147.483.647 (4.294.967.295)
  */
 
-
+@Getter
 public class JSONPlayer {
   private final int id;
   private final Account account;
+  private final String puuid;
   private final JSONObject json;
 
-  public JSONPlayer(int id, JSONObject json, Account account) {
+  public JSONPlayer(int id, JSONObject json, String puuid) {
     this.id = id;
     this.json = json;
-    this.account = account;
+    this.puuid = puuid;
+    this.account = Account.findPuuid(puuid);
   }
 
   public Object value(StoredStat storedStat) {
@@ -91,6 +94,13 @@ public class JSONPlayer {
     return null;
   }
 
+  public Short getSmall(StoredStat storedStat, int factor) {
+    if (getMedium(storedStat) != null) {
+      return Short.parseShort(String.valueOf(getMedium(storedStat)));
+    }
+    return null;
+  }
+
   public Short getSmall(StoredStat challenge, StoredStat alternative) {
     return getSmall(challenge) != null ? getSmall(challenge) : getSmall(alternative);
   }
@@ -132,18 +142,6 @@ public class JSONPlayer {
 
   public boolean isListed() {
     return account != null;
-  }
-
-  public Account getAccount() {
-    return account;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  public JSONObject getJson() {
-    return json;
   }
 
   public List<Team> getTeams() {

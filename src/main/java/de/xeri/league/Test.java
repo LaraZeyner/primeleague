@@ -6,5 +6,6 @@ package de.xeri.league;
 public class Test {
 
   public static void main(String[] args) {
+    System.out.println("Skalieren statt Stagnieren (ESS)".split(" \\(")[1].split("\\)")[0]);
   }
 }
