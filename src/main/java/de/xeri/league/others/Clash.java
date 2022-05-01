@@ -1,10 +1,11 @@
-package de.xeri.league.models.league;
+package de.xeri.league.others;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.xeri.league.models.league.Team;
 import de.xeri.league.models.match.Teamperformance;
 
 /**

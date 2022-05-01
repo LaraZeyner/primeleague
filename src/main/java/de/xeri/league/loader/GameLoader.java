@@ -2,7 +2,6 @@ package de.xeri.league.loader;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.league.TurnamentMatch;
@@ -17,12 +16,14 @@ import de.xeri.league.util.io.riot.RiotGameRequester;
 public final class GameLoader {
 
   static {
-    final Stream<ScheduledGame> gameStream = ScheduledGame.get().stream();
-    gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.TOURNEY)).forEach(RiotGameRequester::loadCompetitive);
+    ScheduledGame.get().stream()
+        .filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.TOURNEY)).forEach(RiotGameRequester::loadCompetitive);
     mergeTurnamentMatch();
-    gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.CLASH)).forEach(RiotGameRequester::loadClashGame);
+    ScheduledGame.get().stream()
+        .filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.CLASH)).forEach(RiotGameRequester::loadClashGame);
     Data.getInstance().commit();
-    gameStream.filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.OTHER)).forEach(RiotGameRequester::loadMatchmade);
+    ScheduledGame.get().stream()
+        .filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.OTHER)).forEach(RiotGameRequester::loadMatchmade);
   }
 
   private static void mergeTurnamentMatch() {

@@ -65,7 +65,7 @@ public final class StatText {
       " - Objective Damage während Roam";
   public static final String GANKING = "Ganks < br /> " +
       "Stats: <br />" +
-      " - Team Invades + Buffs genommen<br />" +
+      " - Team Invades + Buffs genommen <br />" +
       " - Ganks Earlygame <br />" +
       " - Ganks gesamt/Proximity <br />" +
       " - Ganks Priorität (Top/Mid/Bot) <br />" +
@@ -174,13 +174,13 @@ public final class StatText {
       " - Gegner unter Kontrolle <br />" +
       " - Verbündete gerettet <br />" +
       " - Utility Score";
-  public static final String GANK_SURVIVAL_TIMEWASTING = "Gank überleben < br /> " +
+  public static final String WAVE_RESOURCEMANAGEMENT = "Wave und Resourcemanagement < br /> " +
       "Stats: <br />" +
-      " - Gank Setup / Jungle Gap <br />" +
-      " - Jungle Timewaste <br />" +
-      " - Roams entdeckt <br />" +
-      " - Gepickt worden <br />" +
-      " - Gank Tode";
+      " - Lebensstatus <br />" +
+      " - Verwendung von Resourcen <br />" +
+      " - Wavemanagement und Jungle Clear <br />" +
+      " - geplante Resets <br />" +
+      " - ";
   public static final String ISOLATION = "Lane isolieren < br /> " +
       "Stats: <br />" +
       " - Minion Effizienz < br />" +

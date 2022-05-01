@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import de.xeri.league.models.enums.DragonSoul;
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.models.match.PlayerperformanceInfo;
+import de.xeri.league.util.Const;
 import lombok.val;
 
 /**
@@ -59,7 +60,7 @@ public class Ratings {
       return handleValues(minionAvantagePerRoam, xpEfficiency, goldEfficiency, roamSuccess, objectiveDamageWhileRoaming);
 
     } else if (subcategory.equals(StatSubcategory.GANKING)) {
-      return handleValues(teamInvadesAndBuffsTaken, ganksEarlygame, proximity, gankPriority, gankSetups);
+      return handleValues(teamInvadesAndBuffsTaken, ganksEarlygameSpottedAndTimeWasted, proximity, gankPriority, gankSetups);
 
     } else if (subcategory.equals(StatSubcategory.DIVING)) {
       return handleValues(divingSuccessrate, divingDisengagerate, divesDied);
@@ -103,8 +104,8 @@ public class Ratings {
     } else if (subcategory.equals(StatSubcategory.TEAM_UTILITY)) {
       return handleValues(damageShielded, crowdControl, enemiesControlled, teammatesSaved, utilityScore);
 
-    } else if (subcategory.equals(StatSubcategory.GANK_SURVIVAL_TIMEWASTING)) {
-      return handleValues(jungleTimewaste, roamsScouted);
+    } else if (subcategory.equals(StatSubcategory.WAVE_RESOURCEMANAGEMENT)) {
+      return handleValues(healthState, resourceState, wavesOrJungleClear, planedResets);
 
     } else if (subcategory.equals(StatSubcategory.ISOLATION)) {
       return handleValues(minionEfficiency, isolationXPEfficiency, wardsUsed, damageTrading, resetAmount);
@@ -128,7 +129,7 @@ public class Ratings {
       return handleValues(ffRate, laneLeadAfterDiedEarly, farmingFromBehind, wardingFromBehind, deathsFromBehind);
 
     } else if (subcategory.equals(StatSubcategory.CONSISTENCY)) {
-      return handleValues(earlyLevelupLead, farmAdvantageFromAhead, farmAdvantageFromBehind, xpAdvantageFromAhead, xpAdvantageFromBehind);
+      return handleValues(earlyLevelupLead, goldAdvantageFromAhead, goldAdvantageFromBehind, xpAdvantageFromAhead, xpAdvantageFromBehind);
 
     } else if (subcategory.equals(StatSubcategory.VERSATILTITY)) {
       return handleValues(visionValue, roamingValue, aggressionValue, fightingValue, survivabilityValue);
@@ -249,39 +250,16 @@ public class Ratings {
       .sub("Ocean-Soul", p -> p.getTeamperformance().getSoul().equals(DragonSoul.OCEAN) ? 1 : 0);
 
   //</editor-fold>
-  //<editor-fold desc="Kategorie 1.4: WARDING (open)">
+  //<editor-fold desc="Kategorie 1.4: WARDING">
   public Stat visionScoreAdvantage = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getVisionscoreAdvantage)
+      .nullable()
+      .sub("Visionscore", Playerperformance::getVisionScore)
+      .sub("Wards placed", Playerperformance::getWardsPlaced);
+
+  public Stat trinketEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getTrinketEfficiency())
       .nullable();
-
-  //TODO (Abgie) 27.04.2022: Later
-  public Stat trinketEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  }.nullable();
 
   public Stat firstWardTime = new Stat(playerperformances, OutputType.TIME, 2)
       .map(p -> p.getStats().getFirstWardTime())
@@ -350,92 +328,19 @@ public class Ratings {
       .map(Playerperformance::getCreepsInvade)
       .nullable();
 
-  //TODO (Abgie) 27.04.2022:
-  public Stat midgameXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4) {
+  public Stat midgameXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4)
+      .map(p -> p.getStats().getMidgameXPEfficiency())
+      .sub("Midgame-XP", p -> p.getStats().getMidgameXPEfficiency() * Const.MIDGAME_XP)
+      .sub("Lane-Midgame-XP", p -> Const.MIDGAME_XP);
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat midgameGoldEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4)
+      .map(p -> p.getStats().getMidgameGoldEfficiency())
+      .sub("Midgame-Gold", p -> p.getStats().getMidgameGoldEfficiency() * Const.MIDGAME_GOLD)
+      .sub("Lane-Midgame-Gold", p -> Const.MIDGAME_GOLD);
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat lateXPGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4)
+      .map(p -> p.getStats().getLategameLead());
 
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 27.04.2022:
-  public Stat midgameGoldEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 27.04.2022:
-  public Stat lateXPGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   //</editor-fold>
   //<editor-fold desc="Kategorie 2.3: ROAMING (open)">
   //TODO (Abgie) 27.04.2022: Maybe Roams Scouted
@@ -588,7 +493,8 @@ public class Ratings {
       .map(p -> p.getStats().getInvadingAndBuffs())
       .nullable();
 
-  public Stat ganksEarlygame = new Stat(playerperformances, OutputType.NUMBER, 3)
+  //TODO (Abgie) 01.05.2022: spotted and Wasted
+  public Stat ganksEarlygameSpottedAndTimeWasted = new Stat(playerperformances, OutputType.NUMBER, 3)
       .map(Playerperformance::getGanksEarly)
       .nullable();
 
@@ -1277,37 +1183,15 @@ public class Ratings {
       .nullable()
       .sub("Total CS", Playerperformance::getCreepsTotal);
 
-  //TODO (Abgie) 28.04.2022:
   public Stat trueKDA = new Stat(playerperformances, OutputType.TEXT, 12) {
     @Override
-    public double calculate() {
-      return playerperformances.stream().mapToDouble(p -> p.getStats().getTrueKdaValue()).average().orElse(0);
-    }
-
-    @Override
     public String display() {
-      return playerperformances.stream().mapToInt(Playerperformance::getKills).sum() + " / " +
-          playerperformances.stream().mapToInt(Playerperformance::getDeaths).sum() + " / " +
-          playerperformances.stream().mapToInt(Playerperformance::getAssists).sum() + " / ";
+      return Math.round(playerperformances.stream().mapToDouble(p -> p.getStats().getTrueKdaKills()).average().orElse(0) * 10) / 10.0 +
+          " / " + Math.round(playerperformances.stream().mapToDouble(p -> p.getStats().getTrueKdaDeaths()).average().orElse(1) * 10) / 10.0 +
+          " / " + Math.round(playerperformances.stream().mapToDouble(p -> p.getStats().getTrueKdaAssists()).average().orElse(0) * 10) / 10.0;
     }
-
-    @Override
-    public double average() {
-      return (Playerperformance.get().stream().mapToInt(Playerperformance::getKills).sum() +
-          Playerperformance.get().stream().mapToInt(Playerperformance::getAssists).sum()) * 1d /
-          Playerperformance.get().stream().mapToInt(Playerperformance::getDeaths).sum();
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  }.map(p -> p.getStats().getTrueKdaValue())
+      .nullable();
   //</editor-fold>
   //<editor-fold desc="Kategorie 4.5: ITEMIZATION">
   public Stat legendaryItems = new Stat(playerperformances, OutputType.NUMBER, 2)
@@ -1373,6 +1257,7 @@ public class Ratings {
       return 0;
     }
   };
+
   //</editor-fold>
   //<editor-fold desc="Kategorie 5.2: EARLY_SURVIVAL">
   public Stat firstKillDeath = new Stat(playerperformances, OutputType.TIME, 2)
@@ -1478,33 +1363,12 @@ public class Ratings {
       .map(Playerperformance::getImmobilizations)
       .nullable();
 
-  public Stat enemiesControlled = new Stat(playerperformances, OutputType.NUMBER, 4) {
+  public Stat enemiesControlled = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getEnemyControlAdvantage())
+      .nullable()
+      .sub("Gegner kontrolliert", p -> p.getStats().getEnemyControlled())
+      .sub("Spieler kontrolliert", p -> p.getStats().getEnemyControlled() - p.getStats().getEnemyControlAdvantage());
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   public Stat teammatesSaved = new Stat(playerperformances, OutputType.NUMBER, 3)
       .map(Playerperformance::getSavedAlly)
       .nullable();
@@ -1537,10 +1401,9 @@ public class Ratings {
       return 0;
     }
   };
-  //</editor-fold>
-  //<editor-fold desc="Kategorie 5.4: GANK_SURVIVAL_TIMEWASTING">
-  //TODO (Abgie) 29.04.2022:
-  public Stat jungleTimewaste = new Stat(playerperformances, OutputType.TIME, 2) {
+  //</editor-fold>>
+  //<editor-fold desc="Kategorie 5.4: WAVE_RESOURCEMANAGEMENT">
+  public Stat healthState = new Stat(playerperformances, OutputType.TIME, 2) {
 
     @Override
     public double calculate() {
@@ -1568,9 +1431,8 @@ public class Ratings {
     }
   };
 
-  @Deprecated
   //TODO (Abgie) 29.04.2022:
-  public Stat roamsScouted = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  public Stat resourceState = new Stat(playerperformances, OutputType.NUMBER, 2) {
 
     @Override
     public double calculate() {
@@ -1597,6 +1459,65 @@ public class Ratings {
       return 0;
     }
   };
+
+  //TODO (Abgie) 29.04.2022: Lane positioning
+  public Stat wavesOrJungleClear = new Stat(playerperformances, OutputType.PERCENT, 3) {
+
+    @Override
+    public double calculate() {
+      return 0;
+    }
+
+    @Override
+    public String display() {
+      return null;
+    }
+
+    @Override
+    public double average() {
+      return 0;
+    }
+
+    @Override
+    public double maximum() {
+      return 0;
+    }
+
+    @Override
+    public double minimum() {
+      return 0;
+    }
+  };
+
+  //TODO (Abgie) 29.04.2022:
+  public Stat planedResets = new Stat(playerperformances, OutputType.PERCENT, 3) {
+
+    @Override
+    public double calculate() {
+      return 0;
+    }
+
+    @Override
+    public String display() {
+      return null;
+    }
+
+    @Override
+    public double average() {
+      return 0;
+    }
+
+    @Override
+    public double maximum() {
+      return 0;
+    }
+
+    @Override
+    public double minimum() {
+      return 0;
+    }
+  };
+
   //</editor-fold>
   //<editor-fold desc="Kategorie 5.5: ISOLATION">
   //TODO (Abgie) 29.04.2022: Isolationen
@@ -2023,7 +1944,7 @@ public class Ratings {
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.3: LANE_BILANCE">
   public Stat earlyXPGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4)
-      .map(Playerperformance::getEarlyLaneLead)
+      .map(Playerperformance::getLaneLead)
       .nullable();
 
   public Stat laneObjectiveAdvantage = new Stat(playerperformances, OutputType.NUMBER, 2)
@@ -2039,10 +1960,10 @@ public class Ratings {
       .sub("Turretplates verloren", p -> p.getTurretplates() - p.getStats().getTurretplateAdvantage());
 
   public Stat laneEnemyUnderControlAdvantage = new Stat(playerperformances, OutputType.TIME, 2)
-      .map(p -> p.getStats().getEnemyControlAdvantage())
+      .map(p -> p.getStats().getEnemyControlAdvantageEarly())
       .nullable()
-      .sub("Gegner kontrolliert", p -> p.getStats().getEnemyControlled())
-      .sub("Spieler kontrolliert", p -> p.getStats().getEnemyControlled() - p.getStats().getEnemyControlAdvantage());
+      .sub("Gegner kontrolliert", p -> p.getStats().getEnemyControlledEarly())
+      .sub("Spieler kontrolliert", p -> p.getStats().getEnemyControlledEarly() - p.getStats().getEnemyControlAdvantageEarly());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.4: PLAYSTYLE">
@@ -2276,223 +2197,250 @@ public class Ratings {
       .map(p -> p.getStats().getLeadDifferenceAfterDiedEarly());
 
   public Stat farmingFromBehind = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getFarmingFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getFarmingFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getFarmingFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getFarmingFromBehind())
+          .min().orElse(0);
     }
-  };
+  }.nullable();
+
   public Stat wardingFromBehind = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getWardingFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getWardingFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getWardingFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getWardingFromBehind())
+          .min().orElse(0);
     }
-  };
+  }.nullable();
+
   public Stat deathsFromBehind = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getDeathsFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getDeathsFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getDeathsFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getDeathsFromBehind())
+          .min().orElse(0);
     }
-  };
+  }.nullable()
+      .reverse();
+
   //</editor-fold>
   //<editor-fold desc="Kategorie 7.2: CONSISTENCY">
-  public Stat earlyLevelupLead = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  public Stat earlyLevelupLead = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getLevelupEarlier())
+      .nullable();
 
+  public Stat goldAdvantageFromAhead = new Stat(playerperformances, OutputType.NUMBER, 4) {
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .min().orElse(0);
     }
-  };
-  public Stat farmAdvantageFromAhead = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  }.nullable();
 
+  public Stat goldAdvantageFromBehind = new Stat(playerperformances, OutputType.NUMBER, 4) {
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getGoldFromBehind())
+          .min().orElse(0);
     }
-  };
-  public Stat farmAdvantageFromBehind = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  }.nullable();
 
+  public Stat xpAdvantageFromAhead = new Stat(playerperformances, OutputType.NUMBER, 4) {
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isAhead())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .min().orElse(0);
     }
-  };
-  public Stat xpAdvantageFromAhead = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  }.nullable();
 
+  public Stat xpAdvantageFromBehind = new Stat(playerperformances, OutputType.NUMBER, 4) {
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      return playerperformances.stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double average() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .average().orElse(0);
     }
 
     @Override
     public double maximum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .max().orElse(0);
     }
 
     @Override
     public double minimum() {
-      return 0;
+      return Playerperformance.get().stream()
+          .filter(p -> p.getStats().isBehind())
+          .mapToDouble(p -> p.getStats().getXpFromBehind())
+          .min().orElse(0);
     }
-  };
-  public Stat xpAdvantageFromBehind = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  }.nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   //</editor-fold>
   //<editor-fold desc="Kategorie 7.3: VERSATILTITY">
   public Stat visionValue = new Stat(playerperformances, OutputType.NUMBER, 4) {
@@ -2527,7 +2475,7 @@ public class Ratings {
     @Override
     public double calculate() {
       return handleValues(firstTowerAdvantage, turretPlatings, turretTakedownsEarly, turretsSplitpushed, turretParticipation,
-          teleportKills, jungleCampsStolen, midgameXPEfficiency, midgameGoldEfficiency, lateXPGoldLead, minionAvantagePerRoam, xpEfficiency, goldEfficiency, roamSuccess, objectiveDamageWhileRoaming, teamInvadesAndBuffsTaken, ganksEarlygame, proximity, gankPriority, gankSetups, divingSuccessrate, divingDisengagerate, divesDied);
+          teleportKills, jungleCampsStolen, midgameXPEfficiency, midgameGoldEfficiency, lateXPGoldLead, minionAvantagePerRoam, xpEfficiency, goldEfficiency, roamSuccess, objectiveDamageWhileRoaming, teamInvadesAndBuffsTaken, ganksEarlygameSpottedAndTimeWasted, proximity, gankPriority, gankSetups, divingSuccessrate, divingDisengagerate, divesDied);
     }
 
     @Override
@@ -2603,7 +2551,8 @@ public class Ratings {
     public double calculate() {
       return handleValues(playtimeLive, timeWithoutDying, survivedClose, deathPositioning, firstKillDeath, firstBaseThroughRecall,
           laneLeadDeficitThroughDeaths, laneLeadDeficitWithoutDeaths, damageShielded, crowdControl, enemiesControlled, teammatesSaved,
-          utilityScore, jungleTimewaste, roamsScouted, minionEfficiency, isolationXPEfficiency, wardsUsed, damageTrading, resetAmount);
+          utilityScore, healthState, resourceState, wavesOrJungleClear, planedResets, minionEfficiency, isolationXPEfficiency, wardsUsed,
+          damageTrading, resetAmount);
     }
 
     @Override
@@ -2635,61 +2584,14 @@ public class Ratings {
       .map(p -> p.getStats().getAmplifierTime() != 0 ? 1 : 0)
       .nullable();
 
-  public Stat resistanceBuild = new Stat(playerperformances, OutputType.PERCENT, 3) {
+  public Stat resistanceBuild = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getDurabilityTime() != 0 ? 1 : 0)
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  public Stat farmstop = new Stat(playerperformances, OutputType.TIME, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat farmstop = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getCsDropAtMinute() != 0 ? 1 : 0)
+      .nullable()
+      .sub("Minute", p -> p.getStats().getCsDropAtMinute());
   //</editor-fold>
   //<editor-fold desc="Kategorie 7.5: STATS">
   public Stat winrate = new Stat(playerperformances, OutputType.PERCENT, 3)
@@ -2751,9 +2653,10 @@ public class Ratings {
   public Stat kDA = new Stat(playerperformances, OutputType.TEXT, 12) {
     @Override
     public double calculate() {
+      int deaths = playerperformances.stream().mapToInt(Playerperformance::getDeaths).sum();
       return (playerperformances.stream().mapToInt(Playerperformance::getKills).sum() +
           playerperformances.stream().mapToInt(Playerperformance::getAssists).sum()) * 1d /
-          playerperformances.stream().mapToInt(Playerperformance::getDeaths).sum();
+          (deaths == 0 ? 1 : deaths);
     }
 
     @Override
@@ -2765,16 +2668,18 @@ public class Ratings {
 
     @Override
     public double average() {
+      int deaths = Playerperformance.get().stream().mapToInt(Playerperformance::getDeaths).sum();
       return (Playerperformance.get().stream().mapToInt(Playerperformance::getKills).sum() +
           Playerperformance.get().stream().mapToInt(Playerperformance::getAssists).sum()) * 1d /
-          Playerperformance.get().stream().mapToInt(Playerperformance::getDeaths).sum();
+          (deaths == 0 ? 1 : deaths);
     }
 
     @Override
     public double maximum() {
+      int deaths = Playerperformance.get().stream().mapToInt(Playerperformance::getDeaths).sum();
       return (Playerperformance.get().stream().mapToInt(Playerperformance::getKills).max().orElse(0) +
           Playerperformance.get().stream().mapToInt(Playerperformance::getAssists).max().orElse(0)) * 1d /
-          Playerperformance.get().stream().mapToInt(Playerperformance::getDeaths).max().orElse(0);
+          (deaths == 0 ? 1 : deaths);
     }
 
     @Override

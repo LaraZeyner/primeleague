@@ -1,9 +1,11 @@
 package de.xeri.league.util;
 
+import java.awt.geom.Point2D;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import de.xeri.league.models.match.Position;
 import org.hibernate.Session;
 
 /**
@@ -28,5 +30,9 @@ public final class Util {
 
   public static String capitalizeFirst(String str) {
     return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+  }
+
+  public static double distance(Position a, Position b) {
+    return Point2D.distance(a.getX(), a.getX(), b.getX(), b.getY());
   }
 }

@@ -93,6 +93,7 @@ public final class RiotGameRequester {
     if (isValidGame(game, timeline, queueType))
       ScheduledGame.get().remove(scheduledGame);
     Data.getInstance().getSession().remove(scheduledGame);
+    Data.getInstance().commit();
   }
 
   private static boolean isValidGame(JSON gameJson, JSON timelineJson, QueueType queueType) {
@@ -215,6 +216,11 @@ public final class RiotGameRequester {
     final short firstTrinketSwap = searchForTrinketSwap(events, pId);
     stats.setFirstTrinketSwap(firstTrinketSwap);
 
+    final List<Integer> yellowPlacementTimes = searchForTrinketPlacementsUntilSwap(events, pId, firstTrinketSwap);
+    final int twoChargesUp = searchForRechargeTimes(playerperformance, firstTrinketSwap, yellowPlacementTimes);
+    final double twoChargesUpPercentage = (twoChargesUp - 240_000) * 1d / (firstTrinketSwap * 1000);
+    stats.setTrinketEfficiency(BigDecimal.valueOf(1 - twoChargesUpPercentage));
+
     val purchases = searchForControlPurchase(events, pId);
     val placements = searchForControlPlacements(events, pId);
     final short averageControlTime = (short) IntStream.range(0, placements.size())
@@ -230,85 +236,148 @@ public final class RiotGameRequester {
         .sum();
     stats.setTeamDamageMitigated(playerperformance, totalMitigation);
 
-    int bountyDrop = 0;
+    boolean wasAhead = false;
+    boolean wasBehind = false;
+    int behindStartMillis = 0;
+    int behindEndMillis = 0;
+    boolean comeback = false;
+    int endMinute = 0;
+    int xpLead = 0;
+    for (int i = 0; i < playerInfo.size(); i++) {
+      final int infoMilli = new ArrayList<>(playerInfo.keySet()).get(i);
+      endMinute = infoMilli / 60000;
+      if (endMinute <= 15) {
+        if (getLeadAt(playerInfo, player, endMinute) >= Const.AHEAD_XPGOLD && !wasAhead) {
+          wasAhead = true;
+          behindStartMillis = infoMilli;
+        } else if (getLeadAt(playerInfo, player, endMinute) <= (Const.AHEAD_XPGOLD * -1) && !wasBehind) {
+          wasBehind = true;
+          behindStartMillis = infoMilli;
+        }
+      }
+      if (wasAhead && getLeadAt(playerInfo, player, endMinute) < 0 ||
+          wasBehind && getLeadAt(playerInfo, player, endMinute) > 0) {
+        behindEndMillis = infoMilli;
+        comeback = true;
+      }
+
+      xpLead = getXPLeadAt(playerInfo, player, endMinute);
+    }
+
+    if (behindStartMillis != 0 && behindEndMillis == 0) {
+      behindEndMillis = endMinute * 60_000;
+    }
+    stats.setAhead(wasAhead);
+    stats.setBehind(wasBehind);
+    stats.setComeback(comeback);
+    stats.setXpLead((short) xpLead);
+
+
+    int deathsFromBehind = 0;
+    short bountyDrop = 0;
     int duelsWon = 0;
     int duelsLost = 0;
     int deathsEarly = 0;
     int firstKillTime = 0;
     int firstDeathTime = 0;
+
+    val killBounties = new ArrayList<Short>();
+    val assistBounties = new ArrayList<Short>();
+
     for (JSONObject event : events) {
       if (event.has("victimId")) {
-        final int victimId = event.getInt("victimId");
         val type = EventTypes.valueOf(event.getString("type"));
-        if (victimId == pId && type.equals(EventTypes.CHAMPION_KILL)) {
-          if (firstKillTime == 0) {
-            int timestamp = event.getInt("timestamp");
-            firstKillTime = timestamp / 1000;
-          }
-          final int killerId = event.getInt("killerId");
-          if (killerId != 0) {
-            int timestamp = event.getInt("timestamp");
-            if (timestamp / 60_000 <= 14) {
-              deathsEarly++;
-            }
-            bountyDrop += event.getInt("shutdownBounty");
-          }
-          if (!event.has("assistingParticipantIds")) {
-            duelsLost++;
-          }
-        }
-      }
-      if (event.has("killerId")) {
-        final int killerId = event.getInt("killerId");
-        val type = EventTypes.valueOf(event.getString("type"));
+        if (type.equals(EventTypes.CHAMPION_KILL)) {
+          final short shutdownBounty = (short) event.getInt("shutdownBounty");
+          final short bounty = (short) event.getInt("bounty");
+          final short totalBounty = (short) (bounty + shutdownBounty);
 
-        if (killerId == pId && type.equals(EventTypes.CHAMPION_KILL)) {
-          if (firstDeathTime == 0) {
+          if (enemyPlayer != null && isParticipant(enemyPlayer.getId() + 1, event, KillRole.VICTIM)) {
             int timestamp = event.getInt("timestamp");
-            firstDeathTime = timestamp / 1000;
+            // from ahead
+            if (timestamp > behindStartMillis && timestamp < behindEndMillis) {
+              deathsFromBehind--;
+            }
           }
-          if (!event.has("assistingParticipantIds")) {
-            duelsWon++;
+
+          if (isParticipant(pId, event, KillRole.VICTIM)) {
+            //handle First Death time
+            if (firstDeathTime == 0) {
+              int timestamp = event.getInt("timestamp");
+              firstDeathTime = timestamp / 1000;
+            }
+
+            if (wasKilledByPlayer(event)) {
+              int timestamp = event.getInt("timestamp");
+              if (timestamp / 60_000 <= 14) {
+                deathsEarly++;
+              }
+
+              // Bounties
+              killBounties.add((short) (totalBounty * -1));
+              bountyDrop += shutdownBounty;
+
+              //lost duel
+              if (!event.has("assistingParticipantIds")) {
+                duelsLost++;
+              }
+
+              // from behind
+              if (timestamp > behindStartMillis && timestamp < behindEndMillis) {
+                deathsFromBehind++;
+              }
+            }
+
+          } else if (isParticipant(pId, event, KillRole.KILLER)) {
+            //handle First Kill time
+            if (firstKillTime == 0) {
+              int timestamp = event.getInt("timestamp");
+              firstKillTime = timestamp / 1000;
+            }
+
+            //won duel
+            if (!event.has("assistingParticipantIds")) {
+              duelsWon++;
+            }
+
+            // Bounties
+            killBounties.add(totalBounty);
+
+          } else if (isParticipant(pId, event, KillRole.ASSIST) && wasKilledByPlayer(event)) {
+            // Bounties
+            final int timestamp = event.getInt("timestamp");
+            final double factor = determineAssistbountyFactor(timestamp);
+            final int totalAssistBounty = bounty == Const.KILL_BOUNTY_FIRST_BLOOD ? Const.ASSIST_BOUNTY_FIRST_BLOOD :
+                (int) (bounty * factor);
+            final int participantAmount = event.getJSONArray("assistingParticipantIds").toList().size();
+            final int assistBounty = totalAssistBounty / participantAmount;
+            assistBounties.add((short) assistBounty);
           }
         }
       }
+
     }
+
     if (firstDeathTime < 300) {
       int deathMinute = firstDeathTime / 60;
       final int leadAt = getLeadAt(playerInfo, player, deathMinute);
       stats.setLeadDifferenceAfterDiedEarly((short) (getLeadAt(playerInfo, player, 15) - leadAt));
     }
 
+    handleFromBehind(events, playerInfo, player, pId, stats, enemyPlayer, behindStartMillis, behindEndMillis, deathsFromBehind);
+
     stats.setFirstKillTime((short) firstKillTime, (short) firstDeathTime);
+
 
     short startItemSold = determineStartItem(events);
     stats.setStartItemSold(startItemSold);
 
-    boolean wasAhead = false;
-    boolean wasBehind = false;
-    boolean comeback = false;
-    int xpLead = 0;
-    for (int i = 0; i < playerInfo.size(); i++) {
-      final int integer = new ArrayList<>(playerInfo.keySet()).get(i);
-      final int minute = integer / 60000;
-      if (minute <= 15) {
-        if (getLeadAt(playerInfo, player, minute) >= Const.AHEAD_XPGOLD && !wasAhead) {
-          wasAhead = true;
-        } else if (getLeadAt(playerInfo, player, minute) <= (Const.AHEAD_XPGOLD * -1) && !wasBehind) {
-          wasBehind = true;
-        }
-      }
-      if (wasAhead && getLeadAt(playerInfo, player, minute) < 0 ||
-          wasBehind && getLeadAt(playerInfo, player, minute) > 0) {
-        comeback = true;
-      }
 
-      xpLead = getXPLeadAt(playerInfo, player, minute);
-    }
-    stats.setAhead(wasAhead);
-    stats.setBehind(wasBehind);
-    stats.setComeback(comeback);
-    stats.setXpLead((short) xpLead);
+    final double kills = killBounties.stream().filter(b -> b > 0).mapToInt(b -> b).sum() * 1d / Const.KILL_BOUNTY;
+    final double deaths = killBounties.stream().filter(b -> b < 0).mapToInt(b -> b).sum() * 1d / Const.KILL_BOUNTY;
+    final double assists = assistBounties.stream().mapToInt(b -> b).sum() * 1d / Const.ASSIST_BOUNTY;
+    stats.setTrueKda(kills, deaths, assists);
+
 
     byte objectivesEarlyWe = 0;
     byte objectivesEarlyEnemy = 0;
@@ -360,15 +429,40 @@ public final class RiotGameRequester {
     stats.setExtendingLead(leadExtend);
     stats.setDeathsEarly(playerperformance, (byte) deathsEarly);
     stats.setDuels(playerperformance, duelsWon, duelsLost);
-    stats.setBountyDifference(playerperformance, (short) bountyDrop);
+    stats.setBountyDifference(playerperformance, bountyDrop);
+
+    double csAt10 = 0;
+    for (PlayerperformanceInfo info : playerperformance.getInfos()) {
+      if (info.getMinute() == 10) {
+        final int csAt = getCSAt(playerInfo, player, info.getMinute());
+        csAt10 = csAt * 1d / info.getMinute();
+      }
+      if (info.getMinute() > 10) {
+        final int csAt = getCSAt(playerInfo, player, info.getMinute());
+        final double csPerMinute = csAt * 1d / minute;
+        if (csAt10 > 0 && csPerMinute < csAt10 * 0.8) {
+          stats.setCsDropAtMinute(info.getMinute());
+          break;
+        }
+      }
+    }
 
 
     final double csAt = getCSAt(playerInfo, player, 14) * 1d / 158;
     stats.setEarlyFarmEfficiency(BigDecimal.valueOf(csAt));
     stats.setEarlyGoldAdvantage((short) getGoldLeadAt(playerInfo, player, 10));
 
+    getMidgameStats(playerInfo, player, stats, endMinute);
+    handleControlled(playerInfo, player, minute, stats);
 
-    handleControlledAt(playerInfo, player, minute, stats);
+    if (enemyPlayer != null) {
+      final byte earlierLevelups = 0;
+      final byte totalLevelups = determineLevelups(playerperformance, events, enemyPlayer, earlierLevelups);
+      if (totalLevelups != 0) { // null division
+        final double earlierLevelupsAdvantage = earlierLevelups * 1d / totalLevelups;
+        stats.setLevelupEarlier(BigDecimal.valueOf(earlierLevelupsAdvantage));
+      }
+    }
 
     stats.setSpellDodge(playerperformance, enemyPlayer.getSmall(StoredStat.SPELL_LANDED), enemyPlayer.getSmall(StoredStat.SPELL_DODGE),
         enemyPlayer.getSmall(StoredStat.SPELL_DODGE_QUICK));
@@ -380,6 +474,223 @@ public final class RiotGameRequester {
     playerperformance.setStats(stats);
   }
 
+  private static byte determineLevelups(Playerperformance playerperformance, List<JSONObject> events, JSONPlayer enemyPlayer,
+                                        byte earlierLevelups) {
+    byte totalLevelups = 0;
+    for (JSONObject event : events) {
+      val type = EventTypes.valueOf(event.getString("type"));
+
+      if (type.equals(EventTypes.LEVEL_UP)) {
+        final int participantId = event.getInt("participantId");
+        if (participantId == enemyPlayer.getId() + 1) {
+          int level = event.getInt("level");
+
+          final int levelupTime = getLevelupTime(playerperformance, level);
+          if (levelupTime != 0) { // byte not nullable
+            int timestamp = event.getInt("timestamp");
+            if (levelupTime < timestamp) {
+              earlierLevelups++;
+            }
+            totalLevelups++;
+          }
+        }
+      }
+    }
+    return totalLevelups;
+  }
+
+  private static void handleFromBehind(List<JSONObject> events, Map<Integer, JSONObject> playerInfo, JSONPlayer player, int pId,
+                                       PlayerperformanceStats stats, JSONPlayer enemyPlayer, int behindStartMillis, int behindEndMillis,
+                                       int deathsFromBehind) {
+    int wardsFromBehind = 0;
+    for (JSONObject event : events) {
+      val type = EventTypes.valueOf(event.getString("type"));
+      if (type.equals(EventTypes.WARD_PLACED)) {
+        int timestamp = event.getInt("timestamp");
+        if (timestamp > behindStartMillis && timestamp < behindEndMillis) {
+          final int creatorId = event.getInt("creatorId");
+          if (pId == creatorId) {
+            wardsFromBehind++;
+
+          } else if (enemyPlayer != null && enemyPlayer.getId() + 1 == creatorId) {
+            wardsFromBehind--;
+          }
+        }
+      }
+    }
+
+    final int csLeadAtStart = getCSLeadAt(playerInfo, player, behindStartMillis / 60_000);
+    final int csLeadAtEnd = getCSLeadAt(playerInfo, player, behindEndMillis / 60_000);
+    final int creepScoreFromBehind = csLeadAtEnd - csLeadAtStart;
+
+    final int goldLeadAtStart = getGoldLeadAt(playerInfo, player, behindStartMillis / 60_000);
+    final int goldLeadAtEnd = getGoldLeadAt(playerInfo, player, behindEndMillis / 60_000);
+    final int goldFromBehind = goldLeadAtEnd - goldLeadAtStart;
+
+    final int xpLeadAtStart = getXPLeadAt(playerInfo, player, behindStartMillis / 60_000);
+    final int xpLeadAtEnd = getXPLeadAt(playerInfo, player, behindEndMillis / 60_000);
+    final int xpFromBehind = xpLeadAtEnd - xpLeadAtStart;
+
+    stats.setBehaviourFromBehindAhead((short) creepScoreFromBehind, (short) wardsFromBehind, (short) deathsFromBehind, (short) goldFromBehind,
+        (short) xpFromBehind);
+  }
+
+  private static int searchForRechargeTimes(Playerperformance playerperformance, short firstTrinketSwap, List<Integer> yellowPlacementTimes) {
+    int twoTrinkets = 0;
+    val yellows = new ArrayList<>(yellowPlacementTimes);
+    int lastWardCharged = 0;
+    int chargedTime = 0;
+    int currentAmount = 0;
+    int currentMilli = 0;
+    int currentLevel = 1;
+    boolean wasNextLevel = false;
+    boolean wasNextWard = false;
+    boolean wasNextCharge = true;
+    while (currentMilli < firstTrinketSwap * 1000) {
+      if (wasNextCharge) {
+        currentAmount++;
+        lastWardCharged = currentMilli;
+        wasNextCharge = false;
+
+      } else if (wasNextLevel) {
+        currentLevel++;
+        if (chargedTime - lastWardCharged > getRechargeTimeAtLevel(currentLevel)) {
+          chargedTime = lastWardCharged + getRechargeTimeAtLevel(currentLevel);
+        }
+        wasNextLevel = false;
+
+      } else if (wasNextWard && !yellows.isEmpty()) {
+        if (!yellows.isEmpty()) {
+          yellows.remove(0);
+        }
+        currentAmount--;
+        wasNextWard = false;
+      }
+
+      int nextLevel = getLevelupTime(playerperformance, currentLevel + 1);
+      int nextWardPlaced = yellows.isEmpty() ? Integer.MAX_VALUE : yellows.get(0);
+      if (nextLevel > nextWardPlaced && nextLevel > yellows.get(chargedTime)) {
+        wasNextLevel = true;
+      } else if (nextWardPlaced > nextLevel && nextWardPlaced > yellows.get(chargedTime)) {
+        wasNextWard = true;
+      } else if (currentAmount < 2) {
+        wasNextCharge = true;
+      }
+      int min = Math.min(Math.min(nextLevel, nextWardPlaced), chargedTime);
+      if (currentAmount == 2) {
+        twoTrinkets += min - currentMilli;
+      }
+      currentMilli = min;
+    }
+
+    return twoTrinkets / 1000;
+  }
+
+  private static void getMidgameStats(Map<Integer, JSONObject> playerInfo, JSONPlayer player, PlayerperformanceStats stats, int endMinute) {
+    val infoAt14 = getPlayerperformanceInfo(playerInfo, player, 14);
+    if (infoAt14 != null) {
+      final int xpDifference;
+      final int goldDifference;
+
+      val infoAt27 = getPlayerperformanceInfo(playerInfo, player, 27);
+      if (infoAt27 != null) {
+
+        val enemyPlayer = getEnemyPlayer(player);
+        if (enemyPlayer != null) {
+          final int leadMidgame = getLeadAt(playerInfo, player, 27);
+          final int leadLategame = getLeadAt(playerInfo, player, endMinute);
+          final int leadDifference = leadLategame - leadMidgame;
+          stats.setLategameLead((short) leadDifference);
+        }
+
+        xpDifference = infoAt27.getExperience() - infoAt14.getExperience();
+        goldDifference = infoAt27.getTotalGold() - infoAt14.getTotalGold();
+
+      } else {
+        xpDifference = infoAt14.getPlayerperformance().getExperience() - infoAt14.getExperience();
+        goldDifference = infoAt14.getPlayerperformance().getGoldTotal() - infoAt14.getTotalGold();
+      }
+      final double xpPercentage = xpDifference * 1d / Const.MIDGAME_XP;
+      stats.setMidgameXPEfficiency(BigDecimal.valueOf(xpPercentage));
+
+      final double goldPercentage = goldDifference * 1d / Const.MIDGAME_XP;
+      stats.setMidgameGoldEfficiency(BigDecimal.valueOf(goldPercentage));
+    }
+  }
+
+  private static int getRechargeTimeAtLevel(int level) {
+    final int levelProgress = (level - 1) / 17;
+    final int rechargeDifference = Const.YELLOW_TRINKET_RECHARGE_TIME_START - Const.YELLOW_TRINKET_RECHARGE_TIME_END;
+    return (1 - levelProgress) * rechargeDifference + Const.YELLOW_TRINKET_RECHARGE_TIME_END;
+  }
+
+  private static int getLevelupTime(Playerperformance playerperformance, int level) {
+    return playerperformance.getLevelups().stream()
+        .map(PlayerperformanceLevel::getTime)
+        .filter(lvlLevel -> lvlLevel == level)
+        .findFirst().orElse(0);
+  }
+
+  private static double determineAssistbountyFactor(int timestamp) {
+    final int second = timestamp / 1000;
+    if (second <= Const.ASSIST_FACTOR_INCREASE_SECOND) {
+      return Const.ASSIST_FACTOR_START_VALUE;
+
+    } else if (second >= Const.ASSIST_FACTOR_ENDING_SECOND) {
+      return Const.ASSIST_FACTOR_END_VALUE;
+
+    } else {
+      final int currentSecond = second - Const.ASSIST_FACTOR_INCREASE_SECOND;
+      final int timespanDifference = Const.ASSIST_FACTOR_ENDING_SECOND - Const.ASSIST_FACTOR_INCREASE_SECOND;
+      final double progressToMaxValue = currentSecond * 1d / timespanDifference;
+      final double valueDifference = Const.ASSIST_FACTOR_END_VALUE - Const.ASSIST_FACTOR_START_VALUE;
+      return valueDifference * progressToMaxValue + Const.ASSIST_FACTOR_START_VALUE;
+    }
+  }
+
+  /**
+   * Suche, inwiefer Spieler von anderem Spieler getötet wurde
+   *
+   * @param event Ereignis
+   * @return Spieler wurde von anderem Spieler getötet
+   */
+  private static boolean wasKilledByPlayer(JSONObject event) {
+    final int killerId = event.getInt("killerId");
+    return killerId != 0;
+  }
+
+  /**
+   * Suche, inwiefert Spieler am Ereignis beteiligt
+   *
+   * @param pId Id des gesuchten Spielers (bereits angepasst)
+   * @param event Ereignis
+   * @param role Rolle des Spielersd
+   * @return Spieler war am Ereignis beteiligt
+   */
+  private static boolean isParticipant(int pId, JSONObject event, KillRole role) {
+    if (role.equals(KillRole.VICTIM)) {
+      final int victimId = event.getInt("victimId");
+      return pId == victimId;
+
+    } else if (role.equals(KillRole.KILLER)) {
+      final int killerId = event.getInt("killerId");
+      return pId == killerId;
+
+    } else if (role.equals(KillRole.ASSIST) && event.has("assistingParticipantIds")) {
+      val participantIds = event.getJSONArray("assistingParticipantIds").toList()
+          .stream().map(id -> (Integer) id).collect(Collectors.toList());
+      return participantIds.contains(pId);
+    }
+
+    return false;
+  }
+
+  /**
+   * Bestimme das Startitem, dass ein Spieler gekauft hat
+   *
+   * @param events Ereignisse
+   * @return Sekunden, wann es verkauft wurde
+   */
   private static short determineStartItem(List<JSONObject> events) {
     for (JSONObject event : events) {
       val type = EventTypes.valueOf(event.getString("type"));
@@ -395,9 +706,26 @@ public final class RiotGameRequester {
   }
 
   private static int getCSAt(Map<Integer, JSONObject> playerInfo, JSONPlayer player, int minute) {
-      val playerperformanceInfoMeAt15 = getPlayerperformanceInfo(playerInfo, player, minute);
-      if (playerperformanceInfoMeAt15 != null) {
-        return playerperformanceInfoMeAt15.getCreepScore();
+    val playerperformanceInfoMeAt15 = getPlayerperformanceInfo(playerInfo, player, minute);
+    if (playerperformanceInfoMeAt15 != null) {
+      return playerperformanceInfoMeAt15.getCreepScore();
+    }
+    return 0;
+  }
+
+  private static int getCSLeadAt(Map<Integer, JSONObject> playerInfo, JSONPlayer player, int minute) {
+    val enemyPlayer = getEnemyPlayer(player);
+    if (enemyPlayer != null) {
+
+      val playerperformanceInfoMe = getPlayerperformanceInfo(playerInfo, player, minute);
+      if (playerperformanceInfoMe != null) {
+
+        val playerperformanceInfoEnemy = getPlayerperformanceInfo(playerInfo, enemyPlayer, minute);
+        if (playerperformanceInfoEnemy != null) {
+
+          return playerperformanceInfoMe.getCreepScore() - playerperformanceInfoEnemy.getCreepScore();
+        }
+      }
     }
     return 0;
   }
@@ -419,22 +747,37 @@ public final class RiotGameRequester {
     return 0;
   }
 
-  private static void handleControlledAt(Map<Integer, JSONObject> playerInfo, JSONPlayer player, int minute, PlayerperformanceStats stats) {
+  private static void handleControlled(Map<Integer, JSONObject> playerInfo, JSONPlayer player, int minute, PlayerperformanceStats stats) {
+    final List<Double> controlValues = handleControlledAt(playerInfo, player, minute);
+    if (controlValues != null) {
+      stats.setEnemyControlAdvantage(controlValues.get(0), controlValues.get(1));
+    }
+
+    final List<Double> controlValuesAt15 = handleControlledAt(playerInfo, player, 15);
+    if (controlValuesAt15 != null) {
+      stats.setEnemyControlAdvantageEarly(controlValuesAt15.get(0), controlValuesAt15.get(1));
+    }
+  }
+
+  private static List<Double> handleControlledAt(Map<Integer, JSONObject> playerInfo, JSONPlayer player, int minute) {
+    val list = new ArrayList<Double>();
     val enemyPlayer = getEnemyPlayer(player);
     if (enemyPlayer != null) {
 
       val playerperformanceInfoMe = getPlayerperformanceInfo(playerInfo, player, minute);
       if (playerperformanceInfoMe != null) {
         final double enemyControlled = playerperformanceInfoMe.getEnemyControlled();
+        list.add(enemyControlled);
 
         val playerperformanceInfoEnemy = getPlayerperformanceInfo(playerInfo, enemyPlayer, minute);
         if (playerperformanceInfoEnemy != null) {
           final double underControl = playerperformanceInfoEnemy.getEnemyControlled();
-
-          stats.setEnemyControlAdvantage(enemyControlled, underControl);
+          list.add(underControl);
+          return list;
         }
       }
     }
+    return null;
   }
 
   private static int getLeadAt(Map<Integer, JSONObject> playerInfo, JSONPlayer player, int minute) {
@@ -562,12 +905,12 @@ public final class RiotGameRequester {
   private static List<Short> searchForControlPlacements(List<JSONObject> events, int pId) {
     val returnList = new ArrayList<Short>();
     for (JSONObject event : events) {
-      if (event.has("participantId")) {
-        final int participantId = event.getInt("participantId");
+      if (event.has("creatorId")) {
+        final int creatorId = event.getInt("creatorId");
         val type = EventTypes.valueOf(event.getString("type"));
 
-        if (participantId == pId && type.equals(EventTypes.WARD_PLACED)) {
-          val wardTypeString = event.getString("type");
+        if (creatorId == pId && type.equals(EventTypes.WARD_PLACED)) {
+          val wardTypeString = event.getString("wardType");
           val wardType = WardType.valueOf(wardTypeString);
 
           if (wardType.equals(WardType.CONTROL_WARD)) {
@@ -600,15 +943,36 @@ public final class RiotGameRequester {
     return 0;
   }
 
+  private static List<Integer> searchForTrinketPlacementsUntilSwap(List<JSONObject> events, int pId, short second) {
+    val list = new ArrayList<Integer>();
+    for (JSONObject event : events) {
+      if (event.has("creatorId")) {
+        final int creatorId = event.getInt("creatorId");
+        val type = EventTypes.valueOf(event.getString("type"));
+        final int timestamp = event.getInt("timestamp");
+
+        if (creatorId == pId && type.equals(EventTypes.WARD_PLACED) && timestamp / 1000 <= second) {
+          val wardTypeString = event.getString("wardType");
+          val wardType = WardType.valueOf(wardTypeString);
+          if (wardType.equals(WardType.YELLOW_TRINKET)) {
+            list.add(timestamp);
+          }
+        }
+      }
+    }
+
+    return list;
+  }
+
   private static short searchForFirstWardTime(List<JSONObject> events, int pId, short controlTime) {
     short wardTime = 0;
     for (JSONObject event : events) {
-      if (event.has("participantId")) {
-        final int participantId = event.getInt("participantId");
+      if (event.has("creatorId")) {
+        final int creatorId = event.getInt("creatorId");
         val type = EventTypes.valueOf(event.getString("type"));
 
-        if (participantId == pId && type.equals(EventTypes.WARD_PLACED)) {
-          val wardTypeString = event.getString("type");
+        if (creatorId == pId && type.equals(EventTypes.WARD_PLACED)) {
+          val wardTypeString = event.getString("wardType");
           val wardType = WardType.valueOf(wardTypeString);
           final short timestamp = (short) (event.getInt("timestamp") / 1000);
 
@@ -838,7 +1202,7 @@ public final class RiotGameRequester {
     val timelineFrames = timelineInfo.getJSONArray("frames");
     for (int i = 0; i < timelineFrames.length(); i++) {
       val frameObject = timelineFrames.getJSONObject(i);
-      final JSONArray eventArray = frameObject.getJSONArray("events");
+      val eventArray = frameObject.getJSONArray("events");
       val event = timelineFrames.getJSONObject(0);
       if (Arrays.stream(EventTypes.values()).anyMatch(type2 -> type2.name().equals(event.getString("type")))) {
         IntStream.range(0, eventArray.length()).mapToObj(eventArray::getJSONObject).forEach(events::add);
@@ -855,8 +1219,12 @@ public final class RiotGameRequester {
       final int timestamp = event.getInt("timestamp");
       if (type.equals(EventTypes.PAUSE_START)) {
         handlePauseStart(timestamp, game);
+
       } else if (type.equals(EventTypes.PAUSE_END)) {
         handlePauseEnd(timestamp, game);
+
+      } else if (type.equals(EventTypes.CHAMPION_KILL)) {
+
       }
     }
   }
@@ -913,21 +1281,7 @@ public final class RiotGameRequester {
     for (JSONObject event : events) {
       val type = EventTypes.valueOf(event.getString("type"));
       final int timestamp = event.getInt("timestamp");
-      final int playerId = event.has("killerId") ? event.getInt("killerId") : event.getInt("participantId");
-      val participatingIds = new ArrayList<Integer>();
-      if (event.has("assistingParticipantIds")) {
-        participatingIds.addAll(event.getJSONArray("assistingParticipantIds").toList()
-            .stream().map(id -> (Integer) id - 1).collect(Collectors.toList()));
-      }
-      final int victimId = event.has("victimId") ? event.getInt("victimId") : 0;
-      KillRole role = null;
-      if (playerId == player.getId() + 1) {
-        role = KillRole.KILL;
-      } else if (participatingIds.contains(playerId + 1)) {
-        role = KillRole.ASSIST;
-      } else if (victimId == player.getId() + 1) {
-        role = KillRole.VICTIM;
-      }
+      val role = handleEventOfPlayer(player, event);
 
       if (role != null) {
         if (type.equals(EventTypes.LEVEL_UP)) {
@@ -935,28 +1289,56 @@ public final class RiotGameRequester {
         } else if (type.equals(EventTypes.ITEM_PURCHASED)) {
           final int itemId = event.getInt("itemId");
           playerperformance.addItem(Item.find((short) itemId), items.contains(itemId), timestamp);
-        } else if (type.equals(EventTypes.CHAMPION_SPECIAL_KILL) || type.equals(EventTypes.CHAMPION_KILL)) {
-          handleChampionKills(playerperformance, event, type, timestamp, role);
+        } else if (type.equals(EventTypes.CHAMPION_KILL)) {
+          handleChampionKills(playerperformance, event, timestamp, role);
         } else if (type.equals(EventTypes.TURRET_PLATE_DESTROYED) || type.equals(EventTypes.BUILDING_KILL) ||
             type.equals(EventTypes.ELITE_MONSTER_KILL)) {
           handleObjectives(playerperformance, event, type, timestamp, role);
         }
       }
     }
+
+    for (JSONObject event : events) {
+      val type = EventTypes.valueOf(event.getString("type"));
+      val role = handleEventOfPlayer(player, event);
+      if (role != null && type.equals(EventTypes.CHAMPION_SPECIAL_KILL)) {
+        final int timestamp = event.getInt("timestamp");
+        val kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
+        kill.setType(KillType.valueOf(event.getString("killType").replace("KILL_", "")));
+      }
+    }
   }
 
-  private static void handleChampionKills(Playerperformance playerperformance, JSONObject event, EventTypes type, int timestamp, KillRole role) {
-    if (type.equals(EventTypes.CHAMPION_SPECIAL_KILL)) {
-      val kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
-      kill.setType(KillType.valueOf(event.getString("killType").replace("KILL_", "")));
-    } else {
-      val positionObject = event.getJSONObject("position");
-      val position = new Position((short) positionObject.getInt("x"), (short) positionObject.getInt("y"));
-      val kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
-      final int killId = kill == null ? PlayerperformanceKill.lastId() + 1 : kill.getId();
-      playerperformance.addKill(new PlayerperformanceKill(killId, timestamp, position, (short) event.getInt("bounty"), role,
-          KillType.NORMAL, (byte) event.getInt("killStreakLength")));
+  private static KillRole handleEventOfPlayer(JSONPlayer player, JSONObject event) {
+    final int playerId = event.has("killerId") ? event.getInt("killerId") : event.getInt("participantId");
+    val participatingIds = new ArrayList<Integer>();
+    if (event.has("assistingParticipantIds")) {
+      participatingIds.addAll(event.getJSONArray("assistingParticipantIds").toList()
+          .stream().map(id -> (Integer) id).collect(Collectors.toList()));
     }
+    final int victimId = event.has("victimId") ? event.getInt("victimId") : 0;
+    if (playerId == player.getId() + 1) {
+      return KillRole.KILLER;
+    } else if (participatingIds.contains(playerId + 1)) {
+      return KillRole.ASSIST;
+    } else if (victimId == player.getId() + 1) {
+      return KillRole.VICTIM;
+    }
+    return null;
+  }
+
+  private static void handleChampionKills(Playerperformance playerperformance, JSONObject event, int timestamp, KillRole role) {
+    val positionObject = event.getJSONObject("position");
+    final int xCoordinate = positionObject.getInt("x");
+    final int yCoordinate = positionObject.getInt("y");
+    val position = new Position((short) xCoordinate, (short) yCoordinate);
+
+    val kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
+    final int killId = kill == null ? PlayerperformanceKill.lastId() + 1 : kill.getId();
+
+    val playerperformanceKill = new PlayerperformanceKill(killId, timestamp, position, (short) event.getInt("bounty"), role,
+        KillType.NORMAL, (byte) event.getInt("killStreakLength"));
+    playerperformance.addKill(playerperformanceKill);
   }
 
   private static void handleObjectives(Playerperformance playerperformance, JSONObject event, EventTypes type, int timestamp, KillRole role) {

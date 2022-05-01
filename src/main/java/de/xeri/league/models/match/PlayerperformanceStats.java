@@ -133,6 +133,9 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "amplifier_time")
   private short amplifierTime;
 
+  @Column(name = "durability_time")
+  private short durabilityTime;
+
   @Column(name = "start_item_sold")
   private short startItemSold;
 
@@ -193,8 +196,53 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "kda_true", precision = 9, scale = 6)
   private BigDecimal trueKdaValue;
 
-  @Column(name = "kda_true_display")
-  private String trueKdaDisplay;
+  @Column(name = "kda_true_kills")
+  private BigDecimal trueKdaKills;
+
+  @Column(name = "kda_true_deaths")
+  private BigDecimal trueKdaDeaths;
+
+  @Column(name = "kda_true_assists")
+  private BigDecimal trueKdaAssists;
+
+  @Column(name = "enemy_early_under_control_advantage", precision = 9, scale = 4)
+  private BigDecimal enemyControlAdvantageEarly;
+
+  @Column(name = "enemy_early_under_control", precision = 9, scale = 4)
+  private BigDecimal enemyControlledEarly;
+
+  @Column(name = "farm_drop_minute")
+  private short csDropAtMinute;
+
+  @Column(name = "trinket_efficiency")
+  private BigDecimal trinketEfficiency;
+
+  @Column(name = "xp_efficiency_midgame")
+  private BigDecimal midgameXPEfficiency;
+
+  @Column(name = "gold_efficiency_midgame")
+  private BigDecimal midgameGoldEfficiency;
+
+  @Column(name = "lead_lategame")
+  private short lategameLead;
+
+  @Column(name = "behind_farm")
+  private short farmingFromBehind;
+
+  @Column(name = "behind_warding")
+  private short wardingFromBehind;
+
+  @Column(name = "behind_deaths")
+  private short deathsFromBehind;
+
+  @Column(name = "behind_gold")
+  private short goldFromBehind;
+
+  @Column(name = "behind_xp")
+  private short xpFromBehind;
+
+  @Column(name = "levelup_lead")
+  private BigDecimal levelupEarlier;
 
   public PlayerperformanceStats(Playerperformance playerperformance) {
     this();
@@ -268,6 +316,11 @@ public class PlayerperformanceStats implements Serializable {
 
     this.amplifierTime = (short) playerperformance.getItems().stream()
         .filter(item -> item.getItem().getSubtype().equals(ItemSubType.AMPLIFIER))
+        .mapToInt(item -> item.getBuyTime() / 1000)
+        .min().orElse(0);
+
+    this.durabilityTime = (short) playerperformance.getItems().stream()
+        .filter(item -> item.getItem().getSubtype().equals(ItemSubType.DURABILITY))
         .mapToInt(item -> item.getBuyTime() / 1000)
         .min().orElse(0);
 
@@ -362,6 +415,11 @@ public class PlayerperformanceStats implements Serializable {
     this.enemyControlAdvantage = BigDecimal.valueOf(controlled - underControl);
   }
 
+  public void setEnemyControlAdvantageEarly(double controlled, double underControl) {
+    this.enemyControlledEarly = BigDecimal.valueOf(controlled);
+    this.enemyControlAdvantageEarly = BigDecimal.valueOf(controlled - underControl);
+  }
+
   public void setSpellDodge(Playerperformance playerperformance, short spellsHit, short spellsDodged, short quickDodged) {
     final double hitBilance = playerperformance.getSpellsHit() * 1d / (playerperformance.getSpellsHit() + spellsDodged);
     this.hitBilance = BigDecimal.valueOf(hitBilance);
@@ -370,6 +428,21 @@ public class PlayerperformanceStats implements Serializable {
     final double totalSpellBilance = (hitBilance + dodgeBilance) / 2;
     this.totalSpellBilance = BigDecimal.valueOf(totalSpellBilance);
     this.reactionBilance = (short) (playerperformance.getQuickDodged() - quickDodged);
+  }
+
+  public void setTrueKda(double kills, double deaths, double assists) {
+    this.trueKdaKills = BigDecimal.valueOf(kills);
+    this.trueKdaDeaths = BigDecimal.valueOf(deaths);
+    this.trueKdaAssists = BigDecimal.valueOf(assists);
+    this.trueKdaValue = BigDecimal.valueOf((kills + assists) / deaths);
+  }
+
+  public void setBehaviourFromBehindAhead(short farm, short wards, short deaths, short gold, short xp) {
+    this.farmingFromBehind = farm;
+    this.wardingFromBehind = wards;
+    this.deathsFromBehind = deaths;
+    this.goldFromBehind = gold;
+    this.xpFromBehind = xp;
   }
 
   //<editor-fold desc="getter">
@@ -467,6 +540,42 @@ public class PlayerperformanceStats implements Serializable {
 
   public double getTrueKdaValue() {
     return trueKdaValue.doubleValue();
+  }
+
+  public double getTrueKdaKills() {
+    return trueKdaKills.doubleValue();
+  }
+
+  public double getTrueKdaDeaths() {
+    return trueKdaDeaths.doubleValue();
+  }
+
+  public double getTrueKdaAssists() {
+    return trueKdaAssists.doubleValue();
+  }
+
+  public double getEnemyControlAdvantageEarly() {
+    return enemyControlAdvantageEarly.doubleValue();
+  }
+
+  public double getEnemyControlledEarly() {
+    return enemyControlledEarly.doubleValue();
+  }
+
+  public double getTrinketEfficiency() {
+    return trinketEfficiency.doubleValue();
+  }
+
+  public double getMidgameGoldEfficiency() {
+    return midgameGoldEfficiency.doubleValue();
+  }
+
+  public double getMidgameXPEfficiency() {
+    return midgameXPEfficiency.doubleValue();
+  }
+
+  public double getLevelupEarlier() {
+    return levelupEarlier.doubleValue();
   }
 
   //</editor-fold>

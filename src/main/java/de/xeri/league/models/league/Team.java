@@ -27,6 +27,7 @@ import de.xeri.league.models.enums.StageType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.Playerperformance;
 import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.others.Clash;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
