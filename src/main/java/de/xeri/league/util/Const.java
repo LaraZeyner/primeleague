@@ -20,8 +20,13 @@ public final class Const {
   public static final int KILL_BOUNTY = 300;
   public static final int KILL_BOUNTY_FIRST_BLOOD = 400;
   public static final int MIDGAME_GOLD = 5935;
+  public static final int EARLYGAME_UNTIL_MINUTE = 14;
+  public static final int MIDGAME_UNTIL_MINUTE = 27;
+  public static final int LATEGAME_UNTIL_MINUTE = 40;
   public static final int MIDGAME_XP = 8896;
-  public static final int TIME_BETWEEN_FIGHTS = 30;
+  public static final int SKIRMISH_PLAYERS_REQUIRED = 2;
+  public static final int TEAMFIGHT_PLAYERS_REQUIRED = 3;
+  public static final int TIME_BETWEEN_FIGHTS = 15;
   public static final int YELLOW_TRINKET_RECHARGE_TIME_START = 240;
   public static final int YELLOW_TRINKET_RECHARGE_TIME_END = 120;
 
@@ -38,6 +43,7 @@ public final class Const {
     return ASSIST_FACTOR_INCREASE_SECOND <= ASSIST_FACTOR_ENDING_SECOND &&
         ASSIST_FACTOR_START_VALUE <= ASSIST_FACTOR_END_VALUE &&
         KILL_BOUNTY != KILL_BOUNTY_FIRST_BLOOD &&
-        YELLOW_TRINKET_RECHARGE_TIME_START >= YELLOW_TRINKET_RECHARGE_TIME_END;
+        YELLOW_TRINKET_RECHARGE_TIME_START >= YELLOW_TRINKET_RECHARGE_TIME_END &&
+        EARLYGAME_UNTIL_MINUTE < MIDGAME_UNTIL_MINUTE && MIDGAME_UNTIL_MINUTE < LATEGAME_UNTIL_MINUTE;
   }
 }

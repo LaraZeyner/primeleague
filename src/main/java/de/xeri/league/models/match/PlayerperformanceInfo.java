@@ -18,6 +18,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.ids.PlayerperformanceInfoId;
+import de.xeri.league.models.match.location.PlayerPosition;
+import de.xeri.league.models.match.location.Position;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
@@ -99,7 +101,7 @@ public class PlayerperformanceInfo extends Position {
     this.totalGold = totalGold;
     this.currentGold = currentGold;
     this.enemyControlled = BigDecimal.valueOf(enemyControlled);
-    this.position = new PlayerPosition(position.getX(), position.getY());
+    this.position = new PlayerPosition((short) position.getX(), (short) position.getY());
     this.experience = experience;
     this.lead = lead;
     this.creepScore = creepScore;

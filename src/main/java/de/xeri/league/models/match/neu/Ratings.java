@@ -319,7 +319,7 @@ public class Ratings {
       .sub("gesamt", p -> p.getTeamperformance().getTowers());
 
   //</editor-fold>
-  //<editor-fold desc="Kategorie 2.2: MACRO (open)">
+  //<editor-fold desc="Kategorie 2.2: MACRO">
   public Stat teleportKills = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getTeleportKills)
       .nullable();
@@ -342,153 +342,29 @@ public class Ratings {
       .map(p -> p.getStats().getLategameLead());
 
   //</editor-fold>
-  //<editor-fold desc="Kategorie 2.3: ROAMING (open)">
-  //TODO (Abgie) 27.04.2022: Maybe Roams Scouted
-  public Stat minionAvantagePerRoam = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  //<editor-fold desc="Kategorie 2.3: ROAMING">
+  public Stat minionAvantagePerRoam = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getRoamCreepScoreAdvantage())
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat xpEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getRoamXPAdvantage())
+      .nullable();
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat goldEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getRoamGoldAdvantage())
+      .nullable();
 
-    @Override
-    public double average() {
-      return 0;
-    }
+  public Stat roamSuccess = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getRoamSuccessScore())
+      .nullable();
 
-    @Override
-    public double maximum() {
-      return 0;
-    }
+  public Stat objectiveDamageWhileRoaming = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getRoamObjectiveDamageAdvantage())
+      .nullable();
 
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 27.04.2022:
-  public Stat xpEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 27.04.2022:
-  public Stat goldEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 27.04.2022: Eingliedern von gankDeaths
-  public Stat roamSuccess = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 27.04.2022:
-  public Stat objectiveDamageWhileRoaming = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   //</editor-fold>
-  //<editor-fold desc="Kategorie 2.4: GANKING (open)">
+  //<editor-fold desc="Kategorie 2.4: GANKING">
   public Stat teamInvadesAndBuffsTaken = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getInvadingAndBuffs())
       .nullable();
@@ -714,15 +590,15 @@ public class Ratings {
       .sub("Bounty erhalten", Playerperformance::getBountyGold)
       .sub("Bounty gegeben", p -> p.getStats().getBountyDifference() - p.getBountyGold());
 
-  //TODO (Abgie) 28.04.2022:
   public Stat assassinations = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getAssassinated)
       .nullable();
 
-  //TODO (Abgie) 28.04.2022:
   public Stat picksMade = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getPicksMade)
-      .nullable();
+      .map(p -> p.getStats().getPickAdvantage())
+      .nullable()
+      .sub("Picks gemacht", Playerperformance::getPicksMade)
+      .sub("gepickt worden", p -> p.getPicksMade() - p.getStats().getPickAdvantage());
 
   public Stat ambushes = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getAmbush);
@@ -732,6 +608,7 @@ public class Ratings {
       .nullable()
       .sub("Duelle gewonnen", p -> p.getStats().getDuelWins())
       .sub("Duelle verloren", p -> p.getStats().getDuelWins() * (1 - p.getStats().getDuelWinrate()));
+
   //</editor-fold>
   //<editor-fold desc="Kategorie 3.4: SNOWBALLING">
   public Stat killsDeathsEarlygame = new Stat(playerperformances, OutputType.NUMBER, 2)
@@ -897,63 +774,11 @@ public class Ratings {
   }.map(p -> p.getDoubleKills() + p.getTripleKills() * 2 + p.getQuadraKills() * 6 + p.getPentaKills() * 24)
       .nullable();
 
-  //TODO (Abgie) 28.04.2022:
-  public Stat deathOrder = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  public Stat deathOrder = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getAverageDeathOrder());
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 28.04.2022:
-  public Stat teamfightSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat teamfightSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getTeamfightWinrate());
 
   public Stat acesEarlyAndCleanFights = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getAcesAndClean())
@@ -961,181 +786,36 @@ public class Ratings {
       .sub("Earlygame Aces", p -> p.getTeamperformance().getEarlyAces())
       .sub("Flawless Aces", p -> p.getTeamperformance().getFlawlessAces());
 
-  //TODO (Abgie) 28.04.2022:
-  public Stat teamfightDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat teamfightDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getTeamfightDamageRate())
+      .nullable()
+      .sub("Schaden insgesamt", Playerperformance::getDamageTotal)
+      .sub("Schaden in Teamfights", p -> p.getDamageTotal() * p.getStats().getTeamfightDamageRate());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 4.2: SKIRMISHING">
-  //TODO (Abgie) 28.04.2022:
-  public Stat skirmishesAmount = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  public Stat skirmishesAmount = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getSkirmishesAmount())
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat skirmishKillBilance = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getSkirmishKillsPerSkirmish())
+      .nullable();
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat skirmishSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 2)
+      .map(p -> p.getStats().getSkirmishWinrate())
+      .nullable()
+      .sub("Skirmishes gewonnen", p -> p.getStats().getSkirmishesAmount() * p.getStats().getSkirmishWinrate());
 
-    @Override
-    public double average() {
-      return 0;
-    }
+  public Stat damagePerSkirmish = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getDamageTotal() * p.getStats().getSkirmishDamageRate() / p.getStats().getSkirmishesAmount())
+      .nullable();
 
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 28.04.2022:
-  public Stat skirmishKillBilance = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 28.04.2022:
-  public Stat skirmishSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 28.04.2022:
-  public Stat damagePerSkirmish = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 28.04.2022:
-  public Stat skirmishDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat skirmishDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getSkirmishDamageRate())
+      .nullable()
+      .sub("Schaden insgesamt", Playerperformance::getDamageTotal)
+      .sub("Schaden in Skirmishes", p -> p.getDamageTotal() * p.getStats().getSkirmishDamageRate());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 4.3: EARLY_INCOME">

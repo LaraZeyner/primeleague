@@ -1,4 +1,4 @@
-package de.xeri.league.models.match;
+package de.xeri.league.models.match.location;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -11,7 +11,7 @@ import javax.persistence.Transient;
  * Created by Lara on 14.04.2022 for web
  */
 @Embeddable
-public class PlayerPosition implements Serializable {
+public class KillPosition implements Serializable {
   @Transient
   private static final long serialVersionUID = -7334079325539871684L;
 
@@ -22,10 +22,10 @@ public class PlayerPosition implements Serializable {
   private short y;
 
   // default constructor
-  public PlayerPosition() {
+  public KillPosition() {
   }
 
-  public PlayerPosition(short x, short y) {
+  public KillPosition(short x, short y) {
     this.x = x;
     this.y = y;
   }
@@ -42,8 +42,8 @@ public class PlayerPosition implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof PlayerPosition)) return false;
-    final PlayerPosition position = (PlayerPosition) o;
+    if (!(o instanceof KillPosition)) return false;
+    final KillPosition position = (KillPosition) o;
     return getX() == position.getX() && getY() == position.getY();
   }
 

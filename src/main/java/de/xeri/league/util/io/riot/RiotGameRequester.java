@@ -4,11 +4,14 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -38,12 +41,21 @@ import de.xeri.league.models.match.PlayerperformanceKill;
 import de.xeri.league.models.match.PlayerperformanceLevel;
 import de.xeri.league.models.match.PlayerperformanceObjective;
 import de.xeri.league.models.match.PlayerperformanceStats;
-import de.xeri.league.models.match.Position;
 import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.models.match.TeamperformanceBounty;
+import de.xeri.league.models.match.location.Position;
+import de.xeri.league.models.others.Kill;
+import de.xeri.league.others.Duel;
+import de.xeri.league.others.Fight;
+import de.xeri.league.others.Gank;
+import de.xeri.league.others.Pick;
+import de.xeri.league.others.Skirmish;
+import de.xeri.league.others.Teamfight;
+import de.xeri.league.others.enums.Fighttype;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
+import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.JSON;
 import lombok.val;
 import lombok.var;
@@ -114,7 +126,7 @@ public final class RiotGameRequester {
       val gametype = Gametype.find((info.has("tournamentCode") && !info.isNull("tournamentCode")) ? (short) -1 : (short) queueId);
       val game = handleGame(info, gameId, gametype);
       gametype.addGame(game, gametype);
-      handleGameEvents(events, game);
+      val fights = handleGameEvents(events, game);
 
       jsonTeams = getJsonTeams(participants);
       for (int i = 0; i < jsonTeams.size(); i++) {
@@ -128,7 +140,7 @@ public final class RiotGameRequester {
           handleTeamEvents(events, teamperformance);
 
           val players = determinePlayers(queueType, jsonTeam);
-          players.forEach(player -> handlePlayer(player, teamperformance, events, playerInfo));
+          players.forEach(player -> handlePlayer(player, teamperformance, events, playerInfo, fights));
         }
         determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
       }
@@ -167,7 +179,7 @@ public final class RiotGameRequester {
   }
 
   private static void handlePlayer(JSONPlayer player, Teamperformance teamperformance, List<JSONObject> events,
-                                   Map<Integer, JSONObject> playerInfo) {
+                                   Map<Integer, JSONObject> playerInfo, List<Fight> fights) {
     val enemyPlayer = getEnemyPlayer(player);
     val performance = handlePerformance(player, enemyPlayer);
     val account = (player.isListed()) ? player.getAccount() : Account.get(RiotAccountRequester.fromPuuid(player.get(StoredStat.PUUID)));
@@ -190,12 +202,12 @@ public final class RiotGameRequester {
       handlePlayerEvents(events, player, playerperformance);
       handlePlayerInfo(playerInfo, player, playerperformance);
 
-      handlePlayerStats(playerperformance, teamperformance, jsonTeams, events, playerInfo, player);
+      handlePlayerStats(playerperformance, teamperformance, jsonTeams, events, playerInfo, player, fights);
     }
   }
 
   private static void handlePlayerStats(Playerperformance playerperformance, Teamperformance teamperformance, List<JSONTeam> jsonTeams,
-                                        List<JSONObject> events, Map<Integer, JSONObject> playerInfo, JSONPlayer player) {
+                                        List<JSONObject> events, Map<Integer, JSONObject> playerInfo, JSONPlayer player, List<Fight> fights) {
     final int pId = player.getId() + 1;
     val stats = new PlayerperformanceStats(playerperformance);
     final JSONPlayer enemyPlayer = getEnemyPlayer(player);
@@ -275,8 +287,6 @@ public final class RiotGameRequester {
 
     int deathsFromBehind = 0;
     short bountyDrop = 0;
-    int duelsWon = 0;
-    int duelsLost = 0;
     int deathsEarly = 0;
     int firstKillTime = 0;
     int firstDeathTime = 0;
@@ -317,11 +327,6 @@ public final class RiotGameRequester {
               killBounties.add((short) (totalBounty * -1));
               bountyDrop += shutdownBounty;
 
-              //lost duel
-              if (!event.has("assistingParticipantIds")) {
-                duelsLost++;
-              }
-
               // from behind
               if (timestamp > behindStartMillis && timestamp < behindEndMillis) {
                 deathsFromBehind++;
@@ -333,11 +338,6 @@ public final class RiotGameRequester {
             if (firstKillTime == 0) {
               int timestamp = event.getInt("timestamp");
               firstKillTime = timestamp / 1000;
-            }
-
-            //won duel
-            if (!event.has("assistingParticipantIds")) {
-              duelsWon++;
             }
 
             // Bounties
@@ -428,7 +428,6 @@ public final class RiotGameRequester {
     final boolean leadExtend = wasAhead && (leadAt - Const.AHEAD_XPGOLD > 1000);
     stats.setExtendingLead(leadExtend);
     stats.setDeathsEarly(playerperformance, (byte) deathsEarly);
-    stats.setDuels(playerperformance, duelsWon, duelsLost);
     stats.setBountyDifference(playerperformance, bountyDrop);
 
     double csAt10 = 0;
@@ -447,7 +446,6 @@ public final class RiotGameRequester {
       }
     }
 
-
     final double csAt = getCSAt(playerInfo, player, 14) * 1d / 158;
     stats.setEarlyFarmEfficiency(BigDecimal.valueOf(csAt));
     stats.setEarlyGoldAdvantage((short) getGoldLeadAt(playerInfo, player, 10));
@@ -456,7 +454,7 @@ public final class RiotGameRequester {
     handleControlled(playerInfo, player, minute, stats);
 
     if (enemyPlayer != null) {
-      final byte earlierLevelups = 0;
+      byte earlierLevelups = 0;
       final byte totalLevelups = determineLevelups(playerperformance, events, enemyPlayer, earlierLevelups);
       if (totalLevelups != 0) { // null division
         final double earlierLevelupsAdvantage = earlierLevelups * 1d / totalLevelups;
@@ -466,6 +464,130 @@ public final class RiotGameRequester {
 
     stats.setSpellDodge(playerperformance, enemyPlayer.getSmall(StoredStat.SPELL_LANDED), enemyPlayer.getSmall(StoredStat.SPELL_DODGE),
         enemyPlayer.getSmall(StoredStat.SPELL_DODGE_QUICK));
+
+    val myGanks = new ArrayList<Gank>();
+    val enemyGanks = new ArrayList<Gank>();
+    int duelsWon = 0;
+    int duelsLost = 0;
+    short pickAdvantage = 0;
+    val teamfights = new ArrayList<Teamfight>();
+    val skirmishes = new ArrayList<Skirmish>();
+    for (Fight fight : fights) {
+      if (playerperformance.getLane() != null) {
+        if (fight.isGankOf(playerperformance.getLane(), player, enemyPlayer)) {
+          myGanks.add(new Gank(player, playerperformance, fight));
+        }
+        if (fight.isGankOf(playerperformance.getLane(), enemyPlayer, player)) {
+          enemyGanks.add(new Gank(player, playerperformance, fight));
+        }
+      }
+
+      if (fight instanceof Duel) {
+        if (fight.getKills().get(0).getKiller() == pId) {
+          duelsWon++;
+
+        } else if (fight.getKills().get(0).getVictim() == pId) {
+          duelsLost++;
+        }
+
+      } else if (fight instanceof Pick) {
+        if (fight.getKills().get(0).getVictim() == pId) {
+          pickAdvantage--;
+        } else {
+          pickAdvantage++;
+        }
+
+      } else if (fight instanceof Teamfight) {
+        val teamfight = (Teamfight) fight;
+        teamfights.add(teamfight);
+
+      } else if (fight instanceof Skirmish) {
+        val skirmish = (Skirmish) fight;
+        skirmishes.add(skirmish);
+      }
+    }
+
+    double deathOrder = teamfights.stream().filter(teamfight -> teamfight.getDeathOrder(pId) != 0)
+        .mapToDouble(teamfight -> teamfight.getDeathOrder(pId)).average().orElse(0);
+    stats.setAverageDeathOrder(BigDecimal.valueOf(deathOrder));
+
+    double teamfightWins = teamfights.stream().mapToInt(teamfight -> teamfight.isWinner(pId) ? 1 : 0).average().orElse(0);
+    stats.setTeamfightWinrate(BigDecimal.valueOf(teamfightWins));
+
+    final int teamfightDamage = teamfights.stream().mapToInt(teamfight -> teamfight.getFightDamage(playerperformance, player)).sum();
+    double teamfightDamagePercentage = teamfightDamage * 1d / playerperformance.getDamageTotal();
+    stats.setTeamfightDamageRate(BigDecimal.valueOf(teamfightDamagePercentage));
+
+    final int skirmishAmount = skirmishes.size();
+    stats.setSkirmishesAmount((short) skirmishAmount);
+
+    int skirmishKills = (int) skirmishes.stream()
+        .flatMap(skirmish -> skirmish.getKills().stream())
+        .filter(kill -> kill.getKiller() == pId).count();
+    stats.setSkirmishKillsPerSkirmish(BigDecimal.valueOf(skirmishKills * 1d / skirmishAmount));
+
+    final double skirmishWins = teamfights.stream().mapToInt(skirmish -> skirmish.isWinner(pId) ? 1 : 0).average().orElse(0);
+    stats.setSkirmishWinrate(BigDecimal.valueOf(skirmishWins));
+
+    final int skrimishDamage = skirmishes.stream().mapToInt(skirmish -> skirmish.getFightDamage(playerperformance, player)).sum();
+    double skirmishDamagePercentage = skrimishDamage * 1d / playerperformance.getDamageTotal();
+    stats.setSkirmishDamageRate(BigDecimal.valueOf(skirmishDamagePercentage));
+
+
+    stats.setDuels(playerperformance, duelsWon, duelsLost);
+    stats.setPickAdvantage(pickAdvantage);
+
+    int roamSuccess = 0;
+    int gold = 0;
+    int xp = 0;
+    int cs = 0;
+    int plates = 0;
+    for (Gank gank : myGanks) {
+      final List<Integer> involvedPlayers = gank.getFight().getInvolvedPlayers();
+      final int start = gank.start();
+      int end = gank.end() + 60_000;
+
+      final Predicate<Integer> integerPredicate = player.getId() < 5 ? id -> id < 6 : id -> id > 5;
+      final List<Integer> teamPlayers = involvedPlayers.stream().filter(integerPredicate).collect(Collectors.toList());
+      for (Integer teamPlayer : teamPlayers) {
+        JSONPlayer searchedPlayer = jsonTeams.get(0).getPlayer(teamPlayer, jsonTeams.get(1));
+        xp += getXPLeadAt(playerInfo, searchedPlayer, end / 60_000) -
+            getXPLeadAt(playerInfo, searchedPlayer, start / 60_000);
+        gold += getGoldLeadAt(playerInfo, searchedPlayer, end / 60_000) -
+            getGoldLeadAt(playerInfo, searchedPlayer, start / 60_000);
+        cs += getCSLeadAt(playerInfo, searchedPlayer, end / 60_000) -
+            getCSLeadAt(playerInfo, searchedPlayer, start / 60_000);
+        roamSuccess += getLeadAt(playerInfo, player, end / 60_000) -
+            getLeadAt(playerInfo, player, start / 60_000);
+      }
+
+      for (JSONObject event : events) {
+        final int timestamp = event.getInt("timestamp");
+        if (timestamp < end && timestamp > start) {
+          final EventTypes type = EventTypes.valueOf(event.getString("type"));
+          if (type.equals(EventTypes.TURRET_PLATE_DESTROYED)) {
+            final JSONObject positionObject = event.getJSONObject("position");
+            final Position position = new Position(positionObject.getInt("x"), positionObject.getInt("y"));
+            if (Util.distance(gank.getFight().getLastPosition(), position) < Const.DISTANCE_BETWEEN_FIGHTS ||
+                event.getString("laneType").equals(playerperformance.getLane().getType())) {
+              final int teamId = event.getInt("teamId");
+              if (player.getId() < 5) {
+                plates += teamId == 100 ? 1 : -1;
+              } else {
+                plates += teamId == 200 ? 1 : -1;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    stats.setRoamObjectiveDamageAdvantage((short) (plates * 200));
+    stats.setRoamXPAdvantage((short) xp);
+    stats.setRoamCreepScoreAdvantage((short) cs);
+    stats.setRoamGoldAdvantage((short) gold);
+    stats.setRoamSuccessScore((short) roamSuccess);
+
 
     playerperformance.setLaneLead((short) getLeadAt(playerInfo, player, 15));
     playerperformance.setEarlyLaneLead((short) getLeadAt(playerInfo, player, 10));
@@ -1213,7 +1335,8 @@ public final class RiotGameRequester {
     }
   }
 
-  private static void handleGameEvents(List<JSONObject> events, Game game) {
+  private static List<Fight> handleGameEvents(List<JSONObject> events, Game game) {
+    val kills = new ArrayList<Kill>();
     for (JSONObject event : events) {
       val type = EventTypes.valueOf(event.getString("type"));
       final int timestamp = event.getInt("timestamp");
@@ -1224,7 +1347,75 @@ public final class RiotGameRequester {
         handlePauseEnd(timestamp, game);
 
       } else if (type.equals(EventTypes.CHAMPION_KILL)) {
+        val positionObject = event.getJSONObject("position");
+        final int xCoordinate = positionObject.getInt("x");
+        final int yCoordinate = positionObject.getInt("y");
+        val position = new Position((short) xCoordinate, (short) yCoordinate);
 
+        final int victim = event.getInt("victimId");
+        final int killer = event.getInt("killerId");
+        final int gold = event.getInt("shutdownBounty") + event.getInt("bounty");
+        final Map<Integer, Integer> participants = event.getJSONArray("assistingParticipantIds").toList()
+            .stream().map(id -> (Integer) id).collect(Collectors.toMap(Function.identity(), e -> 0));
+        val damageReceived = event.getJSONArray("victimDamageReceived");
+        handleDamageValues(participants, damageReceived);
+        val damageDealt = event.getJSONArray("victimDamageDealt");
+        handleDamageValues(participants, damageDealt);
+
+
+        if (killer != 0 || !participants.isEmpty()) {
+          val kill = new Kill(timestamp, position, killer, victim, participants, gold);
+          kills.add(kill);
+        }
+
+      }
+    }
+
+    kills.sort(Comparator.comparingInt(Kill::getTimestamp));
+
+    val fights = new ArrayList<Fight>();
+    for (Kill kill : kills) {
+      val validFight = fights.stream().filter(fight -> fight.getLastTimestamp() >= kill.getTimestamp() - Const.TIME_BETWEEN_FIGHTS * 60_000)
+          .filter(fight -> Util.distance(fight.getLastPosition(), kill.getPosition()) <= Const.DISTANCE_BETWEEN_FIGHTS)
+          .findFirst().orElse(null);
+      if (validFight == null) {
+        fights.add(new Fight(kill));
+      } else {
+        validFight.addKill(kill);
+      }
+    }
+
+    val returnFights = new ArrayList<Fight>();
+    for (Fight fight : fights) {
+      if (fight.getFighttype().equals(Fighttype.DUEL)) {
+        returnFights.add(fight.getDuel());
+      } else if (fight.getFighttype().equals(Fighttype.PICK)) {
+        returnFights.add(fight.getPick());
+      } else if (fight.getFighttype().equals(Fighttype.SKIRMISH)) {
+        returnFights.add(fight.getSkirmish());
+      } else if (fight.getFighttype().equals(Fighttype.TEAMFIGHT)) {
+        returnFights.add(fight.getTeamfight());
+      }
+    }
+
+
+    return returnFights;
+  }
+
+  private static void handleDamageValues(Map<Integer, Integer> participants, JSONArray damage) {
+    for (int i = 0; i < damage.length(); i++) {
+      val damageObject = damage.getJSONObject(i);
+      final int magicalDamage = damageObject.getInt("magicDamage");
+      final int physicalDamage = damageObject.getInt("physicalDamage");
+      final int trueDamage = damageObject.getInt("trueDamage");
+      final int totalDamage = magicalDamage + physicalDamage + trueDamage;
+
+      final int partId = damageObject.getInt("participantId");
+
+      if (participants.containsKey(partId)) {
+        participants.put(partId, participants.get(partId + totalDamage));
+      } else if (partId != 0) {
+        participants.put(partId, totalDamage);
       }
     }
   }
@@ -1290,7 +1481,7 @@ public final class RiotGameRequester {
           final int itemId = event.getInt("itemId");
           playerperformance.addItem(Item.find((short) itemId), items.contains(itemId), timestamp);
         } else if (type.equals(EventTypes.CHAMPION_KILL)) {
-          handleChampionKills(playerperformance, event, timestamp, role);
+          playerperformance.addKill(handleChampionKills(playerperformance, event, timestamp, role));
         } else if (type.equals(EventTypes.TURRET_PLATE_DESTROYED) || type.equals(EventTypes.BUILDING_KILL) ||
             type.equals(EventTypes.ELITE_MONSTER_KILL)) {
           handleObjectives(playerperformance, event, type, timestamp, role);
@@ -1327,18 +1518,18 @@ public final class RiotGameRequester {
     return null;
   }
 
-  private static void handleChampionKills(Playerperformance playerperformance, JSONObject event, int timestamp, KillRole role) {
+  private static PlayerperformanceKill handleChampionKills(Playerperformance playerperformance, JSONObject event, int timestamp,
+                                                           KillRole role) {
     val positionObject = event.getJSONObject("position");
     final int xCoordinate = positionObject.getInt("x");
     final int yCoordinate = positionObject.getInt("y");
     val position = new Position((short) xCoordinate, (short) yCoordinate);
 
-    val kill = PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
+    val kill = playerperformance == null ? null : PlayerperformanceKill.find(playerperformance.getTeamperformance().getGame(), timestamp);
     final int killId = kill == null ? PlayerperformanceKill.lastId() + 1 : kill.getId();
 
-    val playerperformanceKill = new PlayerperformanceKill(killId, timestamp, position, (short) event.getInt("bounty"), role,
-        KillType.NORMAL, (byte) event.getInt("killStreakLength"));
-    playerperformance.addKill(playerperformanceKill);
+    return new PlayerperformanceKill(killId, timestamp, position, (short) event.getInt("bounty"), role, KillType.NORMAL,
+        (byte) event.getInt("killStreakLength"));
   }
 
   private static void handleObjectives(Playerperformance playerperformance, JSONObject event, EventTypes type, int timestamp, KillRole role) {

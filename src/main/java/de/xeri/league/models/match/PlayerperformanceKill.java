@@ -23,6 +23,8 @@ import javax.persistence.Transient;
 import de.xeri.league.models.enums.KillRole;
 import de.xeri.league.models.enums.KillType;
 import de.xeri.league.models.ids.PlayerperformanceKillId;
+import de.xeri.league.models.match.location.KillPosition;
+import de.xeri.league.models.match.location.Position;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
@@ -114,7 +116,7 @@ public class PlayerperformanceKill implements Serializable {
   public PlayerperformanceKill(int id, int time, Position position, short bounty, KillRole role, KillType type, byte streak) {
     this.id = id;
     this.time = time;
-    this.position = new KillPosition(position.getX(), position.getY());
+    this.position = new KillPosition((short) position.getX(), (short) position.getY());
     this.bounty = bounty;
     this.role = role;
     this.type = type;

@@ -244,6 +244,45 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "levelup_lead")
   private BigDecimal levelupEarlier;
 
+  @Column(name = "pick_advantage")
+  private short pickAdvantage;
+
+  @Column(name = "death_order_average")
+  private BigDecimal averageDeathOrder;
+
+  @Column(name = "teamfight_winrate")
+  private BigDecimal teamfightWinrate;
+
+  @Column(name = "teamfight_damage_rate")
+  private BigDecimal teamfightDamageRate;
+
+  @Column(name = "skirmish_amount")
+  private short skirmishesAmount;
+
+  @Column(name = "skirmish_kills")
+  private BigDecimal skirmishKillsPerSkirmish;
+
+  @Column(name = "skirmish_winrate")
+  private BigDecimal skirmishWinrate;
+
+  @Column(name = "skirmish_damage_rate")
+  private BigDecimal skirmishDamageRate;
+
+  @Column(name = "roam_cs_advantage")
+  private short roamCreepScoreAdvantage;
+
+  @Column(name = "roam_xp_advantage")
+  private short roamXPAdvantage;
+
+  @Column(name = "roam_gold_advantage")
+  private short roamGoldAdvantage;
+
+  @Column(name = "roam_objectivedamage_advantage")
+  private short roamObjectiveDamageAdvantage;
+
+  @Column(name = "roam_successscore")
+  private short roamSuccessScore;
+
   public PlayerperformanceStats(Playerperformance playerperformance) {
     this();
     final Teamperformance teamperformance = playerperformance.getTeamperformance();
@@ -578,6 +617,29 @@ public class PlayerperformanceStats implements Serializable {
     return levelupEarlier.doubleValue();
   }
 
+  public double getAverageDeathOrder() {
+    return averageDeathOrder.doubleValue();
+  }
+
+  public double getTeamfightWinrate() {
+    return teamfightWinrate.doubleValue();
+  }
+
+  public double getTeamfightDamageRate() {
+    return teamfightDamageRate.doubleValue();
+  }
+
+  public double getSkirmishKillsPerSkirmish() {
+    return skirmishKillsPerSkirmish.doubleValue();
+  }
+
+  public double getSkirmishWinrate() {
+    return skirmishWinrate.doubleValue();
+  }
+
+  public double getSkirmishDamageRate() {
+    return skirmishDamageRate.doubleValue();
+  }
   //</editor-fold>
 
 }
