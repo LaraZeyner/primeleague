@@ -91,14 +91,20 @@ public class Reset {
     return player.getStatAt(minute, stat);
   }
 
-  public int getResetStatPercentage(TimelineStat stat) {
-    if (stat.name().contains("TOTAL") || stat.name().contains("CURRENT")) {
-      val totalStat = (stat.name().contains("TOTAL")) ? stat : TimelineStat.valueOf(stat.name().replace("CURRENT", "TOTAL"));
-      val currentStat = (stat.name().contains("CURRENT")) ? stat : TimelineStat.valueOf(stat.name().replace("TOTAL", "CURRENT"));
-      int minute = getStart() / 60_000;
-      return player.getStatAt(minute, totalStat) == 0 ? -1 : player.getStatAt(minute, currentStat) / player.getStatAt(minute, totalStat);
-    }
-    throw new IllegalArgumentException("Wert nicht zulässig");
+  public int getStatPercentage(TimelineStat stat) {
+    return player.getStatPercentage(getStart() / 60_000, stat);
+  }
+
+  public double getPool() {
+    return player.getPool(getStart() / 60_000);
+  }
+
+  /**
+   * Wie lange dauert ein Reset von Beginn bis zum Erreichen der Lane
+   * @return Dauer des Resets in Millisekunden
+   */
+  public int getDuration() {
+    return getEnd() - getStart();
   }
 
 }

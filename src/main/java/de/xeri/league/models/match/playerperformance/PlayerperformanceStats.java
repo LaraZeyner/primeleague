@@ -332,14 +332,54 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "lead_through_deaths")
   private short leadThroughDeaths;
 
-  @Column(name = "first_base_controlled")
+  @Column(name = "base_first_controlled")
   private short firstBaseEnemyControlled;
 
-  @Column(name = "first_base_lead")
+  @Column(name = "base_first_lead")
   private short firstBaseLead;
 
-  @Column(name = "first_base_gold")
+  @Column(name = "base_first_gold")
   private short firstBaseResetGold;
+
+  @Column(name = "base_first_gold_unspent")
+  private short firstBaseGoldUnspent;
+
+  @Column(name = "base_recall")
+  private BigDecimal resetsThroughRecall;
+
+  @Column(name = "base_total")
+  private short resets;
+
+  @Column(name = "base_duration")
+  private int resetDuration;
+
+  @Column(name = "base_gold")
+  private short resetGold;
+
+  @Column(name = "base_gold_unspent")
+  private short resetGoldUnspent;
+
+  @Column(name = "base_gold_lost")
+  private short resetGoldLost;
+
+  @Column(name = "base_together")
+  private BigDecimal resetsTogether;
+
+  @Column(name = "base_second_time")
+  private short secondBase;
+
+  @Column(name = "base_consumables_purchased")
+  private boolean consumablesPurchased;
+
+  @Column(name = "base_resource_conservation")
+  private BigDecimal resourceConservation;
+
+  @Column(name = "base_second_controlled")
+  private short secondBaseEnemyControlled;
+
+  @Column(name = "damage_early_percentage")
+  private BigDecimal earlyDamage;
+
 
   public PlayerperformanceStats(Playerperformance playerperformance) {
     this();
@@ -748,6 +788,22 @@ public class PlayerperformanceStats implements Serializable {
 
   public double getLaneKillPositioning() {
     return laneKillPositioning.doubleValue();
+  }
+
+  public double getResetsThroughRecall() {
+    return resetsThroughRecall.doubleValue();
+  }
+
+  public double getResetsTogether() {
+    return resetsTogether.doubleValue();
+  }
+
+  public double getResourceConservation() {
+    return resourceConservation.doubleValue();
+  }
+
+  public double getEarlyDamage() {
+    return earlyDamage.doubleValue();
   }
   //</editor-fold>
 

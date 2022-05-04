@@ -124,7 +124,7 @@ public class Ratings {
       return handleValues(positioning, killDeathPosition, keyspellsUsed, spellBilance, reactions);
 
     } else if (subcategory.equals(StatSubcategory.RESETS)) {
-      return handleValues(resetsThroughDeaths, averageResetTime, averageResetGold, goldLostThroughResets, resetsWithTeam);
+      return handleValues(resetsThroughRecalls, averageResetTime, averageResetGold, goldLostThroughResets, resetsWithTeam);
 
     } else if (subcategory.equals(StatSubcategory.GIVING_UP)) {
       return handleValues(ffRate, laneLeadAfterDiedEarly, farmingFromBehind, wardingFromBehind, deathsFromBehind);
@@ -1257,10 +1257,12 @@ public class Ratings {
   //TODO (Abgie) 29.04.2022: Resets?? 15 TODOs
   //<editor-fold desc="Kategorie 6.1: PRE_FIRST_BASE">
   public Stat firstReset = new Stat(playerperformances, OutputType.TIME, 2)
-      .map(p -> p.getStats().getFirstBase());
+      .map(p -> p.getStats().getFirstBase())
+      .reverse();
 
   public Stat preFirstBaseEnemyUnderControl = new Stat(playerperformances, OutputType.TIME, 2)
-      .map(p -> p.getStats().getFirstBaseEnemyControlled());
+      .map(p -> p.getStats().getFirstBaseEnemyControlled())
+      .nullable();
 
   public Stat buffsAndScuttlesInitial = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getInitialScuttles)
@@ -1271,145 +1273,31 @@ public class Ratings {
       .map(p -> p.getStats().getFirstBaseLead());
 
   public Stat goldOnReset = new Stat(playerperformances, OutputType.NUMBER, 3)
-      .map(p -> p.getStats().getFirstBaseResetGold());
+      .map(p -> p.getStats().getFirstBaseResetGold())
+      .sub("verbleibend", p -> p.getStats().getFirstBaseGoldUnspent());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.2: POST_FIRST_BASE">
-  public Stat resourceUsage = new Stat(playerperformances, OutputType.NUMBER, 4) {
+  public Stat resourceUsage = new Stat(playerperformances, OutputType.NUMBER, 4)
+      .map(p -> p.getStats().getResourceConservation())
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat consumablesUsed = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().isConsumablesPurchased() ? 1 : 0)
+      .nullable();
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat secondResetTime = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getSecondBase())
+      .nullable();
 
-    @Override
-    public double average() {
-      return 0;
-    }
+  public Stat postFirstBaseEnemyUnderControl = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getSecondBaseEnemyControlled())
+      .nullable();
 
-    @Override
-    public double maximum() {
-      return 0;
-    }
+  public Stat earlyDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 2)
+      .map(p -> p.getStats().getEarlyDamage())
+      .nullable();
 
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat consumablesUsed = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat secondResetTime = new Stat(playerperformances, OutputType.TIME, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat postFirstBaseEnemyUnderControl = new Stat(playerperformances, OutputType.TIME, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat earlyDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.3: LANE_BILANCE">
   public Stat earlyXPGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4)
@@ -1481,141 +1369,33 @@ public class Ratings {
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.5: RESETS">
-  public Stat resetsThroughDeaths = new Stat(playerperformances, OutputType.PERCENT, 3) {
+  public Stat resetsThroughRecalls = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getResetsThroughRecall())
+      .nullable()
+      .sub("Recalls", p -> p.getStats().getResets() * p.getStats().getResetsThroughRecall())
+      .sub("Tode", p -> p.getStats().getResets() - p.getStats().getResets() * p.getStats().getResetsThroughRecall());
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat averageResetTime = new Stat(playerperformances, OutputType.TIME_FROM_MILLIS, 2)
+      .map(p -> p.getStats().getResetDuration())
+      .sub("Resets gesamt", p -> p.getStats().getResets())
+      .sub("mittlere Dauer", p -> p.getStats().getResets() * p.getStats().getResetDuration());
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat averageResetGold = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getResetGold())
+      .sub("verbleibend", p -> p.getStats().getResetGoldUnspent());
 
-    @Override
-    public double average() {
-      return 0;
-    }
+  public Stat goldLostThroughResets = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getResetGoldLost())
+      .nullable()
+      .sub("Resets gesamt", p -> p.getStats().getResets())
+      .sub("Gold pro Reset", p -> p.getStats().getResetGoldLost() / p.getStats().getResets());
 
-    @Override
-    public double maximum() {
-      return 0;
-    }
+  public Stat resetsWithTeam = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getResetsTogether())
+      .nullable()
+      .sub("Resets mit Team", p -> p.getStats().getResets() * p.getStats().getResetsTogether())
+      .sub("Resets alleine", p -> p.getStats().getResets() - p.getStats().getResets() * p.getStats().getResetsTogether());
 
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat averageResetTime = new Stat(playerperformances, OutputType.TIME, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat averageResetGold = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat goldLostThroughResets = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat resetsWithTeam = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   //</editor-fold>
 
   //<editor-fold desc="Kategorie 7.1: GIVING_UP">

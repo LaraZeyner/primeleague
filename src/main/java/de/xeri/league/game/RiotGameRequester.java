@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -21,6 +22,7 @@ import de.xeri.league.game.events.fight.Pick;
 import de.xeri.league.game.events.fight.Skirmish;
 import de.xeri.league.game.events.fight.Teamfight;
 import de.xeri.league.game.events.fight.enums.Fighttype;
+import de.xeri.league.game.events.items.ItemStack;
 import de.xeri.league.game.events.items.Reset;
 import de.xeri.league.game.events.location.Position;
 import de.xeri.league.game.models.JSONPlayer;
@@ -200,7 +202,24 @@ public final class RiotGameRequester {
 
     player.buildInventory();
     final List<Reset> resets = player.getInventory().getResets();
+
     final long recalls = resets.stream().filter(Reset::wasRecall).count();
+    final double resetsThroughRecall = resets.isEmpty() ? 0 : recalls * 1d / resets.size();
+    stats.setResetsThroughRecall(BigDecimal.valueOf(resetsThroughRecall));
+    stats.setResets((short) resets.size());
+
+    final double averageGoldAmount = resets.stream().mapToInt(Reset::getGoldPreReset).average().orElse(0);
+    stats.setResetGold((short) averageGoldAmount);
+    final double averageGoldUnspent = resets.stream().mapToInt(Reset::getGoldUnspent).average().orElse(0);
+    stats.setResetGoldUnspent((short) averageGoldUnspent);
+
+    final double averageResetDuration = resets.stream().mapToInt(Reset::getDuration).average().orElse(0);
+    stats.setResetDuration((int) averageResetDuration);
+
+    final int goldLost = resets.stream()
+        .mapToInt(reset -> player.getLeadDifferenceAt(reset.getStart() / 60_000, reset.getEnd() / 60_000 + 1, TimelineStat.TOTAL_GOLD))
+        .sum();
+    stats.setResetGoldLost((short) goldLost);
 
     val firstBase = player.getInventory().getResets().isEmpty() ? null : player.getInventory().getResets().get(0);
     if (firstBase != null) {
@@ -212,18 +231,83 @@ public final class RiotGameRequester {
 
       final int underControl = player.getStatAt(start / 1000, TimelineStat.ENEMY_CONTROLLED) / 1000;
       stats.setFirstBaseEnemyControlled((short) underControl);
-      final int lead = player.getStatAt(start / 1000, TimelineStat.LEAD) / 1000;
+
+      final int lead = player.getStatAt(start / 60_000, TimelineStat.LEAD);
       stats.setFirstBaseLead((short) lead);
+
       final int resetGold = firstBase.getGoldPreReset();
       stats.setFirstBaseResetGold((short) resetGold);
+
+      final int unspentGold = firstBase.getGoldUnspent();
+      stats.setFirstBaseGoldUnspent((short) unspentGold);
     }
 
+    val secondBase = player.getInventory().getResets().size() < 2 ? null : player.getInventory().getResets().get(1);
+    if (secondBase != null) {
 
-    byte allObjectivesAmount = determineAllObjectivesAmount(jsonTeams);
+      final int start = secondBase.getStart();
+      stats.setSecondBase((short) (start / 1000));
+
+      // Resources
+      double discrepance = 0;
+      int amount = 0;
+      if (firstBase.getStart() != 0) {
+        final double startpool = player.getPool(0);
+        final double endpool = firstBase.getPool();
+        final int minutes = firstBase.getStart() / 60_000 - 0;
+        for (int min = 1; min < firstBase.getStart() / 60_000; min++) {
+          final double pool = player.getPool(min);
+          final double expectedPool = (startpool - endpool) * (min * 1d / minutes);
+          if (pool < expectedPool) {
+            discrepance += expectedPool - pool;
+          }
+          amount++;
+        }
+      }
+      if (secondBase.getStart() != 0) {
+        final double startpool = player.getPool(firstBase.getEnd()/60_000+1);
+        final double endpool = secondBase.getPool();
+        final int minutes = secondBase.getStart() / 60_000 - firstBase.getEnd()/60_000+1;
+        for (int min = firstBase.getEnd()/60_000+2; min < secondBase.getStart() / 60_000; min++) {
+          final double pool = player.getPool(min);
+          final double expectedPool = (startpool - endpool) * ((min - firstBase.getEnd() / 60_000 + 1) * 1d / minutes);
+          if (pool < expectedPool) {
+            discrepance += expectedPool - pool;
+          }
+          amount++;
+        }
+      }
+      final double resourceConservation = discrepance * 1d / amount;
+      stats.setResourceConservation(BigDecimal.valueOf(1 - resourceConservation));
+
+      // Consumables
+      final List<ItemStack> items = player.getInventory().getItemsAt(secondBase.getEnd());
+      final boolean hasConsumable = items.stream().anyMatch(itemStack -> itemStack.getItem().getType().equals(ItemType.CONSUMABLE));
+      stats.setConsumablesPurchased(hasConsumable);
+
+      final int underControl = player.getStatAt(start / 1000, TimelineStat.ENEMY_CONTROLLED) / 1000;
+      stats.setSecondBaseEnemyControlled((short) underControl);
+
+      // Damage
+      final int earlyDamage = player.getStatAt(start, TimelineStat.DAMAGE);
+      final double damagePercentage = playerperformance.getDamageTotal() == 0 ? 0 : earlyDamage * 1d / playerperformance.getDamageTotal();
+      stats.setEarlyDamage(BigDecimal.valueOf(damagePercentage));
+    }
+
+    final int amount = (int) resets.stream()
+        .filter(reset -> player.getTeam().getAllPlayers().stream()
+            .anyMatch(teamPlayer -> teamPlayer != player && teamPlayer.getInventory().getResets().stream()
+                .anyMatch(r -> Math.abs(r.getStart() - reset.getStart()) <= 45_000)))
+        .count();
+    final double resetsTogether = resets.isEmpty() ? 0 : amount * 1d / resets.size();
+    stats.setResetsTogether(BigDecimal.valueOf(resetsTogether));
+
+
+    final byte allObjectivesAmount = determineAllObjectivesAmount(jsonTeams);
     stats.setObjectivesStolenAndContested(playerperformance, allObjectivesAmount);
     stats.setObjectivesKilledJunglerBefore(playerperformance, allObjectivesAmount);
 
-    byte stolenBarons = determineStolenBarons(jsonTeam, enemyTeam);
+    final byte stolenBarons = determineStolenBarons(jsonTeam, enemyTeam);
     stats.setBaronTakedownsAttempts(playerperformance, stolenBarons);
 
     final short firstWardTime = searchForFirstWardTime(player);
@@ -684,17 +768,17 @@ public final class RiotGameRequester {
             .collect(Collectors.toList());
         for (Integer teamPlayer : teamPlayers) {
           final JSONPlayer searchedPlayer = JSONPlayer.getPlayer(teamPlayer);
-          final int experience = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.EXPERIENCE);
+          final int experience = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000 + 1, TimelineStat.EXPERIENCE);
           xp += normalMode ? experience : experience * -1;
 
-          final int goldEarned = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.TOTAL_GOLD);
+          final int goldEarned = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000 + 1, TimelineStat.TOTAL_GOLD);
           gold += normalMode ? goldEarned : goldEarned * -1;
 
-          final int csEarned = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.CREEP_SCORE);
+          final int csEarned = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000 + 1, TimelineStat.CREEP_SCORE);
           cs += normalMode ? csEarned : csEarned * -1;
 
-          roamSuccess += normalMode ? player.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.LEAD) :
-              (player.getEnemy().getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.LEAD) * -1);
+          roamSuccess += normalMode ? player.getLeadDifferenceAt(start / 60_000, end / 60_000 + 1, TimelineStat.LEAD) :
+              (player.getEnemy().getLeadDifferenceAt(start / 60_000, end / 60_000 + 1, TimelineStat.LEAD) * -1);
         }
 
         for (JSONObject event : player.getTeam().getEvents(EventTypes.TURRET_PLATE_DESTROYED)) {
@@ -978,7 +1062,7 @@ public final class RiotGameRequester {
     final byte stolen = (byte) (p.getTiny(StoredStat.OBJECTIVES_STOLEN) + p.getTiny(StoredStat.OBJECTIVES_STOLEN_TAKEDOWNS));
     final short creeps = (short) (p.getSmall(StoredStat.CREEP_SCORE_JUNGLE) + p.getSmall(StoredStat.CREEP_SCORE_LANE));
     final boolean firstBlood = p.getBool(StoredStat.FIRST_BLOOD) || p.getBool(StoredStat.FIRST_BLOOD_ASSIST);
-    val visionScore = e != null ? (byte) (p.getSmall(StoredStat.VISION_SCORE) - e.getSmall(StoredStat.VISION_SCORE)) :
+    final Byte visionScore = e != null ? (byte) (p.getSmall(StoredStat.VISION_SCORE) - e.getSmall(StoredStat.VISION_SCORE)) :
         null;
     final byte controlWards = p.getTiny(StoredStat.CONTROL_WARDS_PLACED, StoredStat.CONTROL_WARDS_BOUGHT);
     final byte wardClear = p.getTiny(StoredStat.WARDS_TAKEDOWN, StoredStat.WARDS_CLEARED);

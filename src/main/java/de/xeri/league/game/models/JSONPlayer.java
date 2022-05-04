@@ -296,4 +296,25 @@ public class JSONPlayer {
   public JSONTeam getTeam() {
     return JSONTeam.getTeam(isFirstPick() ? 100 : 200);
   }
+
+  /**
+   * Ermittelt den prozentualen Wert im Verhältnis zum maximalen Wert sofern vorhanden
+   * @param stat zu analysierende Stat
+   * @return Prozentualer Anteil zum Maximalwert
+   * @throws IllegalArgumentException sofern dieser Stat nicht ueber einen <b>CURRENT</b> und einen <b>TOTAL</b> Wert verfuegt
+   */
+  public int getStatPercentage(int minute, TimelineStat stat) {
+    if (stat.name().contains("TOTAL") || stat.name().contains("CURRENT")) {
+      val totalStat = (stat.name().contains("TOTAL")) ? stat : TimelineStat.valueOf(stat.name().replace("CURRENT", "TOTAL"));
+      val currentStat = (stat.name().contains("CURRENT")) ? stat : TimelineStat.valueOf(stat.name().replace("TOTAL", "CURRENT"));
+      return getStatAt(minute, totalStat) == 0 ? -1 : getStatAt(minute, currentStat) / getStatAt(minute, totalStat);
+    }
+    throw new IllegalArgumentException("Wert nicht zulässig");
+  }
+
+  public double getPool(int minute) {
+    final double healthPool = getStatPercentage(minute, TimelineStat.CURRENT_HEALTH);
+    final double resourcePool = getStatPercentage(minute, TimelineStat.CURRENT_HEALTH);
+    return resourcePool == -1 ? healthPool : Math.min(healthPool, resourcePool);
+  }
 }
