@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import de.xeri.league.models.match.location.Position;
+import de.xeri.league.game.events.location.Position;
 import org.hibernate.Session;
 
 /**

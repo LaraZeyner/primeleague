@@ -1,6 +1,6 @@
 package de.xeri.league.models.match.stat;
 
-import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
 
 /**
  * Created by Lara on 22.04.2022 for web

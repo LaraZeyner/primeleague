@@ -16,7 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;

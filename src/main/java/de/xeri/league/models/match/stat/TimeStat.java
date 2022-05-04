@@ -1,6 +1,6 @@
 package de.xeri.league.models.match.stat;
 
-import de.xeri.league.models.match.PlayerperformanceKill;
+import de.xeri.league.models.match.playerperformance.PlayerperformanceKill;
 
 /**
  * Created by Lara on 22.04.2022 for web

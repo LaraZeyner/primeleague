@@ -33,18 +33,18 @@
         <class>de.xeri.league.models.league.TurnamentMatch</class>
         <class>de.xeri.league.models.match.ChampionSelection</class>
         <class>de.xeri.league.models.match.Game</class>
-        <class>de.xeri.league.models.match.Playerperformance</class>
-        <class>de.xeri.league.models.match.PlayerperformanceSummonerspell</class>
+        <class>de.xeri.league.models.match.playerperformance.Playerperformance</class>
+        <class>de.xeri.league.models.match.playerperformance.PlayerperformanceSummonerspell</class>
         <class>de.xeri.league.models.match.ScheduledGame</class>
         <class>de.xeri.league.models.match.Teamperformance</class>
         <class>de.xeri.league.models.others.ChampionRelationship</class>
         <class>de.xeri.league.models.others.Playstyle</class>
         <class>de.xeri.league.models.ids.PlayerperformanceInfoId</class>
-        <class>de.xeri.league.models.match.PlayerperformanceInfo</class>
-        <class>de.xeri.league.models.match.PlayerperformanceKill</class>
-        <class>de.xeri.league.models.match.PlayerperformanceObjective</class>
+        <class>de.xeri.league.models.match.playerperformance.PlayerperformanceInfo</class>
+        <class>de.xeri.league.models.match.playerperformance.PlayerperformanceKill</class>
+        <class>de.xeri.league.models.match.playerperformance.PlayerperformanceObjective</class>
         <class>de.xeri.league.models.ids.PlayerperformanceLevelId</class>
-        <class>de.xeri.league.models.match.PlayerperformanceLevel</class>
+        <class>de.xeri.league.models.match.playerperformance.PlayerperformanceLevel</class>
         <class>de.xeri.league.models.match.TeamperformanceBounty</class>
         <class>de.xeri.league.models.match.GamePause</class>
         <class>de.xeri.league.models.match.neu.Rating</class>

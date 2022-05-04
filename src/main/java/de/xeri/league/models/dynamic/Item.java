@@ -20,7 +20,7 @@ import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.ItemSubType;
 import de.xeri.league.models.enums.ItemType;
-import de.xeri.league.models.match.PlayerperformanceItem;
+import de.xeri.league.models.match.playerperformance.PlayerperformanceItem;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;

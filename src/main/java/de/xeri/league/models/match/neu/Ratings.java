@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import de.xeri.league.models.enums.DragonSoul;
-import de.xeri.league.models.match.Playerperformance;
-import de.xeri.league.models.match.PlayerperformanceInfo;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
+import de.xeri.league.models.match.playerperformance.PlayerperformanceInfo;
 import de.xeri.league.util.Const;
 import lombok.val;
 
@@ -81,10 +81,11 @@ public class Ratings {
       return handleValues(highestLeadMinute, lowestLeadMinute, allowComebacks, xpLead);
 
     } else if (subcategory.equals(StatSubcategory.TEAMFIGHTING)) {
-      return handleValues(multikills, deathOrder, teamfightSuccessRate, acesEarlyAndCleanFights, teamfightDamagePercentage);
+      return handleValues(teamfightParticipation, multikills, deathOrder, teamfightSuccessRate, acesEarlyAndCleanFights,
+          damageInTeamfights);
 
     } else if (subcategory.equals(StatSubcategory.SKIRMISHING)) {
-      return handleValues(skirmishesAmount, skirmishKillBilance, skirmishSuccessRate, damagePerSkirmish, skirmishDamagePercentage);
+      return handleValues(skirmishParticipation, skirmishKillBilance, skirmishSuccessRate, damageInSkirmishes);
 
     } else if (subcategory.equals(StatSubcategory.EARLY_INCOME)) {
       return handleValues(earlyLaneLead, laneLead, firstFullItem, earlyCreepScore, farmSupportitemEfficiency);
@@ -763,6 +764,11 @@ public class Ratings {
   //</editor-fold>
 
   //<editor-fold desc="Kategorie 4.1: TEAMFIGHTING">
+  public Stat teamfightParticipation = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getTeamfightParticipation())
+      .nullable()
+      .sub("Anzahl Teamfights", p -> p.getStats().getTeamfightAmount());
+
   public Stat multikills = new Stat(playerperformances, OutputType.TEXT, 15) {
     @Override
     public String display() {
@@ -778,7 +784,9 @@ public class Ratings {
       .map(p -> p.getStats().getAverageDeathOrder());
 
   public Stat teamfightSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 3)
-      .map(p -> p.getStats().getTeamfightWinrate());
+      .map(p -> p.getStats().getTeamfightWinrate())
+      .nullable()
+      .sub("Teamfights gewonnen", p -> p.getStats().getTeamfightAmount() * p.getStats().getTeamfightWinrate());
 
   public Stat acesEarlyAndCleanFights = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getAcesAndClean())
@@ -786,36 +794,35 @@ public class Ratings {
       .sub("Earlygame Aces", p -> p.getTeamperformance().getEarlyAces())
       .sub("Flawless Aces", p -> p.getTeamperformance().getFlawlessAces());
 
-  public Stat teamfightDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 3)
+  public Stat damageInTeamfights = new Stat(playerperformances, OutputType.PERCENT, 3)
       .map(p -> p.getStats().getTeamfightDamageRate())
       .nullable()
       .sub("Schaden insgesamt", Playerperformance::getDamageTotal)
-      .sub("Schaden in Teamfights", p -> p.getDamageTotal() * p.getStats().getTeamfightDamageRate());
+      .sub("Schaden in Teamfights", p -> p.getDamageTotal() * p.getStats().getTeamfightDamageRate())
+      .sub("Schaden pro Teamfight", p -> p.getDamageTotal() * p.getStats().getTeamfightDamageRate() / p.getStats().getTeamfightAmount());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 4.2: SKIRMISHING">
-  public Stat skirmishesAmount = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(p -> p.getStats().getSkirmishesAmount())
-      .nullable();
+  public Stat skirmishParticipation = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getSkirmishParticipation())
+      .nullable()
+      .sub("Anzahl Skirmishes", p -> p.getStats().getSkirmishAmount());
 
   public Stat skirmishKillBilance = new Stat(playerperformances, OutputType.NUMBER, 3)
       .map(p -> p.getStats().getSkirmishKillsPerSkirmish())
       .nullable();
 
-  public Stat skirmishSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 2)
+  public Stat skirmishSuccessRate = new Stat(playerperformances, OutputType.PERCENT, 3)
       .map(p -> p.getStats().getSkirmishWinrate())
       .nullable()
-      .sub("Skirmishes gewonnen", p -> p.getStats().getSkirmishesAmount() * p.getStats().getSkirmishWinrate());
+      .sub("Skirmishes gewonnen", p -> p.getStats().getSkirmishAmount() * p.getStats().getSkirmishWinrate());
 
-  public Stat damagePerSkirmish = new Stat(playerperformances, OutputType.NUMBER, 3)
-      .map(p -> p.getDamageTotal() * p.getStats().getSkirmishDamageRate() / p.getStats().getSkirmishesAmount())
-      .nullable();
-
-  public Stat skirmishDamagePercentage = new Stat(playerperformances, OutputType.PERCENT, 3)
+  public Stat damageInSkirmishes = new Stat(playerperformances, OutputType.PERCENT, 3)
       .map(p -> p.getStats().getSkirmishDamageRate())
       .nullable()
       .sub("Schaden insgesamt", Playerperformance::getDamageTotal)
-      .sub("Schaden in Skirmishes", p -> p.getDamageTotal() * p.getStats().getSkirmishDamageRate());
+      .sub("Schaden in Skirmishes", p -> p.getDamageTotal() * p.getStats().getSkirmishDamageRate())
+      .sub("Schaden pro Skirmish", p -> p.getDamageTotal() * p.getStats().getSkirmishDamageRate() / p.getStats().getSkirmishAmount());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 4.3: EARLY_INCOME">
@@ -2203,10 +2210,10 @@ public class Ratings {
 
     @Override
     public double calculate() {
-      return handleValues(multikills, deathOrder, teamfightSuccessRate, acesEarlyAndCleanFights, teamfightDamagePercentage,
-          skirmishesAmount, skirmishKillBilance, skirmishSuccessRate, damagePerSkirmish, skirmishDamagePercentage, earlyLaneLead,
-          laneLead, firstFullItem, earlyCreepScore, farmSupportitemEfficiency, creepsPerMinute, xpPerMinute, goldPerMinute,
-          creepAdvantage, trueKDA, legendaryItems, itemsBought, mejaisTime, grievousWoundsAndPenetrationTime, startitemSold);
+      return handleValues(teamfightParticipation, multikills, deathOrder, teamfightSuccessRate, acesEarlyAndCleanFights, damageInTeamfights,
+          skirmishParticipation, skirmishKillBilance, skirmishSuccessRate, damageInSkirmishes, earlyLaneLead, laneLead, firstFullItem,
+          earlyCreepScore, farmSupportitemEfficiency, creepsPerMinute, xpPerMinute, goldPerMinute, creepAdvantage, trueKDA,
+          legendaryItems, itemsBought, mejaisTime, grievousWoundsAndPenetrationTime, startitemSold);
     }
 
     @Override

@@ -2,7 +2,7 @@ package de.xeri.league.models.enums;
 
 import java.util.Arrays;
 
-import de.xeri.league.models.match.location.MapArea;
+import de.xeri.league.game.events.location.MapArea;
 import de.xeri.league.util.Util;
 
 /**

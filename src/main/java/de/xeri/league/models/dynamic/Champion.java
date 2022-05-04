@@ -32,7 +32,7 @@ import de.xeri.league.models.enums.FightStyle;
 import de.xeri.league.models.enums.FightType;
 import de.xeri.league.models.enums.Subclass;
 import de.xeri.league.models.match.ChampionSelection;
-import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
 import de.xeri.league.util.Data;

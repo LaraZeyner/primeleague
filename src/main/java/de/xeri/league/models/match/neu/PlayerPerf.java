@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
 
 /**
  * Created by Lara on 25.04.2022 for web

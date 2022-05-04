@@ -8,7 +8,7 @@ import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.util.Data;
-import de.xeri.league.util.io.riot.RiotGameRequester;
+import de.xeri.league.game.RiotGameRequester;
 
 /**
  * Created by Lara on 08.04.2022 for web

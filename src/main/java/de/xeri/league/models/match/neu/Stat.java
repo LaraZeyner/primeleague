@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
-import de.xeri.league.models.match.Playerperformance;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
 import lombok.val;
 import lombok.var;
 
