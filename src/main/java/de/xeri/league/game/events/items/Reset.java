@@ -28,7 +28,7 @@ public class Reset {
     this.transactions.add(transaction);
   }
 
-  public ResetReason getResetReason() {
+  private ResetReason getResetReason() {
     final int level = player.getLevelAt(getStart() / 60_000);
     final int deathTimer = ResetCalculator.getDeathTimer(level, getStart() / 1000);
     final int minDeath = player.getEvents(EventTypes.CHAMPION_KILL).stream()
@@ -41,16 +41,24 @@ public class Reset {
     return ResetReason.RECALL;
   }
 
+  public boolean wasRecall() {
+    return getResetReason().equals(ResetReason.RECALL);
+  }
+
+  public double getLaneLead() {
+    return player.getLeadDifferenceAt(getStart() / 60_000, getEnd() / 60_000, TimelineStat.LEAD);
+  }
+
   public void addTransaction(ItemTransaction transaction) {
     this.transactions.add(transaction);
   }
 
   public int getStart() {
-    return transactions.stream().mapToInt(ItemTransaction::getTimestamp).min().orElse(11) - 12;
+    return transactions.stream().mapToInt(ItemTransaction::getTimestamp).min().orElse(11_999) - 12_000;
   }
 
   public int getEnd() {
-    return transactions.stream().mapToInt(ItemTransaction::getTimestamp).max().orElse(-21) + 20;
+    return transactions.stream().mapToInt(ItemTransaction::getTimestamp).max().orElse(-20_001) + 20_000;
   }
 
   public int getGoldUnspent() {
@@ -61,7 +69,7 @@ public class Reset {
     return player.getInventory().getItemsAt(getEnd());
   }
 
-  private int getGoldPreReset() {
+  public int getGoldPreReset() {
     int amount = getResetStat(TimelineStat.CURRENT_GOLD);
     int minute = getStart() / 60_000;
     int millisSince = getEnd() - minute * 60_000;

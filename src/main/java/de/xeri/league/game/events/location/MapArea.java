@@ -39,12 +39,13 @@ public class MapArea {
   private static final Position BOTLANE_RED_RIVER = new Position(13350, 5270); // W
   private static final Position MID_BOT_RED_RIVER = new Position(10420, 8200); // X
 
-  public static final MapArea MAP = null;
+  private static final MapArea MAP = new MapArea(SuperArea.ALL, new Position(8195, 8195)).add(
+      BASE_BLUE, BOTLANE_ALCOVE, BASE_RED, TOPLANE_ALCOVE);
 
   public static final MapArea TOPLANE = new MapArea(SuperArea.LANE, new Position(1870, 14520)).add(
       TOPLANE_BLUE_OUTER, TOPLANE_ALCOVE, TOPLANE_RED_OUTER, TOPLANE_RED_INNER, TOPLANE_INNER_RIGHT, TOPLANE_INNER_LEFT, TOPLANE_BLUE_INNER);
 
-  public static final MapArea MIDLANE = new MapArea(SuperArea.LANE, new Position(8200, 8200)).add(
+  public static final MapArea MIDLANE = new MapArea(SuperArea.LANE, new Position(8195, 8195)).add(
       TOPLANE_BLUE_INNER, BOTLANE_BLUE_INNER, BOTLANE_RED_INNER, TOPLANE_RED_INNER);
 
   public static final MapArea BOTLANE = new MapArea(SuperArea.LANE, new Position(14520, 1870)).add(

@@ -1,8 +1,10 @@
 package de.xeri.league.models.enums;
 
 import java.util.Arrays;
+import java.util.List;
 
 import de.xeri.league.game.events.location.MapArea;
+import de.xeri.league.game.events.location.Position;
 import de.xeri.league.util.Util;
 
 /**
@@ -10,19 +12,19 @@ import de.xeri.league.util.Util;
  */
 public enum Lane {
   TOP("TOP", "TOP_LANE", MapArea.TOPLANE),
-  JUNGLE("JGL", "none", null),
+  JUNGLE("JGL", "none", MapArea.TOP_BLUE_JUNGLE, MapArea.BOT_BLUE_JUNGLE, MapArea.TOP_RED_JUNGLE, MapArea.BOT_RED_JUNGLE),
   MIDDLE("MID", "MID_LANE", MapArea.MIDLANE),
   BOTTOM("BOT", "BOT_LANE", MapArea.BOTLANE),
   UTILITY("SUP", "BOT_LANE", MapArea.BOTLANE);
 
-  private String abbreviation;
-  private String type;
-  private MapArea area;
+  private final String abbreviation;
+  private final String type;
+  private final MapArea[] areas;
 
-  Lane(String abbreviation, String type, MapArea area) {
+  Lane(String abbreviation, String type, MapArea... areas) {
     this.abbreviation = abbreviation;
     this.type = type;
-    this.area = area;
+    this.areas = areas;
   }
 
   public String getAbbreviation() {
@@ -37,8 +39,8 @@ public enum Lane {
     return Arrays.stream(Lane.values()).filter(lane -> lane.getType().equals(laneString)).findFirst().orElse(null);
   }
 
-  public MapArea getArea() {
-    return area;
+  public List<MapArea> getAreas() {
+    return Arrays.asList(areas);
   }
 
   public String getDisplayName() {
@@ -46,5 +48,29 @@ public enum Lane {
       return "Support";
     }
     return Util.capitalizeFirst(name());
+  }
+
+  public Position getCenter(Position position, boolean blue) {
+    if (areas.length == 1) {
+      return areas[0].getCenter();
+    }
+
+    if (blue) {
+      return areas[Util.distance(position, areas[0].getCenter()) <= Util.distance(position, areas[1].getCenter()) ? 0 : 1].getCenter();
+    }
+
+    return areas[Util.distance(position, areas[2].getCenter()) <= Util.distance(position, areas[3].getCenter()) ? 2 : 3].getCenter();
+  }
+
+  public boolean isInArea(Position position, boolean blue) {
+    if (areas.length == 1) {
+      return areas[0].isInArea(position);
+    }
+
+    if (blue) {
+      return areas[0].isInArea(position) || areas[1].isInArea(position);
+    }
+
+    return areas[2].isInArea(position) || areas[3].isInArea(position);
   }
 }

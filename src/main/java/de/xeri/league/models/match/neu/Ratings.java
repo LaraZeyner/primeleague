@@ -51,13 +51,13 @@ public class Ratings {
       return handleValues(controlWardsPlaced, controlWardsProtected, controlWardsEnemyJungle, firstControlWardTime, averageControlWardTime);
 
     } else if (subcategory.equals(StatSubcategory.TURRET_PRESSURE)) {
-      return handleValues(firstTowerAdvantage, turretPlatings, turretTakedownsEarly, turretsSplitpushed, turretParticipation);
+      return handleValues(firstTowerAdvantage, turretPlatings, turretTakedownsEarly, splitpush, turretParticipation);
 
     } else if (subcategory.equals(StatSubcategory.MACRO)) {
-      return handleValues(teleportKills, jungleCampsStolen, midgameXPEfficiency, midgameGoldEfficiency, lateXPGoldLead);
+      return handleValues(teleportKills, jungleCampsStolen, midgameGoldXPEfficiency, grouping, lateXPGoldLead);
 
     } else if (subcategory.equals(StatSubcategory.ROAMING)) {
-      return handleValues(minionAvantagePerRoam, xpEfficiency, goldEfficiency, roamSuccess, objectiveDamageWhileRoaming);
+      return handleValues(minionAvantagePerRoam, goldXpEfficiency, roamExpense, roamSuccess, objectiveDamageWhileRoaming);
 
     } else if (subcategory.equals(StatSubcategory.GANKING)) {
       return handleValues(teamInvadesAndBuffsTaken, ganksEarlygameSpottedAndTimeWasted, proximity, gankPriority, gankSetups);
@@ -121,7 +121,7 @@ public class Ratings {
       return handleValues(earlyXPGoldLead, laneObjectiveAdvantage, turretplateAdvantage, laneEnemyUnderControlAdvantage);
 
     } else if (subcategory.equals(StatSubcategory.PLAYSTYLE)) {
-      return handleValues(killsPosition, deathsPosition, keyspellsUsed, spellBilance, reactions);
+      return handleValues(positioning, killDeathPosition, keyspellsUsed, spellBilance, reactions);
 
     } else if (subcategory.equals(StatSubcategory.RESETS)) {
       return handleValues(resetsThroughDeaths, averageResetTime, averageResetGold, goldLostThroughResets, resetsWithTeam);
@@ -167,7 +167,7 @@ public class Ratings {
       .nullable();
 
   public Stat scuttleControlOverall = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getScuttlesTotal)
+      .map(Playerperformance::getTotalScuttles)
       .nullable();
 
   public Stat junglerTakedownsBeforeObjective = new Stat(playerperformances, OutputType.PERCENT, 3)
@@ -309,9 +309,9 @@ public class Ratings {
       .map(Playerperformance::getEarlyTurrets)
       .nullable();
 
-  public Stat turretsSplitpushed = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getSplitpushedTurrets)
-      .nullable();
+  public Stat splitpush = new Stat(playerperformances, OutputType.NUMBER, 5)
+      .map(p -> p.getStats().getSplitScore())
+      .sub("Türme gesplitpusht", Playerperformance::getSplitpushedTurrets);
 
   public Stat turretParticipation = new Stat(playerperformances, OutputType.PERCENT, 2)
       .map(p -> p.getStats().getTurretParticipation())
@@ -329,15 +329,15 @@ public class Ratings {
       .map(Playerperformance::getCreepsInvade)
       .nullable();
 
-  public Stat midgameXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4)
-      .map(p -> p.getStats().getMidgameXPEfficiency())
-      .sub("Midgame-XP", p -> p.getStats().getMidgameXPEfficiency() * Const.MIDGAME_XP)
+  public Stat midgameGoldXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4)
+      .map(p -> p.getStats().getMidgameGoldXPEfficiency())
+      .sub("Midgame-Gold", p -> p.getStats().getMidgameGoldEfficiency() * Const.MIDGAME_GOLD)
+      .sub("Lane-Midgame-Gold", p -> Const.MIDGAME_GOLD)
+      .sub("Midgame-XP", p -> (p.getStats().getMidgameGoldXPEfficiency() * 2 - p.getStats().getMidgameGoldEfficiency()) * Const.MIDGAME_XP)
       .sub("Lane-Midgame-XP", p -> Const.MIDGAME_XP);
 
-  public Stat midgameGoldEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4)
-      .map(p -> p.getStats().getMidgameGoldEfficiency())
-      .sub("Midgame-Gold", p -> p.getStats().getMidgameGoldEfficiency() * Const.MIDGAME_GOLD)
-      .sub("Lane-Midgame-Gold", p -> Const.MIDGAME_GOLD);
+  public Stat grouping = new Stat(playerperformances, OutputType.NUMBER, 5)
+      .map(p -> p.getStats().getCompanionScore());
 
   public Stat lateXPGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4)
       .map(p -> p.getStats().getLategameLead());
@@ -348,17 +348,18 @@ public class Ratings {
       .map(p -> p.getStats().getRoamCreepScoreAdvantage())
       .nullable();
 
-  public Stat xpEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3)
-      .map(p -> p.getStats().getRoamXPAdvantage())
-      .nullable();
-
-  public Stat goldEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3)
-      .map(p -> p.getStats().getRoamGoldAdvantage())
-      .nullable();
-
   public Stat roamSuccess = new Stat(playerperformances, OutputType.NUMBER, 3)
       .map(p -> p.getStats().getRoamSuccessScore())
       .nullable();
+
+  public Stat goldXpEfficiency = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getRoamGoldXpAdvantage())
+      .nullable()
+      .sub("Gold durch Roams", p -> p.getStats().getRoamGoldAdvantage())
+      .sub("XP durch Roams", p -> p.getStats().getRoamGoldXpAdvantage() - p.getStats().getRoamGoldAdvantage());
+
+  public Stat roamExpense = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getRoamScore());
 
   public Stat objectiveDamageWhileRoaming = new Stat(playerperformances, OutputType.NUMBER, 3)
       .map(p -> p.getStats().getRoamObjectiveDamageAdvantage())
@@ -531,34 +532,8 @@ public class Ratings {
       .map(Playerperformance::getDamageHealed)
       .nullable();
 
-  //TODO (Abgie) 28.04.2022:
-  public Stat timeInCombat = new Stat(playerperformances, OutputType.TIME, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat timeInCombat = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getSecondsInCombat());
   //</editor-fold>
   //<editor-fold desc="Kategorie 3.2: PLAYMAKING">
   public Stat aggressiveFlash = new Stat(playerperformances, OutputType.NUMBER, 2)
@@ -916,34 +891,9 @@ public class Ratings {
   public Stat survivedClose = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getSurvivedClose);
 
-  //TODO (Abgie) 29.04.2022:
-  public Stat deathPositioning = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat deathPositioning = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getRelativeDeathPositioning())
+      .nullable();
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 5.2: EARLY_SURVIVAL">
@@ -953,63 +903,13 @@ public class Ratings {
       .sub("1. Kill", p -> p.getStats().getFirstKillTime())
       .sub("1. Death", p -> p.getStats().getFirstKillTime() - p.getStats().getFirstKillDeathTime());
 
-  //TODO (Abgie) 29.04.2022:
-  public Stat firstBaseThroughRecall = new Stat(playerperformances, OutputType.PERCENT, 2) {
+  public Stat firstBaseThroughRecall = new Stat(playerperformances, OutputType.PERCENT, 2)
+      .map(p -> p.getStats().isFirstBaseThroughRecall() ? 1 : 0)
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022:
-  public Stat laneLeadDeficitThroughDeaths = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat laneLeadDeficitThroughDeaths = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getLeadThroughDeaths())
+      .nullable();
 
   //TODO (Abgie) 29.04.2022:
   public Stat laneLeadDeficitWithoutDeaths = new Stat(playerperformances, OutputType.NUMBER, 3) {
@@ -1090,7 +990,7 @@ public class Ratings {
   };
   //</editor-fold>>
   //<editor-fold desc="Kategorie 5.4: WAVE_RESOURCEMANAGEMENT">
-  public Stat healthState = new Stat(playerperformances, OutputType.TIME, 2) {
+  public Stat healthState = new Stat(playerperformances, OutputType.NUMBER, 2) {
 
     @Override
     public double calculate() {
@@ -1148,7 +1048,7 @@ public class Ratings {
   };
 
   //TODO (Abgie) 29.04.2022: Lane positioning
-  public Stat wavesOrJungleClear = new Stat(playerperformances, OutputType.PERCENT, 3) {
+  public Stat wavesOrJungleClear = new Stat(playerperformances, OutputType.NUMBER, 3) {
 
     @Override
     public double calculate() {
@@ -1356,141 +1256,23 @@ public class Ratings {
 
   //TODO (Abgie) 29.04.2022: Resets?? 15 TODOs
   //<editor-fold desc="Kategorie 6.1: PRE_FIRST_BASE">
-  public Stat firstReset = new Stat(playerperformances, OutputType.TIME, 2) {
+  public Stat firstReset = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getFirstBase());
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat preFirstBaseEnemyUnderControl = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getFirstBaseEnemyControlled());
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat buffsAndScuttlesInitial = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(Playerperformance::getInitialScuttles)
+      .nullable()
+      .sub("Buffs", Playerperformance::getInitialBuffs);
 
-    @Override
-    public double average() {
-      return 0;
-    }
+  public Stat xpGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4)
+      .map(p -> p.getStats().getFirstBaseLead());
 
-    @Override
-    public double maximum() {
-      return 0;
-    }
+  public Stat goldOnReset = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getFirstBaseResetGold());
 
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat preFirstBaseEnemyUnderControl = new Stat(playerperformances, OutputType.TIME, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat buffsAndScuttlesInitial = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat xpGoldLead = new Stat(playerperformances, OutputType.NUMBER, 4) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-  public Stat goldOnReset = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.2: POST_FIRST_BASE">
   public Stat resourceUsage = new Stat(playerperformances, OutputType.NUMBER, 4) {
@@ -1654,63 +1436,24 @@ public class Ratings {
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 6.4: PLAYSTYLE">
-  //TODO (Abgie) 29.04.2022:
-  public Stat killsPosition = new Stat(playerperformances, OutputType.PERCENT, 3) {
+  public Stat positioning = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getLanePositioning())
+      .sub("Earlygame", p -> p.getStats().getLanePositioning())
+      .sub(" - wenn ahead", p -> p.getStats().isAhead() ? p.getStats().getLanePositioning() : 0)
+      .sub(" - wenn behind", p -> p.getStats().isBehind() ? p.getStats().getLanePositioning() : 0)
+      .sub("Midgame", p -> p.getStats().getMidgamePositioning())
+      .sub(" - wenn ahead", p -> p.getStats().isAhead() ? p.getStats().getMidgamePositioning() : 0)
+      .sub(" - wenn behind", p -> p.getStats().isBehind() ? p.getStats().getMidgamePositioning() : 0)
+      .sub("Lategame", p -> p.getStats().getLategamePositioning())
+      .sub(" - wenn ahead", p -> p.getStats().isAhead() ? p.getStats().getLategamePositioning() : 0)
+      .sub(" - wenn behind", p -> p.getStats().isBehind() ? p.getStats().getLategamePositioning() : 0)
+      .ignore();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022:
-  public Stat deathsPosition = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat killDeathPosition = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getLaneKillDeathPositioning())
+      .sub("Kill Positioning", p -> p.getStats().getLaneKillPositioning())
+      .sub("Death Positioning", p -> p.getStats().getLaneKillDeathPositioning() * 2 - p.getStats().getLaneKillPositioning())
+      .ignore();
 
   public Stat keyspellsUsed = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getKeyspellsUsed())
@@ -2161,8 +1904,9 @@ public class Ratings {
 
     @Override
     public double calculate() {
-      return handleValues(firstTowerAdvantage, turretPlatings, turretTakedownsEarly, turretsSplitpushed, turretParticipation,
-          teleportKills, jungleCampsStolen, midgameXPEfficiency, midgameGoldEfficiency, lateXPGoldLead, minionAvantagePerRoam, xpEfficiency, goldEfficiency, roamSuccess, objectiveDamageWhileRoaming, teamInvadesAndBuffsTaken, ganksEarlygameSpottedAndTimeWasted, proximity, gankPriority, gankSetups, divingSuccessrate, divingDisengagerate, divesDied);
+      return handleValues(firstTowerAdvantage, turretPlatings, turretTakedownsEarly, splitpush, turretParticipation,
+          teleportKills, jungleCampsStolen, midgameGoldXPEfficiency, grouping, lateXPGoldLead, minionAvantagePerRoam, roamSuccess,
+          goldXpEfficiency, roamExpense, objectiveDamageWhileRoaming, teamInvadesAndBuffsTaken, ganksEarlygameSpottedAndTimeWasted, proximity, gankPriority, gankSetups, divingSuccessrate, divingDisengagerate, divesDied);
     }
 
     @Override

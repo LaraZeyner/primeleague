@@ -2,7 +2,6 @@ package de.xeri.league.game.events.fight;
 
 import java.util.ArrayList;
 
-import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.game.models.JSONPlayer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +13,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class Gank {
   private JSONPlayer player;
-  private Playerperformance playerperformance;
   private Fight fight;
 
   public int getOutcome() {
@@ -35,15 +33,15 @@ public class Gank {
   }
 
   public int start() {
-    return fight.start(playerperformance, player);
+    return fight.start(player);
   }
 
   public int end() {
-    return fight.end(playerperformance, player);
+    return fight.end(player);
   }
 
   public int duration() {
-    return fight.duration(playerperformance, player);
+    return fight.duration(player);
   }
 
   public boolean isCounter() {

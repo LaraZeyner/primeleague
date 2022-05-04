@@ -218,8 +218,8 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "trinket_efficiency")
   private BigDecimal trinketEfficiency;
 
-  @Column(name = "xp_efficiency_midgame")
-  private BigDecimal midgameXPEfficiency;
+  @Column(name = "goldxp_efficiency_midgame")
+  private BigDecimal midgameGoldXPEfficiency;
 
   @Column(name = "gold_efficiency_midgame")
   private BigDecimal midgameGoldEfficiency;
@@ -266,23 +266,23 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "skirmish_amount")
   private short skirmishAmount;
 
-  @Column(name = "skirmish_participation")
+  @Column(name = "skirmish_participation", precision = 9, scale = 7)
   private BigDecimal skirmishParticipation;
 
   @Column(name = "skirmish_kills")
   private BigDecimal skirmishKillsPerSkirmish;
 
-  @Column(name = "skirmish_winrate")
+  @Column(name = "skirmish_winrate", precision = 9, scale = 7)
   private BigDecimal skirmishWinrate;
 
-  @Column(name = "skirmish_damage_rate")
+  @Column(name = "skirmish_damage_rate", precision = 9, scale = 7)
   private BigDecimal skirmishDamageRate;
 
   @Column(name = "roam_cs_advantage")
   private short roamCreepScoreAdvantage;
 
-  @Column(name = "roam_xp_advantage")
-  private short roamXPAdvantage;
+  @Column(name = "roam_goldxp_advantage")
+  private short roamGoldXpAdvantage;
 
   @Column(name = "roam_gold_advantage")
   private short roamGoldAdvantage;
@@ -292,6 +292,54 @@ public class PlayerperformanceStats implements Serializable {
 
   @Column(name = "roam_successscore")
   private short roamSuccessScore;
+
+  @Column(name = "death_positioning_relative")
+  private BigDecimal relativeDeathPositioning;
+
+  @Column(name = "positioning_lane")
+  private BigDecimal lanePositioning;
+
+  @Column(name = "positioning_mid")
+  private BigDecimal midgamePositioning;
+
+  @Column(name = "positioning_late")
+  private BigDecimal lategamePositioning;
+
+  @Column(name = "killdeath_positioning_lane")
+  private BigDecimal laneKillDeathPositioning;
+
+  @Column(name = "kill_positioning_lane")
+  private BigDecimal laneKillPositioning;
+
+  @Column(name = "positioning_split_score")
+  private int splitScore;
+
+  @Column(name = "positioning_companion_score")
+  private int companionScore;
+
+  @Column(name = "positioning_roam_score")
+  private int roamScore;
+
+  @Column(name = "time_combat")
+  private short secondsInCombat;
+
+  @Column(name = "base_first_time")
+  private short firstBase;
+
+  @Column(name = "base_first_recall")
+  private boolean firstBaseThroughRecall;
+
+  @Column(name = "lead_through_deaths")
+  private short leadThroughDeaths;
+
+  @Column(name = "first_base_controlled")
+  private short firstBaseEnemyControlled;
+
+  @Column(name = "first_base_lead")
+  private short firstBaseLead;
+
+  @Column(name = "first_base_gold")
+  private short firstBaseResetGold;
 
   public PlayerperformanceStats(Playerperformance playerperformance) {
     this();
@@ -638,8 +686,8 @@ public class PlayerperformanceStats implements Serializable {
     return midgameGoldEfficiency.doubleValue();
   }
 
-  public double getMidgameXPEfficiency() {
-    return midgameXPEfficiency.doubleValue();
+  public double getMidgameGoldXPEfficiency() {
+    return midgameGoldXPEfficiency.doubleValue();
   }
 
   public double getLevelupEarlier() {
@@ -676,6 +724,30 @@ public class PlayerperformanceStats implements Serializable {
 
   public double getSkirmishDamageRate() {
     return skirmishDamageRate.doubleValue();
+  }
+
+  public double getRelativeDeathPositioning() {
+    return relativeDeathPositioning.doubleValue();
+  }
+
+  public double getLanePositioning() {
+    return lanePositioning.doubleValue();
+  }
+
+  public double getMidgamePositioning() {
+    return midgamePositioning.doubleValue();
+  }
+
+  public double getLategamePositioning() {
+    return lategamePositioning.doubleValue();
+  }
+
+  public double getLaneKillDeathPositioning() {
+    return laneKillDeathPositioning.doubleValue();
+  }
+
+  public double getLaneKillPositioning() {
+    return laneKillPositioning.doubleValue();
   }
   //</editor-fold>
 

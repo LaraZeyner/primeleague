@@ -65,8 +65,6 @@ public class Kill {
     }
   }
 
-
-
   private int timestamp;
   private Position position;
   private int killer;

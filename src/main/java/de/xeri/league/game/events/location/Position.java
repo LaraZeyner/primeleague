@@ -18,4 +18,21 @@ public class Position implements Serializable {
   private int x;
   private int y;
 
+  /**
+   * Prozentuale Entfernung von der Mitte
+   * <ul>
+   *   <li><b>River:</b> 13.484%</li>
+   *   <li><b>Outer:</b> 27.883% </li>
+   *   <li><b>Inner:</b> 45.760%</li>
+   *   <li><b>Inhib:</b> 63.636%</li>
+   *   <li><b>Base:</b> 100%</li>
+   * </ul>
+   *
+   * @param blue Spieler spielt auf linker Seite
+   * @return Aggressionswert
+   */
+  public double getTotalAggression(boolean blue) {
+    return blue ? ((x + y) / 16_390.0 - 1) : (((x + y) / 16_390.0 - 1) * -1);
+  }
+
 }

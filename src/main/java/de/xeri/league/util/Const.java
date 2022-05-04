@@ -24,6 +24,7 @@ public final class Const {
   public static final double GOLD_REFUND_PENALTY = 0.3;
   public static final int GOLD_REFUND_PER_BISCUIT = 5;
   public static final int KILL_BOUNTY = 300;
+  public static final int MAP_SIZE = 16_390;
   public static final int KILL_BOUNTY_FIRST_BLOOD = 400;
   public static final int LATEGAME_UNTIL_MINUTE = 40;
   public static final int MIDGAME_GOLD = 5935;

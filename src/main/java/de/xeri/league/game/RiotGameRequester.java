@@ -21,6 +21,7 @@ import de.xeri.league.game.events.fight.Pick;
 import de.xeri.league.game.events.fight.Skirmish;
 import de.xeri.league.game.events.fight.Teamfight;
 import de.xeri.league.game.events.fight.enums.Fighttype;
+import de.xeri.league.game.events.items.Reset;
 import de.xeri.league.game.events.location.Position;
 import de.xeri.league.game.models.JSONPlayer;
 import de.xeri.league.game.models.JSONTeam;
@@ -198,6 +199,25 @@ public final class RiotGameRequester {
     val enemyTeam = jsonTeams.get(teamperformance.isFirstPick() ? 1 : 0);
 
     player.buildInventory();
+    final List<Reset> resets = player.getInventory().getResets();
+    final long recalls = resets.stream().filter(Reset::wasRecall).count();
+
+    val firstBase = player.getInventory().getResets().isEmpty() ? null : player.getInventory().getResets().get(0);
+    if (firstBase != null) {
+      final boolean firstBaseRecall = firstBase.wasRecall();
+      stats.setFirstBaseThroughRecall(firstBaseRecall);
+
+      final int start = firstBase.getStart();
+      stats.setFirstBase((short) (start / 1000));
+
+      final int underControl = player.getStatAt(start / 1000, TimelineStat.ENEMY_CONTROLLED) / 1000;
+      stats.setFirstBaseEnemyControlled((short) underControl);
+      final int lead = player.getStatAt(start / 1000, TimelineStat.LEAD) / 1000;
+      stats.setFirstBaseLead((short) lead);
+      final int resetGold = firstBase.getGoldPreReset();
+      stats.setFirstBaseResetGold((short) resetGold);
+    }
+
 
     byte allObjectivesAmount = determineAllObjectivesAmount(jsonTeams);
     stats.setObjectivesStolenAndContested(playerperformance, allObjectivesAmount);
@@ -301,12 +321,19 @@ public final class RiotGameRequester {
       }
     }
 
+    val deathPositioning = new HashMap<Integer, Double>();
+    val killPositioning = new HashMap<Integer, Double>();
+    int lead = 0;
     for (JSONObject event : player.getEvents(EventTypes.CHAMPION_KILL)) {
       final Kill kill = Kill.getKillFromEvent(event);
       if (kill != null) {
         final short shutdownBounty = (short) event.getInt("shutdownBounty");
         final short bounty = (short) event.getInt("bounty");
         int timestamp = event.getInt("timestamp");
+        lead += player.getLeadDifferenceAt(timestamp / 60_000, (timestamp + 60_000) / 60_000, TimelineStat.LEAD);
+
+        final Position position = kill.getPosition();
+        final double relativePosition = position.getTotalAggression(player.isFirstPick());
         if (kill.getVictim() == pId) {
           //handle First Death time
           if (firstDeathTime == 0) {
@@ -326,6 +353,9 @@ public final class RiotGameRequester {
             deathsFromBehind++;
           }
 
+          //Positioning
+          deathPositioning.put(timestamp, relativePosition);
+
         } else if (kill.getKiller() == pId) {
           //handle First Kill time
           if (firstKillTime == 0) {
@@ -335,6 +365,9 @@ public final class RiotGameRequester {
           // Bounties
           killBounties.add((short) kill.getGold());
 
+          //Positioning
+          killPositioning.put(timestamp, relativePosition);
+
         } else {
           // Bounties
           final double factor = determineAssistbountyFactor(timestamp);
@@ -343,9 +376,34 @@ public final class RiotGameRequester {
           final int participantAmount = event.getJSONArray("assistingParticipantIds").toList().size();
           final int assistBounty = totalAssistBounty / participantAmount;
           assistBounties.add((short) assistBounty);
+
+          //Positioning
+          killPositioning.put(timestamp, relativePosition);
         }
       }
     }
+
+    if (!deathPositioning.isEmpty()) {
+      final double averageDeathPosition = deathPositioning.values().stream()
+          .mapToDouble(Double::doubleValue)
+          .average().orElse(0);
+      stats.setRelativeDeathPositioning(BigDecimal.valueOf(averageDeathPosition));
+
+      final double laneKillPositioning = killPositioning.keySet().stream()
+          .filter(milli -> milli < Const.EARLYGAME_UNTIL_MINUTE * 60_000)
+          .mapToDouble(deathPositioning::get)
+          .average().orElse(0);
+      stats.setLaneKillPositioning(BigDecimal.valueOf(laneKillPositioning));
+
+      final double laneDeathPositioning = deathPositioning.keySet().stream()
+          .filter(milli -> milli < Const.EARLYGAME_UNTIL_MINUTE * 60_000)
+          .mapToDouble(deathPositioning::get)
+          .average().orElse(0);
+      stats.setLaneKillDeathPositioning(BigDecimal.valueOf((laneKillPositioning + laneDeathPositioning) / 2.0));
+    }
+
+    stats.setLeadThroughDeaths((short) lead);
+
 
     if (firstDeathTime < 300) {
       int deathMinute = firstDeathTime / 60;
@@ -420,7 +478,12 @@ public final class RiotGameRequester {
     stats.setBountyDifference(playerperformance, bountyDrop);
 
     double csAt10 = player.getStatPerMinute(10, TimelineStat.CREEP_SCORE);
+    val positionList = new ArrayList<Double>();
     for (PlayerperformanceInfo info : playerperformance.getInfos()) {
+      final Position position = player.getPositionAt(info.getMinute());
+      final double aggression = position.getTotalAggression(player.isFirstPick());
+      positionList.set(info.getMinute(), aggression);
+
       if (info.getMinute() > 10) {
         final double csPerMinute = player.getStatPerMinute(info.getMinute(), TimelineStat.CREEP_SCORE);
         if (csAt10 > 0 && csPerMinute < csAt10 * 0.8) {
@@ -433,6 +496,24 @@ public final class RiotGameRequester {
     final double csAt = player.getStatAt(14, TimelineStat.CREEP_SCORE) * 1d / 158;
     stats.setEarlyFarmEfficiency(BigDecimal.valueOf(csAt));
     stats.setEarlyGoldAdvantage((short) player.getLeadAt(10, TimelineStat.TOTAL_GOLD));
+
+    final double earlyPosition = positionList.subList(1, Const.EARLYGAME_UNTIL_MINUTE).stream()
+        .mapToDouble(Double::doubleValue).average().orElse(0);
+    if (earlyPosition != 0) {
+      stats.setLanePositioning(BigDecimal.valueOf(earlyPosition));
+    }
+
+    final double midPosition = positionList.subList(Const.EARLYGAME_UNTIL_MINUTE, Const.MIDGAME_UNTIL_MINUTE).stream()
+        .mapToDouble(Double::doubleValue).average().orElse(0);
+    if (midPosition != 0) {
+      stats.setMidgamePositioning(BigDecimal.valueOf(midPosition));
+    }
+
+    final double latePosition = positionList.subList(Const.MIDGAME_UNTIL_MINUTE, positionList.size()).stream()
+        .mapToDouble(Double::doubleValue).average().orElse(0);
+    if (latePosition != 0) {
+      stats.setLategamePositioning(BigDecimal.valueOf(latePosition));
+    }
 
     getMidgameStats(player, stats, endMinute);
     handleControlled(player, minute, stats);
@@ -467,13 +548,13 @@ public final class RiotGameRequester {
         allSkirmishesAmount++;
       }
 
-      if (fight.getInvolvedPlayers().contains(pId)) {
+      if (fight.isInvolved(pId)) {
         if (playerperformance.getLane() != null) {
           if (fight.isGankOf(playerperformance.getLane(), player, enemyPlayer)) {
-            myGanks.add(new Gank(player, playerperformance, fight));
+            myGanks.add(new Gank(player, fight));
           }
           if (fight.isGankOf(playerperformance.getLane(), enemyPlayer, player)) {
-            enemyGanks.add(new Gank(player, playerperformance, fight));
+            enemyGanks.add(new Gank(player, fight));
           }
         }
 
@@ -492,7 +573,7 @@ public final class RiotGameRequester {
             pickAdvantage++;
           }
 
-        } else if (fight instanceof Teamfight && fight.getInvolvedPlayers().contains(pId)) {
+        } else if (fight instanceof Teamfight && fight.isInvolved(pId)) {
           val teamfight = (Teamfight) fight;
           myTeamfights.add(teamfight);
 
@@ -503,11 +584,17 @@ public final class RiotGameRequester {
       }
     }
 
-    double deathOrder = myTeamfights.stream().filter(teamfight -> teamfight.getDeathOrder(pId) != 0)
+    final int combatTime = fights.stream()
+        .filter(fight -> fight.isInvolved(pId))
+        .mapToInt(fight -> (fight.end(player) - fight.start(player)) / 1000).sum();
+    stats.setSecondsInCombat((short) combatTime);
+
+
+    final double deathOrder = myTeamfights.stream().filter(teamfight -> teamfight.getDeathOrder(pId) != 0)
         .mapToDouble(teamfight -> teamfight.getDeathOrder(pId)).average().orElse(0);
-    double teamfightWins = myTeamfights.stream().mapToInt(teamfight -> teamfight.isWinner(pId) ? 1 : 0).average().orElse(0);
-    final int teamfightDamage = myTeamfights.stream().mapToInt(teamfight -> teamfight.getFightDamage(playerperformance, player)).sum();
-    double teamfightDamageRate = teamfightDamage * 1d / playerperformance.getDamageTotal();
+    final double teamfightWins = myTeamfights.stream().mapToInt(teamfight -> teamfight.isWinner(pId) ? 1 : 0).average().orElse(0);
+    final int teamfightDamage = myTeamfights.stream().mapToInt(teamfight -> teamfight.getFightDamage(player)).sum();
+    final double teamfightDamageRate = teamfightDamage * 1d / playerperformance.getDamageTotal();
     stats.setTeamfights(myTeamfights.size(), allTeamfightsAmount, deathOrder, teamfightWins, teamfightDamageRate);
 
     final int skirmishAmount = mySkirmishes.size();
@@ -520,76 +607,28 @@ public final class RiotGameRequester {
     final double skirmishWins = myTeamfights.stream()
         .mapToInt(skirmish -> skirmish.isWinner(pId) ? 1 : 0)
         .average().orElse(0);
-    final int skrimishDamage = mySkirmishes.stream().mapToInt(skirmish -> skirmish.getFightDamage(playerperformance, player)).sum();
+    final int skrimishDamage = mySkirmishes.stream().mapToInt(skirmish -> skirmish.getFightDamage(player)).sum();
     double skirmishDamageRate = skrimishDamage * 1d / playerperformance.getDamageTotal();
     stats.setSkirmishes(skirmishAmount, allSkirmishesAmount, skirmishKills, skirmishWins, skirmishDamageRate);
 
 
     stats.setDuels(playerperformance, duelsWon, duelsLost);
     stats.setPickAdvantage(pickAdvantage);
+    handleGanks(stats, myGanks, enemyGanks, player);
 
-    int roamSuccess = 0;
-    int gold = 0;
-    int xp = 0;
-    int cs = 0;
-    int plates = 0;
-    for (Gank gank : myGanks) {
-      final List<Integer> involvedPlayers = gank.getFight().getInvolvedPlayers();
-      final int start = gank.start();
-      int end = gank.end() + 60_000;
-
-      final List<Integer> teamPlayers = involvedPlayers.stream()
-          .filter(id -> jsonTeam.hasPlayer(id - 1))
-          .collect(Collectors.toList());
-      for (Integer teamPlayer : teamPlayers) {
-        final JSONPlayer searchedPlayer = JSONPlayer.getPlayer(teamPlayer);
-        xp += searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.EXPERIENCE);
-        gold += searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.TOTAL_GOLD);
-        cs += searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.CREEP_SCORE);
-        roamSuccess += player.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.LEAD);
-      }
-
-      for (JSONObject event : allEvents) {
-        final int timestamp = event.getInt("timestamp");
-        if (timestamp < end && timestamp > start) {
-          final EventTypes type = EventTypes.valueOf(event.getString("type"));
-          if (type.equals(EventTypes.TURRET_PLATE_DESTROYED)) {
-            final JSONObject positionObject = event.getJSONObject("position");
-            final Position position = new Position(positionObject.getInt("x"), positionObject.getInt("y"));
-            if (Util.distance(gank.getFight().getLastPosition(), position) < Const.DISTANCE_BETWEEN_FIGHTS ||
-                event.getString("laneType").equals(playerperformance.getLane().getType())) {
-              final int teamId = jsonTeam.getId() * 100;
-              if (player.getId() < 5) {
-                plates += teamId == 100 ? 1 : -1;
-              } else {
-                plates += teamId == 200 ? 1 : -1;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    stats.setRoamObjectiveDamageAdvantage((short) (plates * 200));
-    stats.setRoamXPAdvantage((short) xp);
-    stats.setRoamCreepScoreAdvantage((short) cs);
-    stats.setRoamGoldAdvantage((short) gold);
-    stats.setRoamSuccessScore((short) roamSuccess);
-
-//TODO (Abgie) 03.05.2022:
     val map = new HashMap<Integer, List<Position>>();
     for (int min = 5; min < 31; min++) {
       val list = new ArrayList<Position>();
 
       for (JSONPlayer allPlayer : jsonTeam.getAllPlayers()) {
         if (allPlayer != player) {
-          final Position teammatePosition = allPlayer.getPositionAt(min);
+          val teammatePosition = allPlayer.getPositionAt(min);
           list.add(teammatePosition);
         }
       }
       map.put(min, list);
     }
-    // TODO A measure of how far away a player is from all allied champions between minutes 15 and 30.
+    // A measure of how far away a player is from all allied champions between minutes 15 and 30.
     final double splitScore = map.keySet().stream()
         .filter(min -> min >= 15)
         .filter(min -> min <= 30)
@@ -597,8 +636,9 @@ public final class RiotGameRequester {
             .mapToDouble(position -> Util.distance(position, player.getPositionAt(min)))
             .average().orElse(0))
         .average().orElse(0);
+    stats.setSplitScore((int) splitScore);
 
-    // TODO A measure of how close a player is to the nearest allied champion between minutes 5 and 20.
+    // A measure of how close a player is to the nearest allied champion between minutes 5 and 20.
     final double companionScore = map.keySet().stream()
         .filter(min -> min >= 5)
         .filter(min -> min <= 20)
@@ -606,20 +646,75 @@ public final class RiotGameRequester {
             .mapToDouble(position -> Util.distance(position, player.getPositionAt(min)))
             .min().orElse(0))
         .average().orElse(0);
+    stats.setCompanionScore((int) companionScore);
 
-    // TODO A measure of how much a player rotated around the map between minutes 5 and 20.
-    final Position laneCenter = playerperformance.getLane().getArea().getCenter();
+    // A measure of how much a player rotated around the map between minutes 5 and 20.
     final double rotationScore = map.keySet().stream()
         .filter(min -> min >= 5)
         .filter(min -> min <= 20)
-        .mapToDouble(min -> Util.distance(laneCenter, player.getPositionAt(min)))
+        .mapToDouble(min -> {
+          val realPosition = player.getPositionAt(min);
+          return Util.distance(player.getLane().getCenter(realPosition, player.isFirstPick()), realPosition);
+        })
         .average().orElse(0);
+    stats.setRoamScore((int) rotationScore);
 
     playerperformance.setLaneLead((short) player.getLeadAt(15, TimelineStat.LEAD));
     playerperformance.setEarlyLaneLead((short) player.getLeadAt(10, TimelineStat.LEAD));
 
 
     playerperformance.setStats(stats);
+  }
+
+  private static void handleGanks(PlayerperformanceStats stats, List<Gank> myGanks, List<Gank> enemyGanks, JSONPlayer player) {
+    int roamSuccess = 0;
+    int gold = 0;
+    int xp = 0;
+    int cs = 0;
+    int plates = 0;
+    for (List<Gank> ganks : Arrays.asList(myGanks, enemyGanks)) {
+      final boolean normalMode = ganks.equals(myGanks);
+      for (Gank gank : ganks) {
+        final List<Integer> involvedPlayers = gank.getFight().getInvolvedPlayers();
+        final int start = gank.start();
+        final int end = gank.end() + 60_000;
+
+        final List<Integer> teamPlayers = normalMode ? involvedPlayers.stream().filter(id -> player.getTeam().hasPlayer(id - 1))
+            .collect(Collectors.toList()) : involvedPlayers.stream().filter(id -> player.getEnemy().getTeam().hasPlayer(id - 1))
+            .collect(Collectors.toList());
+        for (Integer teamPlayer : teamPlayers) {
+          final JSONPlayer searchedPlayer = JSONPlayer.getPlayer(teamPlayer);
+          final int experience = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.EXPERIENCE);
+          xp += normalMode ? experience : experience * -1;
+
+          final int goldEarned = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.TOTAL_GOLD);
+          gold += normalMode ? goldEarned : goldEarned * -1;
+
+          final int csEarned = searchedPlayer.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.CREEP_SCORE);
+          cs += normalMode ? csEarned : csEarned * -1;
+
+          roamSuccess += normalMode ? player.getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.LEAD) :
+              (player.getEnemy().getLeadDifferenceAt(start / 60_000, end / 60_000, TimelineStat.LEAD) * -1);
+        }
+
+        for (JSONObject event : player.getTeam().getEvents(EventTypes.TURRET_PLATE_DESTROYED)) {
+          final int timestamp = event.getInt("timestamp");
+          if (timestamp < end && timestamp > start) {
+            final JSONObject positionObject = event.getJSONObject("position");
+            final Position position = new Position(positionObject.getInt("x"), positionObject.getInt("y"));
+            if (Util.distance(gank.getFight().getLastPosition(), position) < Const.DISTANCE_BETWEEN_FIGHTS ||
+                event.getString("laneType").equals(normalMode ? player.getLane().getType() : player.getEnemy().getLane().getType())) {
+              plates += normalMode ? 1 : -1;
+            }
+          }
+        }
+      }
+    }
+    stats.setRoamObjectiveDamageAdvantage((short) (plates * 200));
+    stats.setRoamGoldXpAdvantage((short) (xp + cs));
+    stats.setRoamCreepScoreAdvantage((short) cs);
+    stats.setRoamGoldAdvantage((short) gold);
+    stats.setRoamSuccessScore((short) roamSuccess);
   }
 
   private static byte determineLevelups(Playerperformance playerperformance, JSONPlayer enemyPlayer, byte earlierLevelups) {
@@ -713,13 +808,13 @@ public final class RiotGameRequester {
 
   private static void getMidgameStats(JSONPlayer player, PlayerperformanceStats stats, int endMinute) {
     if (player.getLastMinute() > Const.EARLYGAME_UNTIL_MINUTE) {
-      final int xpDifference = player.getLeadDifferenceAt(Const.EARLYGAME_UNTIL_MINUTE, Const.MIDGAME_UNTIL_MINUTE, TimelineStat.EXPERIENCE);
-      final double xpPercentage = xpDifference * 1d / Const.MIDGAME_XP;
-      stats.setMidgameXPEfficiency(BigDecimal.valueOf(xpPercentage));
-
       final int goldDifference = player.getLeadDifferenceAt(Const.EARLYGAME_UNTIL_MINUTE, Const.MIDGAME_UNTIL_MINUTE, TimelineStat.TOTAL_GOLD);
       final double goldPercentage = goldDifference * 1d / Const.MIDGAME_XP;
       stats.setMidgameGoldEfficiency(BigDecimal.valueOf(goldPercentage));
+
+      final int xpDifference = player.getLeadDifferenceAt(Const.EARLYGAME_UNTIL_MINUTE, Const.MIDGAME_UNTIL_MINUTE, TimelineStat.EXPERIENCE);
+      final double xpPercentage = xpDifference * 1d / Const.MIDGAME_XP;
+      stats.setMidgameGoldXPEfficiency(BigDecimal.valueOf((xpPercentage + goldPercentage) / 2.0));
     }
 
     if (player.getLastMinute() > Const.MIDGAME_UNTIL_MINUTE) {
@@ -778,13 +873,13 @@ public final class RiotGameRequester {
    * @param stats eintragen hier
    */
   private static void handleControlled(JSONPlayer player, int minute, PlayerperformanceStats stats) {
-    if (player.getEnemy() != null) {
+    if (player.hasEnemy()) {
       final double statAt = player.getStatAt(minute, TimelineStat.ENEMY_CONTROLLED) / 1000.0;
       final double statAt1 = player.getEnemy().getStatAt(minute, TimelineStat.ENEMY_CONTROLLED) / 1000.0;
       stats.setEnemyControlAdvantage(statAt, statAt1);
     }
 
-    if (player.getEnemy() != null) {
+    if (player.hasEnemy()) {
       final double statAt = player.getStatAt(minute, TimelineStat.ENEMY_CONTROLLED) / 1000.0;
       final double statAt1 = player.getEnemy().getStatAt(15, TimelineStat.ENEMY_CONTROLLED) / 1000.0;
       stats.setEnemyControlAdvantageEarly(statAt, statAt1);
@@ -920,8 +1015,8 @@ public final class RiotGameRequester {
     }
     if (e != null) playerperformance.setBaronExecutes(e.getTiny(StoredStat.BARON_EXECUTES));
     playerperformance.setBuffsStolen(p.getTiny(StoredStat.BUFFS_STOLEN));
-    playerperformance.setScuttlesInitial(p.getTiny(StoredStat.SCUTTLES_INITIAL));
-    playerperformance.setScuttlesTotal(p.getTiny(StoredStat.SCUTTLES_TOTAL));
+    playerperformance.setInitialScuttles(p.getTiny(StoredStat.SCUTTLES_INITIAL));
+    playerperformance.setTotalScuttles(p.getTiny(StoredStat.SCUTTLES_TOTAL));
     playerperformance.setSplitpushedTurrets(p.getTiny(StoredStat.TOWERS_SPLITPUSHED));
     playerperformance.setTeamInvading(p.getTiny(StoredStat.INVADING_KILLS));
     playerperformance.setGanksEarly(p.getTiny(StoredStat.LANER_ROAMS, StoredStat.JUNGLER_ROAMS));
@@ -989,8 +1084,8 @@ public final class RiotGameRequester {
     for (int i = 0; i < participants.length(); i++) {
       val participant = participants.getJSONObject(i);
       val puuid = participant.getString("puuid");
-      val jsonPlayer = new JSONPlayer(i, participant, puuid);
       final int teamId = participant.getInt("teamId");
+      val jsonPlayer = new JSONPlayer(i, participant, puuid, teamId == 100);
       val team = JSONTeam.getTeam(teamId);
       for (int timestamp : playerInfo.keySet()) {
         int minute = timestamp / 60_000;

@@ -83,7 +83,7 @@ public class Provider {
             TimeUnit.SECONDS.sleep(waitingTime / 1000);
           }
 
-          requests = requests.subList(range / 2, requests.size() - 1);
+          requests = requests.subList(range / 2, requests.size());
         }
       }
       current = System.currentTimeMillis();

@@ -6,14 +6,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import de.xeri.league.models.enums.Lane;
-import de.xeri.league.models.match.playerperformance.Playerperformance;
-import de.xeri.league.game.events.location.Position;
 import de.xeri.league.game.events.fight.enums.Fighttype;
 import de.xeri.league.game.events.fight.enums.Multikill;
+import de.xeri.league.game.events.location.Position;
+import de.xeri.league.game.models.JSONPlayer;
+import de.xeri.league.game.models.TimelineStat;
+import de.xeri.league.models.enums.Lane;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.Util;
-import de.xeri.league.game.models.JSONPlayer;
 import lombok.val;
 
 public class Fight {
@@ -52,6 +52,10 @@ public class Fight {
         .collect(Collectors.toList());
   }
 
+  public boolean isInvolved(int pId) {
+    return getInvolvedPlayers().contains(pId);
+  }
+
   public Fighttype getFighttype() {
     val involved = getInvolvedPlayers();
     final long bluePlayerAmount = involved.stream().filter(id -> id >= 1 && id <= 5).count();
@@ -80,7 +84,7 @@ public class Fight {
   public boolean isGankOf(Lane lane, JSONPlayer player, JSONPlayer enemy) {
     if (new ArrayList<>(kills).get(0).getTimestamp() < Const.EARLYGAME_UNTIL_MINUTE * 60_000) {
       for (Kill kill : kills) {
-        if (enemy != null && kill.isInvolved(player.getId() + 1) && !lane.getArea().isInArea(kill.getPosition())) {
+        if (enemy != null && kill.isInvolved(player.getId() + 1) && !lane.isInArea(kill.getPosition(), player.isFirstPick())) {
           return !kill.isInvolved(enemy.getId() + 1) || (!getFighttype().equals(Fighttype.DUEL));
         }
       }
@@ -119,90 +123,69 @@ public class Fight {
     return pId > 5 ? remainingTeam2 > remainingTeam1 : remainingTeam1 > remainingTeam2;
   }
 
-  public int getFightDamage(Playerperformance playerperformance, JSONPlayer player) {
-    final int start = start(playerperformance, player);
-    int end = end(playerperformance, player);
+  public int getFightDamage(JSONPlayer player) {
+    final int start = start(player);
+    int end = end(player);
     if (end == start) {
       end++;
     }
-    return damageBetween(playerperformance, start, end);
+    return damageBetween(player, start, end);
   }
 
-  private static int damageBetween(Playerperformance playerperformance, int start, int end) {
-    val startInfo = playerperformance.getInfos().stream()
-        .filter(info -> info.getMinute() == start / 60_000)
-        .findFirst().orElse(null);
-    if (startInfo != null) {
-      val endInfo = playerperformance.getInfos().stream()
-          .filter(info -> info.getMinute() == start / 60_000)
-          .findFirst()
-          .orElse(new ArrayList<>(playerperformance.getInfos()).get(playerperformance.getInfos().size() - 1));
-      if (endInfo != null) {
-        return endInfo.getTotalDamage() - startInfo.getTotalDamage();
-      }
-    }
-    return 0;
+  private static int damageBetween(JSONPlayer player, int start, int end) {
+    final int startDamage = player.getStatAt(start / 60_000, TimelineStat.DAMAGE);
+    final int endDamage = player.getStatAt(end / 60_000, TimelineStat.DAMAGE);
+    return endDamage - startDamage;
   }
-
-
 
   public List<Kill> getKills() {
     return new ArrayList<>(kills);
   }
 
   public Teamfight getTeamfight() {
-    if (getFighttype().equals(Fighttype.TEAMFIGHT)) {
-      return new Teamfight(kills);
-    }
-    return null;
+    return getFighttype().equals(Fighttype.TEAMFIGHT) ? new Teamfight(kills) : null;
   }
 
   public Duel getDuel() {
-    if (getFighttype().equals(Fighttype.DUEL)) {
-      return new Duel(kills);
-    }
-    return null;
+    return getFighttype().equals(Fighttype.DUEL) ? new Duel(kills) : null;
   }
 
   public Pick getPick() {
-    if (getFighttype().equals(Fighttype.PICK)) {
-      return new Pick(kills);
-    }
-    return null;
+    return getFighttype().equals(Fighttype.PICK) ? new Pick(kills) : null;
   }
 
   public Skirmish getSkirmish() {
-    if (getFighttype().equals(Fighttype.SKIRMISH)) {
-      return new Skirmish(kills);
-    }
-    return null;
+    return getFighttype().equals(Fighttype.SKIRMISH) ? new Skirmish(kills) : null;
   }
 
 
-  public int start(Playerperformance playerperformance, JSONPlayer player) {
-    val firstKill = kills.stream().filter(kill -> kill.isInvolved(player.getId() + 1))
+  public int start(JSONPlayer player) {
+    val firstKill = kills.stream()
+        .filter(kill -> kill.isInvolved(player.getId() + 1))
         .findFirst().orElse(null);
-    return handleKill(playerperformance, firstKill);
+    return handleKill(player, firstKill);
   }
 
-  public int end(Playerperformance playerperformance, JSONPlayer player) {
+  public int end(JSONPlayer player) {
 
-    val firstKill = kills.stream().filter(kill -> kill.isInvolved(player.getId() + 1))
+    val firstKill = kills.stream()
+        .filter(kill -> kill.isInvolved(player.getId() + 1))
         .reduce((first, second) -> second).orElse(null);
-    return handleKill(playerperformance, firstKill);
+    return handleKill(player, firstKill);
   }
 
-  public int duration(Playerperformance playerperformance, JSONPlayer player) {
-    return end(playerperformance, player) - start(playerperformance, player);
+  public int duration(JSONPlayer player) {
+    return end(player) - start(player);
   }
 
-  private int handleKill(Playerperformance playerperformance, Kill firstKill) {
-    if (firstKill != null) {
-      val lane = playerperformance.getLane();
-      val lanePosition = lane.getArea().getCenter();
-      final double distance = lanePosition == null ? 5000 : Util.distance(firstKill.getPosition(), lanePosition);
+  private int handleKill(JSONPlayer player, Kill kill) {
+    if (kill != null) {
+      val lane = player.getLane();
+      final Position killPosition = kill.getPosition();
+      val lanePosition = lane.getCenter(killPosition, player.isFirstPick());
+      final double distance = Util.distance(killPosition, lanePosition);
       final int walkTime = (int) (distance * 2.5);
-      return firstKill.getTimestamp() + walkTime;
+      return kill.getTimestamp() + walkTime;
     }
     return -1;
   }

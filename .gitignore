@@ -1,0 +1,9 @@
+# Dateien einer spezifischen Dateiendung #
+*.class
+*.iml
+*.log
+
+# Dateien eines spezifischen Ordners #
+.idea
+planung
+target

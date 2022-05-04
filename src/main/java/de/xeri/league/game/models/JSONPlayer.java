@@ -11,6 +11,7 @@ import de.xeri.league.game.events.items.ExperienceCalculator;
 import de.xeri.league.game.events.items.Inventory;
 import de.xeri.league.game.events.location.Position;
 import de.xeri.league.models.enums.EventTypes;
+import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.StoredStat;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
@@ -44,12 +45,14 @@ public class JSONPlayer {
   private final Inventory inventory = new Inventory();
   private final List<JSONObject> events = new ArrayList<>();
   private final List<JSONObject> infos = new ArrayList<>();
+  private final boolean firstPick;
 
-  public JSONPlayer(int id, JSONObject json, String puuid) {
+  public JSONPlayer(int id, JSONObject json, String puuid, boolean firstPick) {
     this.id = id;
     this.json = json;
     this.puuid = puuid;
     this.account = Account.findPuuid(puuid);
+    this.firstPick = firstPick;
   }
 
   public void addEvent(JSONObject event) {
@@ -68,13 +71,8 @@ public class JSONPlayer {
     return infos.isEmpty() ? -1 : infos.size() - 1;
   }
 
-  public Object value(StoredStat storedStat) {
-    if (storedStat.isChallenge() && json.has("challenges")) {
-      return json.getJSONObject("challenges").get(storedStat.getKey());
-    } else if (json.has(storedStat.getKey())) {
-      return json.get(storedStat.getKey());
-    }
-    return null;
+  public Lane getLane() {
+    return Lane.valueOf(get(StoredStat.LANE));
   }
 
   public String get(StoredStat storedStat) {
@@ -249,7 +247,7 @@ public class JSONPlayer {
   }
 
   public int getLeadAt(int minute, TimelineStat stat) {
-    if (getEnemy() != null) {
+    if (hasEnemy()) {
       return getStatAt(minute, stat) - getEnemy().getStatAt(minute, stat);
     }
     return 0;
@@ -295,4 +293,7 @@ public class JSONPlayer {
     return ExperienceCalculator.getLevelOf(statAt);
   }
 
+  public JSONTeam getTeam() {
+    return JSONTeam.getTeam(isFirstPick() ? 100 : 200);
+  }
 }
