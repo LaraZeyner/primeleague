@@ -22,8 +22,9 @@ import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
-import de.xeri.league.util.io.riot.RiotAccountRequester;
+import de.xeri.league.util.io.riot.RiotAccountURLGenerator;
 import de.xeri.league.util.logger.Logger;
+import lombok.val;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -105,23 +106,23 @@ public class TeamLoader {
   static void handleMembers(Document doc, Team team) {
     final Elements members = doc.select("section.league-team-members").select("div.section-content").select("li");
     for (Element playerElement : members) {
-      final Elements elements = playerElement.select("a");
-      final String idString = elements.attr("href").split("/users/")[1].split("-")[0];
-      final String name = elements.text().equals("") ? null : elements.text();
-      final String roleString = playerElement.select("div.txt-subtitle").text();
-      final String summonerName = playerElement.select("div.txt-info").select("span").get(0).text();
+      val elements = playerElement.select("a");
+      val idString = elements.attr("href").split("/users/")[1].split("-")[0];
+      val name = elements.text().equals("") ? null : elements.text();
+      val roleString = playerElement.select("div.txt-subtitle").text();
+      val summonerName = playerElement.select("div.txt-info").select("span").get(0).text();
 
       if (Player.has(Integer.parseInt(idString))) {
-        final Player player = Player.get(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())), team);
+        val player = Player.get(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())), team);
         if (!player.getTeam().equals(team)) {
           // Spieler hat gewechselt
           team.addPlayer(player);
         }
 
-        final Set<Account> accounts = player.getAccounts();
+        val accounts = player.getAccounts();
         if (accounts.stream().noneMatch(account -> account.getName().equals(summonerName))) {
           // Account hat sich geändert
-          final Account account = RiotAccountRequester.fromName(summonerName);
+          final Account account = RiotAccountURLGenerator.fromName(summonerName);
           if (account != null) {
             if (accounts.stream().noneMatch(account1 -> account1.getPuuid() != null && account1.getPuuid().equals(account.getPuuid()))) {
               accounts.forEach(account1 -> account1.setActive(false));
@@ -132,7 +133,7 @@ public class TeamLoader {
           // erweiterte Initialisierung
           for (Account account1 : player.getAccounts()) {
             if (account1.getPuuid() == null) {
-              final Account account = RiotAccountRequester.fromName(summonerName);
+              final Account account = RiotAccountURLGenerator.fromName(summonerName);
               if (account != null && accounts.stream()
                   .filter(account2 -> account2.getPuuid() != null)
                   .noneMatch(account2 -> account2.getPuuid().equals(account.getPuuid()))) {
@@ -142,7 +143,7 @@ public class TeamLoader {
               // Gleich geblieben
             } else if (account1.isValueable() || account1.getLastUpdate() != null &&
                 Util.getCalendar(account1.getLastUpdate()).get(Calendar.MONTH) != Util.getCalendar(new Date()).get(Calendar.MONTH)) {
-              RiotAccountRequester.fromName(summonerName);
+              RiotAccountURLGenerator.fromName(summonerName);
             }
           }
         }

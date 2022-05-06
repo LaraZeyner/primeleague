@@ -2,14 +2,22 @@ package de.xeri.league.models.match.neu;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.xeri.league.models.enums.DragonSoul;
+import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.models.match.playerperformance.JunglePath;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceInfo;
 import de.xeri.league.util.Const;
 import lombok.val;
+import lombok.var;
 
 /**
  * Created by Lara on 26.04.2022 for web
@@ -100,7 +108,7 @@ public class Ratings {
       return handleValues(playtimeLive, timeWithoutDying, survivedClose, deathPositioning);
 
     } else if (subcategory.equals(StatSubcategory.EARLY_SURVIVAL)) {
-      return handleValues(firstKillDeath, firstBaseThroughRecall, laneLeadDeficitThroughDeaths, laneLeadDeficitWithoutDeaths);
+      return handleValues(firstKillDeath, firstBaseThroughRecall, laneLeadDeficitThroughDeaths, laneLeadWithoutDeaths);
 
     } else if (subcategory.equals(StatSubcategory.TEAM_UTILITY)) {
       return handleValues(damageShielded, crowdControl, enemiesControlled, teammatesSaved, utilityScore);
@@ -150,7 +158,6 @@ public class Ratings {
     return stats1.stream().filter(Stat::isRelevant).mapToDouble(Stat::value).average().orElse(0) * 5;
   }
 
-  //TODO (Abgie) 28.04.2022: Ueberpruefe nullable danach nocheinmal
   //<editor-fold desc="Kategorie 1.1: OBJECTIVE_PRESSURE">
   public Stat objectiveAfterSpawn = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getTeamperformance().getObjectiveAtSpawn())
@@ -369,41 +376,23 @@ public class Ratings {
   //<editor-fold desc="Kategorie 2.4: GANKING">
   public Stat teamInvadesAndBuffsTaken = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getInvadingAndBuffs())
-      .nullable();
+      .nullable()
+      .sub("Earlgame Ganks", Playerperformance::getGanksEarly);
 
-  //TODO (Abgie) 01.05.2022: spotted and Wasted
   public Stat ganksEarlygameSpottedAndTimeWasted = new Stat(playerperformances, OutputType.NUMBER, 3)
-      .map(Playerperformance::getGanksEarly)
-      .nullable();
+      .map(p -> p.getTeamperformance().getOtherTeamperformance().getJungleTimeWasted())
+      .nullable()
+      .sub("Jungle Time verloren", p -> p.getTeamperformance().getOtherTeamperformance().getJungleTimeWasted())
+      .sub("Jungle Proximity", p -> p.getStats().getLaneProximityDifference());
 
-  //TODO (Abgie) 27.04.2022: Time Farming, Time fighting, Time roaming -> Move Speed and Position
-  public Stat proximity = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat proximity = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getProximity())
+      .nullable()
+      .subValue(pathBy(1), amountBy(1))
+      .subValue(pathBy(2), amountBy(2))
+      .subValue(pathBy(3), amountBy(3))
+      .subValue(pathBy(4), amountBy(4))
+      .subValue(pathBy(5), amountBy(5));
 
   public Stat gankPriority = new Stat(playerperformances, OutputType.TEXT, 12) {
     private final int ganksTop = playerperformances.stream().mapToInt(Playerperformance::getGanksTop).sum();
@@ -477,36 +466,11 @@ public class Ratings {
       .sub("Dives verhindert", Playerperformance::getDivesProtected)
       .sub("Dive-Tode", p -> p.getStats().getDivesDied());
 
-  public Stat divesDied = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  }
+  public Stat divesDied = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getDivesDied())
       .nullable()
       .reverse();
+
   //</editor-fold>
 
   //<editor-fold desc="Kategorie 3.1: DAMAGE">
@@ -534,6 +498,7 @@ public class Ratings {
 
   public Stat timeInCombat = new Stat(playerperformances, OutputType.TIME, 2)
       .map(p -> p.getStats().getSecondsInCombat());
+
   //</editor-fold>
   //<editor-fold desc="Kategorie 3.2: PLAYMAKING">
   public Stat aggressiveFlash = new Stat(playerperformances, OutputType.NUMBER, 2)
@@ -911,34 +876,9 @@ public class Ratings {
       .map(p -> p.getStats().getLeadThroughDeaths())
       .nullable();
 
-  //TODO (Abgie) 29.04.2022:
-  public Stat laneLeadDeficitWithoutDeaths = new Stat(playerperformances, OutputType.NUMBER, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat laneLeadWithoutDeaths = new Stat(playerperformances, OutputType.NUMBER, 3)
+      .map(p -> p.getStats().getLeadWithoutDying())
+      .nullable();
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 5.3: TEAM_UTILITY">
@@ -960,301 +900,85 @@ public class Ratings {
       .map(Playerperformance::getSavedAlly)
       .nullable();
 
-  //TODO (Abgie) 29.04.2022:
-  public Stat utilityScore = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat utilityScore = new Stat(playerperformances, OutputType.PERCENT, 2)
+      .map(p -> p.getStats().getUtilityScore())
+      .nullable()
+      .sub("Vision", Playerperformance::getVisionScore)
+      .sub("Crowd Control", Playerperformance::getImmobilizations)
+      .sub("Schaden mitigiert", Playerperformance::getDamageMitigated);
   //</editor-fold>>
   //<editor-fold desc="Kategorie 5.4: WAVE_RESOURCEMANAGEMENT">
-  public Stat healthState = new Stat(playerperformances, OutputType.NUMBER, 2) {
+  public Stat healthState = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getAverageLaneHealth())
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat resourceState = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getAverageLaneResource())
+      .nullable();
 
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022:
-  public Stat resourceState = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022: Lane positioning
   public Stat wavesOrJungleClear = new Stat(playerperformances, OutputType.NUMBER, 3) {
 
     @Override
     public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022:
-  public Stat planedResets = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
+      var holds = playerperformances.stream().mapToDouble(p -> p.getStats().getHolds()).average().orElse(0);
+      var freezes = playerperformances.stream().mapToDouble(p -> p.getStats().getFreezes()).average().orElse(0);
+      var pushes = playerperformances.stream().mapToDouble(p -> p.getStats().getPushes()).average().orElse(0);
+      return Math.min(holds, Math.min(freezes, pushes));
     }
 
     @Override
     public double average() {
-      return 0;
+      return calculate();
     }
 
     @Override
     public double maximum() {
-      return 0;
+      var holds = Playerperformance.get().stream().mapToDouble(p -> p.getStats().getHolds()).average().orElse(0);
+      var freezes = Playerperformance.get().stream().mapToDouble(p -> p.getStats().getFreezes()).average().orElse(0);
+      var pushes = Playerperformance.get().stream().mapToDouble(p -> p.getStats().getPushes()).average().orElse(0);
+      return Math.max(holds, Math.max(freezes, pushes));
     }
 
     @Override
     public double minimum() {
-      return 0;
+      var holds = Playerperformance.get().stream().mapToDouble(p -> p.getStats().getHolds()).average().orElse(0);
+      var freezes = Playerperformance.get().stream().mapToDouble(p -> p.getStats().getFreezes()).average().orElse(0);
+      var pushes = Playerperformance.get().stream().mapToDouble(p -> p.getStats().getPushes()).average().orElse(0);
+      return Math.min(holds, Math.min(freezes, pushes));
     }
-  };
+  }
+      .nullable();
+
+  public Stat planedResets = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getPlannedResets())
+      .nullable()
+      .sub("insgesamt", p -> p.getStats().getResets())
+      .sub("geplante Resets", p -> p.getStats().getResets() * p.getStats().getPlannedResets());
 
   //</editor-fold>
   //<editor-fold desc="Kategorie 5.5: ISOLATION">
-  //TODO (Abgie) 29.04.2022: Isolationen
-  public Stat minionEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3) {
+  public Stat minionEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getEarlyFarmEfficiency())
+      .nullable();
 
-    @Override
-    public double calculate() {
-      return 0;
-    }
+  public Stat isolationXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3)
+      .map(p -> p.getStats().getEarlyXpEfficiency())
+      .nullable();
 
-    @Override
-    public String display() {
-      return null;
-    }
+  public Stat wardsUsed = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getWardsEarlygame())
+      .nullable();
 
-    @Override
-    public double average() {
-      return 0;
-    }
+  public Stat damageTrading = new Stat(playerperformances, OutputType.NUMBER, 4)
+      .map(p -> p.getStats().getEarlyDamageTrading())
+      .nullable();
 
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022: Isolationen
-  public Stat isolationXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022: Isolationen
-  public Stat wardsUsed = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022: Isolationen
-  public Stat damageTrading = new Stat(playerperformances, OutputType.NUMBER, 4) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
-
-  //TODO (Abgie) 29.04.2022: Isolationen
-  public Stat resetAmount = new Stat(playerperformances, OutputType.NUMBER, 2) {
-
-    @Override
-    public double calculate() {
-      return 0;
-    }
-
-    @Override
-    public String display() {
-      return null;
-    }
-
-    @Override
-    public double average() {
-      return 0;
-    }
-
-    @Override
-    public double maximum() {
-      return 0;
-    }
-
-    @Override
-    public double minimum() {
-      return 0;
-    }
-  };
+  public Stat resetAmount = new Stat(playerperformances, OutputType.NUMBER, 2)
+      .map(p -> p.getStats().getResets())
+      .nullable();
 
   //</editor-fold>
 
-  //TODO (Abgie) 29.04.2022: Resets?? 15 TODOs
   //<editor-fold desc="Kategorie 6.1: PRE_FIRST_BASE">
   public Stat firstReset = new Stat(playerperformances, OutputType.TIME, 2)
       .map(p -> p.getStats().getFirstBase())
@@ -1388,7 +1112,7 @@ public class Ratings {
       .map(p -> p.getStats().getResetGoldLost())
       .nullable()
       .sub("Resets gesamt", p -> p.getStats().getResets())
-      .sub("Gold pro Reset", p -> p.getStats().getResetGoldLost() / p.getStats().getResets());
+      .sub("Gold pro Reset", p -> p.getStats().getResets() == 0 ? 0 : p.getStats().getResetGoldLost() * 1d / p.getStats().getResets());
 
   public Stat resetsWithTeam = new Stat(playerperformances, OutputType.PERCENT, 3)
       .map(p -> p.getStats().getResetsTogether())
@@ -1761,7 +1485,7 @@ public class Ratings {
     @Override
     public double calculate() {
       return handleValues(playtimeLive, timeWithoutDying, survivedClose, deathPositioning, firstKillDeath, firstBaseThroughRecall,
-          laneLeadDeficitThroughDeaths, laneLeadDeficitWithoutDeaths, damageShielded, crowdControl, enemiesControlled, teammatesSaved,
+          laneLeadDeficitThroughDeaths, laneLeadWithoutDeaths, damageShielded, crowdControl, enemiesControlled, teammatesSaved,
           utilityScore, healthState, resourceState, wavesOrJungleClear, planedResets, minionEfficiency, isolationXPEfficiency, wardsUsed,
           damageTrading, resetAmount);
     }
@@ -1899,4 +1623,40 @@ public class Ratings {
     }
   };
   //</editor-fold>
+
+  private LinkedHashMap<JunglePath, Integer> getClears() {
+    Map<JunglePath, Integer> clears = new HashMap<>();
+    for (JunglePath junglePath : JunglePath.get()) {
+      final long amount = playerperformances.stream()
+          .map(Playerperformance::getTeamperformance)
+          .map(Teamperformance::getJunglePath)
+          .filter(path -> path.equals(junglePath)).count();
+      clears.put(junglePath, (int) amount);
+    }
+    return clears.entrySet().stream()
+        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+  }
+
+  private String pathBy(int order) {
+    int number = 0;
+    for (Map.Entry<JunglePath, Integer> entry : getClears().entrySet()) {
+      number++;
+      if (number == order) {
+        return entry.getKey().getName();
+      }
+    }
+    return "Null";
+  }
+
+  private int amountBy(int order) {
+    int number = 0;
+    for (Map.Entry<JunglePath, Integer> entry : getClears().entrySet()) {
+      number++;
+      if (number == order) {
+        return entry.getValue();
+      }
+    }
+    return 0;
+  }
 }

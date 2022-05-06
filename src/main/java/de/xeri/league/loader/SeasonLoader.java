@@ -62,10 +62,9 @@ public final class SeasonLoader {
   }
 
   private static void updateSeason(short id) {
-    //TODO (Abgie) 28.04.2022: Re-add later
     final Season season = Season.find(id);
-    //final List<Team> teams = loadTeams(season);
-    //TeamLoader.loadMatches(teams, season);
+    final List<Team> teams = loadTeams(season);
+    TeamLoader.loadMatches(teams, season);
 
     for (TurnamentMatch match : TurnamentMatch.get()) {
       if (!match.getState().equals(Matchstate.CLOSED) && !match.isOpen()) {

@@ -9,7 +9,6 @@ import lombok.Getter;
  */
 @AllArgsConstructor
 @Getter
-//TODO (Abgie) 04.05.2022:
 public class RelativePosition {
   private double x;
   private double y;

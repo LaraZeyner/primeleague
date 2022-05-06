@@ -38,6 +38,7 @@ import de.xeri.league.models.match.ChampionSelection;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.GamePause;
 import de.xeri.league.models.match.Gametype;
+import de.xeri.league.models.match.playerperformance.JunglePath;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceInfo;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceItem;
@@ -84,6 +85,7 @@ public final class HibernateUtil {
           Item_Stat.class,
           ItemStat.class,
           Itemstyle.class,
+          JunglePath.class,
           League.class,
           LeagueMap.class,
           Matchday.class,

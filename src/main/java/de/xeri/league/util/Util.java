@@ -12,6 +12,17 @@ import org.hibernate.Session;
  * Created by Lara on 06.04.2022 for web
  */
 public final class Util {
+  public static double div(double divident, double divisor) {
+    return div(divident, divisor, 0);
+  }
+
+  public static double div(double divident, double divisor, double result) {
+    if (divisor == 0) {
+      return result;
+    }
+    return divident / divisor;
+  }
+
   public static Calendar getCalendar(Date date) {
     final Calendar cal = Calendar.getInstance();
     cal.setTime(date);

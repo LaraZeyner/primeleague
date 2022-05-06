@@ -355,6 +355,7 @@ public class Playerperformance implements Serializable {
   @Column(name = "dragon_takedowns")
   private byte dragonTakedowns;
 
+  @Deprecated
   @Column(name = "fastest_legendary")
   private short fastestLegendary;
 
@@ -691,7 +692,4 @@ public class Playerperformance implements Serializable {
         ", stats=" + stats +
         '}';
   }
-
-  // TODO: 12.04.2022 Group stats in embeddables
-
 }

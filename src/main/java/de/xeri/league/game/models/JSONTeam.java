@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import de.xeri.league.game.RiotGameRequester;
 import de.xeri.league.models.enums.EventTypes;
 import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.enums.StoredStat;
 import de.xeri.league.models.league.Team;
 import lombok.Getter;
 import org.json.JSONObject;
@@ -121,11 +122,23 @@ public class JSONTeam {
     }
   }
 
-  /*public List<JSONObject> getEvents() {
-    return allPlayers.stream()
-        .flatMap(player -> player.getEvents().stream())
-        .distinct().collect(Collectors.toList());
-  }*/
+  public Integer getSum(StoredStat storedStat) {
+    if (storedStat.isChallenge() && getAllPlayers().get(0).getJson().has("challenges")) {
+      return allPlayers.stream().filter(player -> player.getMedium(storedStat) != null).mapToInt(player -> player.getMedium(storedStat)).sum();
+    } else if (getAllPlayers().get(0).getJson().has(storedStat.getKey())) {
+      return allPlayers.stream().filter(player -> player.getMedium(storedStat) != null).mapToInt(player -> player.getMedium(storedStat)).sum();
+    }
+    return null;
+  }
+
+  public Integer getMin(StoredStat storedStat) {
+    if (storedStat.isChallenge() && getAllPlayers().get(0).getJson().has("challenges")) {
+      return allPlayers.stream().mapToInt(player -> player.getMedium(storedStat)).min().orElse(0);
+    } else if (getAllPlayers().get(0).getJson().has(storedStat.getKey())) {
+      return allPlayers.stream().mapToInt(player -> player.getMedium(storedStat)).min().orElse(0);
+    }
+    return null;
+  }
 
   public List<JSONPlayer> getListedPlayers() {
     return allPlayers.stream().filter(JSONPlayer::isListed).collect(Collectors.toList());

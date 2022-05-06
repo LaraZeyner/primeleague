@@ -52,8 +52,22 @@ public class Fight {
         .collect(Collectors.toList());
   }
 
+  /**
+   * Ermittelt, inwiefern der Spieler am Fight beteiligt war
+   * @param pId angepasste PID
+   * @return ob am Fight beteiligt
+   */
   public boolean isInvolved(int pId) {
     return getInvolvedPlayers().contains(pId);
+  }
+
+  /**
+   * Ermittelt, inwiefern der Spieler im Fight gestorben ist
+   * @param player Spieler
+   * @return ob im Fight gestorben
+   */
+  public boolean isDying(JSONPlayer player) {
+    return getKills().stream().anyMatch(kill -> kill.getVictim() == player.getPId());
   }
 
   public Fighttype getFighttype() {
@@ -123,9 +137,14 @@ public class Fight {
     return pId > 5 ? remainingTeam2 > remainingTeam1 : remainingTeam1 > remainingTeam2;
   }
 
+  /**
+   * Ermittelt den Schaden eines Spielers an Champions waehrend eines Fights
+   * @param player Spieler
+   * @return Gesamtschaden durch den Spieler verursacht
+   */
   public int getFightDamage(JSONPlayer player) {
-    final int start = start(player);
-    int end = end(player);
+    final int start = getStart(player);
+    int end = getEnd(player);
     if (end == start) {
       end++;
     }
@@ -158,24 +177,48 @@ public class Fight {
     return getFighttype().equals(Fighttype.SKIRMISH) ? new Skirmish(kills) : null;
   }
 
-
-  public int start(JSONPlayer player) {
+  /**
+   * Ermittelt den Startzeitpunkt des Fights fuer den Spieler
+   * @param player Spieler
+   * @return Start-Millis
+   */
+  public int getStart(JSONPlayer player) {
     val firstKill = kills.stream()
         .filter(kill -> kill.isInvolved(player.getId() + 1))
         .findFirst().orElse(null);
     return handleKill(player, firstKill);
   }
 
-  public int end(JSONPlayer player) {
-
+  /**
+   * Ermittelt den Endzeitpunkt des Fights fuer den Spieler
+   * @param player Spieler
+   * @return End-Millis
+   */
+  public int getEnd(JSONPlayer player) {
     val firstKill = kills.stream()
         .filter(kill -> kill.isInvolved(player.getId() + 1))
         .reduce((first, second) -> second).orElse(null);
     return handleKill(player, firstKill);
   }
 
+  /**
+   * Ermittelt, inwiefern der Fight innerhalb des Zeitraumes stattfand
+   * @param player Spieler
+   * @param startMinute Startminute
+   * @param endMinute Endminute
+   * @return ob Fight im Zeitraum stattfand
+   */
+  public boolean isInsideMinutes(JSONPlayer player, int startMinute, int endMinute) {
+    return getStart(player) > startMinute * 60_000 &&  getEnd(player) < endMinute * 60_000;
+  }
+
+  /**
+   * Ermittelt die Dauer des Fights fuer einen Spieler
+   * @param player Spieler
+   * @return Dauer in Millis
+   */
   public int duration(JSONPlayer player) {
-    return end(player) - start(player);
+    return getEnd(player) - getStart(player);
   }
 
   private int handleKill(JSONPlayer player, Kill kill) {

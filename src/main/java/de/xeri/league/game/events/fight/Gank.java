@@ -33,11 +33,11 @@ public class Gank {
   }
 
   public int start() {
-    return fight.start(player);
+    return fight.getStart(player);
   }
 
   public int end() {
-    return fight.end(player);
+    return fight.getEnd(player);
   }
 
   public int duration() {

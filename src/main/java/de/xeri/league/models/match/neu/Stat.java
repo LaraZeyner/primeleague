@@ -58,6 +58,11 @@ public class Stat {
     return this;
   }
 
+  public Stat subValue(String name, double value) {
+    subvalues.put(name, value);
+    return this;
+  }
+
   public Stat sub(String name, ToDoubleFunction<? super Playerperformance> mapper) {
     var doubleStream = playerperformances.stream().mapToDouble(mapper);
 

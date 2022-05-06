@@ -7,8 +7,8 @@ public final class Const {
   public static final int LOG_LEVEL = 500;
   public static final int TEAMID = 142116;
 
-  public static final int AHEAD_XPGOLD = 1500;
-  public static final int AHEAD_XPGOLD_EXTEND = 1000;
+  public static final int AHEAD_LEAD = 1500;
+  public static final int AHEAD_LEAD_EXTEND = 1000;
   public static final int ASSIST_BOUNTY = 150;
   public static final int ASSIST_BOUNTY_FIRST_BLOOD = 200;
   public static final int ASSIST_FACTOR_INCREASE_SECOND = 90;
@@ -18,13 +18,16 @@ public final class Const {
   public static final int DAYS_UNTIL_INACTIVE = 180;
   public static final int DAYS_UNTIL_MATCH_CLOSED = 7;
   public static final int DISTANCE_BETWEEN_FIGHTS = 5000;
+  public static final int EARLYGAME_CS = 158;
   public static final int EARLYGAME_UNTIL_MINUTE = 14;
+  public static final int EARLYGAME_XP = 8896;
   public static final double GOLD_GENERATION_PER_SECOND = 1.9;
   public static final double GOLD_REFUND = 0.7;
   public static final double GOLD_REFUND_PENALTY = 0.3;
   public static final int GOLD_REFUND_PER_BISCUIT = 5;
   public static final int KILL_BOUNTY = 300;
-  public static final int MAP_SIZE = 16_390;
+  public static final int MAP_SIZE = 15_000;
+  public static final int PATH_SIMILARITY = 750;
   public static final int KILL_BOUNTY_FIRST_BLOOD = 400;
   public static final int LATEGAME_UNTIL_MINUTE = 40;
   public static final int MIDGAME_GOLD = 5935;
@@ -32,6 +35,7 @@ public final class Const {
   public static final int MIDGAME_XP = 8896;
   public static final int MULTIKILL_TIME_BETWEEN_KILLS = 10;
   public static final int MULTIKILL_TIME_BETWEEN_KILLS_PENTAKILL = 30;
+  public static final int RESET_PLANNED_LIMIT = 250;
   public static final int SKIRMISH_PLAYERS_REQUIRED = 2;
   public static final int TEAMFIGHT_PLAYERS_REQUIRED = 3;
   public static final int TIME_BETWEEN_FIGHTS = 30;

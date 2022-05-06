@@ -12,6 +12,7 @@ import de.xeri.league.models.enums.Abilitytype;
 import de.xeri.league.models.enums.ItemSubType;
 import de.xeri.league.models.enums.ItemType;
 import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.util.Util;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,6 +25,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class PlayerperformanceStats implements Serializable {
+  private static final transient long serialVersionUID = -335345591230884880L;
 
   @Column(name = "objectives_stolen_contested", precision = 9, scale = 7)
   private BigDecimal objectivesStolenAndContested;
@@ -197,13 +199,13 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "kda_true", precision = 9, scale = 6)
   private BigDecimal trueKdaValue;
 
-  @Column(name = "kda_true_kills")
+  @Column(name = "kda_true_kills", precision = 9, scale = 6)
   private BigDecimal trueKdaKills;
 
-  @Column(name = "kda_true_deaths")
+  @Column(name = "kda_true_deaths", precision = 9, scale = 6)
   private BigDecimal trueKdaDeaths;
 
-  @Column(name = "kda_true_assists")
+  @Column(name = "kda_true_assists", precision = 9, scale = 6)
   private BigDecimal trueKdaAssists;
 
   @Column(name = "enemy_early_under_control_advantage", precision = 9, scale = 4)
@@ -215,13 +217,13 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "farm_drop_minute")
   private short csDropAtMinute;
 
-  @Column(name = "trinket_efficiency")
+  @Column(name = "trinket_efficiency", precision = 9, scale = 7)
   private BigDecimal trinketEfficiency;
 
-  @Column(name = "goldxp_efficiency_midgame")
+  @Column(name = "goldxp_efficiency_midgame",  precision = 9, scale = 7)
   private BigDecimal midgameGoldXPEfficiency;
 
-  @Column(name = "gold_efficiency_midgame")
+  @Column(name = "gold_efficiency_midgame",  precision = 9, scale = 7)
   private BigDecimal midgameGoldEfficiency;
 
   @Column(name = "lead_lategame")
@@ -242,25 +244,25 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "behind_xp")
   private short xpFromBehind;
 
-  @Column(name = "levelup_lead")
+  @Column(name = "levelup_lead",  precision = 9, scale = 7)
   private BigDecimal levelupEarlier;
 
   @Column(name = "pick_advantage")
-  private short pickAdvantage;
+  private byte pickAdvantage;
 
   @Column(name = "teamfight_amount")
-  private short teamfightAmount;
+  private byte teamfightAmount;
 
-  @Column(name = "teamfight_participation")
+  @Column(name = "teamfight_participation",  precision = 9, scale = 7)
   private BigDecimal teamfightParticipation;
 
-  @Column(name = "death_order_average")
+  @Column(name = "death_order_average",  precision = 9, scale = 7)
   private BigDecimal averageDeathOrder;
 
-  @Column(name = "teamfight_winrate")
+  @Column(name = "teamfight_winrate",  precision = 9, scale = 7)
   private BigDecimal teamfightWinrate;
 
-  @Column(name = "teamfight_damage_rate")
+  @Column(name = "teamfight_damage_rate",  precision = 9, scale = 7)
   private BigDecimal teamfightDamageRate;
 
   @Column(name = "skirmish_amount")
@@ -269,7 +271,7 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "skirmish_participation", precision = 9, scale = 7)
   private BigDecimal skirmishParticipation;
 
-  @Column(name = "skirmish_kills")
+  @Column(name = "skirmish_kills",  precision = 9, scale = 8)
   private BigDecimal skirmishKillsPerSkirmish;
 
   @Column(name = "skirmish_winrate", precision = 9, scale = 7)
@@ -279,7 +281,7 @@ public class PlayerperformanceStats implements Serializable {
   private BigDecimal skirmishDamageRate;
 
   @Column(name = "roam_cs_advantage")
-  private short roamCreepScoreAdvantage;
+  private byte roamCreepScoreAdvantage;
 
   @Column(name = "roam_goldxp_advantage")
   private short roamGoldXpAdvantage;
@@ -293,22 +295,22 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "roam_successscore")
   private short roamSuccessScore;
 
-  @Column(name = "death_positioning_relative")
+  @Column(name = "death_positioning_relative",  precision = 9, scale = 7)
   private BigDecimal relativeDeathPositioning;
 
-  @Column(name = "positioning_lane")
+  @Column(name = "positioning_lane",  precision = 9, scale = 7)
   private BigDecimal lanePositioning;
 
-  @Column(name = "positioning_mid")
+  @Column(name = "positioning_mid",  precision = 9, scale = 7)
   private BigDecimal midgamePositioning;
 
-  @Column(name = "positioning_late")
+  @Column(name = "positioning_late",  precision = 9, scale = 7)
   private BigDecimal lategamePositioning;
 
-  @Column(name = "killdeath_positioning_lane")
+  @Column(name = "killdeath_positioning_lane",  precision = 9, scale = 7)
   private BigDecimal laneKillDeathPositioning;
 
-  @Column(name = "kill_positioning_lane")
+  @Column(name = "kill_positioning_lane",  precision = 9, scale = 7)
   private BigDecimal laneKillPositioning;
 
   @Column(name = "positioning_split_score")
@@ -344,8 +346,11 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "base_first_gold_unspent")
   private short firstBaseGoldUnspent;
 
-  @Column(name = "base_recall")
+  @Column(name = "base_recall",  precision = 9, scale = 7)
   private BigDecimal resetsThroughRecall;
+
+  @Column(name = "base_planned",  precision = 9, scale = 7)
+  private BigDecimal plannedResets;
 
   @Column(name = "base_total")
   private short resets;
@@ -362,7 +367,7 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "base_gold_lost")
   private short resetGoldLost;
 
-  @Column(name = "base_together")
+  @Column(name = "base_together",  precision = 9, scale = 7)
   private BigDecimal resetsTogether;
 
   @Column(name = "base_second_time")
@@ -371,15 +376,50 @@ public class PlayerperformanceStats implements Serializable {
   @Column(name = "base_consumables_purchased")
   private boolean consumablesPurchased;
 
-  @Column(name = "base_resource_conservation")
+  @Column(name = "base_resource_conservation",  precision = 9, scale = 7)
   private BigDecimal resourceConservation;
 
   @Column(name = "base_second_controlled")
   private short secondBaseEnemyControlled;
 
-  @Column(name = "damage_early_percentage")
+  @Column(name = "damage_early_percentage",  precision = 9, scale = 7)
   private BigDecimal earlyDamage;
 
+  @Column(name = "wards_early")
+  private short wardsEarlygame;
+
+  @Column(name = "xp_early",  precision = 9, scale = 7)
+  private BigDecimal earlyXpEfficiency;
+
+  @Column(name = "damage_early_difference")
+  private short earlyDamageTrading;
+
+  @Column(name = "lane_health",  precision = 9, scale = 7)
+  private BigDecimal averageLaneHealth;
+
+  @Column(name = "lane_resource",  precision = 9, scale = 7)
+  private BigDecimal averageLaneResource;
+
+  @Column(name = "wave_status_push")
+  private byte pushes;
+
+  @Column(name = "wave_status_freeze")
+  private byte freezes;
+
+  @Column(name = "wave_status_hold")
+  private byte holds;
+
+  @Column(name = "utility_score",  precision = 9, scale = 7)
+  private BigDecimal utilityScore;
+
+  @Column(name = "lead_without_dying")
+  private short leadWithoutDying;
+
+  @Column(name = "proximity",  precision = 9, scale = 6)
+  private BigDecimal proximity;
+
+  @Column(name = "lane_proximity",  precision = 9, scale = 6)
+  private BigDecimal laneProximityDifference;
 
   public PlayerperformanceStats(Playerperformance playerperformance) {
     this();
@@ -482,8 +522,15 @@ public class PlayerperformanceStats implements Serializable {
 
     this.keyspellsUsed = amount;
 
-    final double killParticipation = playerperformance.getKills() * 1d / playerperformance.getTeamperformance().getTotalKills();
+    final double killParticipation =
+        Util.div(playerperformance.getKills(), playerperformance.getTeamperformance().getTotalKills());
     this.killParticipation = BigDecimal.valueOf(killParticipation);
+
+    final double visionValue = Util.div(playerperformance.getVisionScore(), teamperformance.getVision());
+    final double ccValue = Util.div(playerperformance.getImmobilizations(), teamperformance.getImmobilizations());
+    final double mitigationValue = Util.div(playerperformance.getDamageMitigated(), teamperformance.getDamageMitigated());
+    final double utilityScore = visionValue + ccValue + mitigationValue;
+    this.utilityScore = BigDecimal.valueOf(utilityScore);
   }
 
 
@@ -593,7 +640,7 @@ public class PlayerperformanceStats implements Serializable {
   }
 
   public void setTeamfights(int amount, int total, double deathOrder, double winrate, double damageRate) {
-    this.teamfightAmount = (short) amount;
+    this.teamfightAmount = (byte) amount;
     final double teamfightPercentage = amount * 1d / total;
     this.teamfightParticipation = BigDecimal.valueOf(teamfightPercentage);
     this.averageDeathOrder = BigDecimal.valueOf(deathOrder);
@@ -794,6 +841,10 @@ public class PlayerperformanceStats implements Serializable {
     return resetsThroughRecall.doubleValue();
   }
 
+  public double getPlannedResets() {
+    return plannedResets.doubleValue();
+  }
+
   public double getResetsTogether() {
     return resetsTogether.doubleValue();
   }
@@ -804,6 +855,30 @@ public class PlayerperformanceStats implements Serializable {
 
   public double getEarlyDamage() {
     return earlyDamage.doubleValue();
+  }
+
+  public double getEarlyXpEfficiency() {
+    return earlyXpEfficiency.doubleValue();
+  }
+
+  public double getAverageLaneHealth() {
+    return averageLaneHealth.doubleValue();
+  }
+
+  public double getAverageLaneResource() {
+    return averageLaneResource.doubleValue();
+  }
+
+  public double getUtilityScore() {
+    return utilityScore.doubleValue();
+  }
+
+  public double getProximity() {
+    return proximity.doubleValue();
+  }
+
+  public double getLaneProximityDifference() {
+    return laneProximityDifference.doubleValue();
   }
   //</editor-fold>
 

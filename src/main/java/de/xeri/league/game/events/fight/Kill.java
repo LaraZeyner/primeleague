@@ -1,5 +1,6 @@
 package de.xeri.league.game.events.fight;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -32,14 +33,28 @@ public class Kill {
 
       final int victim = event.getInt("victimId");
       final int killer = event.getInt("killerId");
-      final int gold = event.getInt("shutdownBounty") + event.getInt("bounty");
-      final Map<Integer, Integer> participants = event.getJSONArray("assistingParticipantIds").toList()
-          .stream().map(id -> (Integer) id).collect(Collectors.toMap(Function.identity(), e -> 0));
+      final int shutdown = event.has("shutdownBounty") ? event.getInt("shutdownBounty") : 0;
+      final int gold = shutdown + event.getInt("bounty");
+      Map<Integer, Integer> participants = new HashMap<>();
+      if (event.has("assistingParticipantIds")) {
+        participants = event.getJSONArray("assistingParticipantIds").toList()
+            .stream().map(id -> (Integer) id).collect(Collectors.toMap(Function.identity(), e -> 0));
+      }
+
       val damageReceived = event.getJSONArray("victimDamageReceived");
       handleDamageValues(participants, damageReceived);
-      val damageDealt = event.getJSONArray("victimDamageDealt");
-      handleDamageValues(participants, damageDealt);
+      if (event.has("victimDamageDealt")) {
+        val damageDealt = event.getJSONArray("victimDamageDealt");
+        handleDamageValues(participants, damageDealt);
+      }
 
+      if (victim != 0 && !participants.containsKey(victim)) {
+        participants.put(victim, 0);
+      }
+
+      if (killer != 0 && !participants.containsKey(killer)) {
+        participants.put(killer, 0);
+      }
 
       if (killer != 0 || !participants.isEmpty()) {
         return new Kill(timestamp, position, killer, victim, participants, gold);
@@ -58,7 +73,7 @@ public class Kill {
       final int partId = damageObject.getInt("participantId");
 
       if (participants.containsKey(partId)) {
-        participants.put(partId, participants.get(partId + totalDamage));
+        participants.put(partId, participants.get(partId) + totalDamage);
       } else if (partId != 0) {
         participants.put(partId, totalDamage);
       }

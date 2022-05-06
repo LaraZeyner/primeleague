@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import de.xeri.league.game.RiotGameRequester;
 import de.xeri.league.game.events.items.ExperienceCalculator;
@@ -17,7 +18,6 @@ import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import lombok.Getter;
 import lombok.val;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -44,15 +44,21 @@ public class JSONPlayer {
   private final JSONObject json;
   private final Inventory inventory = new Inventory();
   private final List<JSONObject> events = new ArrayList<>();
-  private final List<JSONObject> infos = new ArrayList<>();
+  private final List<JSONObject> infos;
   private final boolean firstPick;
 
-  public JSONPlayer(int id, JSONObject json, String puuid, boolean firstPick) {
+  public JSONPlayer(int id, JSONObject json, String puuid, boolean firstPick, int minute) {
     this.id = id;
     this.json = json;
     this.puuid = puuid;
-    this.account = Account.findPuuid(puuid);
+    this.infos = new ArrayList<>();
+    IntStream.range(0, minute+1).forEach(i -> this.infos.add(null));
+    this.account = Account.hasPuuid(puuid) ? Account.findPuuid(puuid) : null;
     this.firstPick = firstPick;
+  }
+
+  public int getPId() {
+    return id + 1;
   }
 
   public void addEvent(JSONObject event) {
@@ -82,6 +88,10 @@ public class JSONPlayer {
       return json.getString(storedStat.getKey());
     }
     return null;
+  }
+
+  public boolean has(StoredStat storedStat) {
+    return storedStat.isChallenge() && json.has("challenges") || json.has(storedStat.getKey());
   }
 
   public Boolean getBool(StoredStat storedStat) {
@@ -156,15 +166,6 @@ public class JSONPlayer {
     return getTiny(challenge) != null ? getTiny(challenge) : getTiny(alternative);
   }
 
-  public JSONArray array(StoredStat storedStat) {
-    if (storedStat.isChallenge() && json.has("challenges")) {
-      return json.getJSONObject("challenges").getJSONArray(storedStat.getKey());
-    } else if (json.has(storedStat.getKey())) {
-      return json.getJSONArray(storedStat.getKey());
-    }
-    return null;
-  }
-
   public JSONObject object(StoredStat storedStat) {
     if (storedStat.isChallenge() && json.has("challenges")) {
       return json.getJSONObject("challenges").getJSONObject(storedStat.getKey());
@@ -214,14 +215,7 @@ public class JSONPlayer {
   }
 
   public int getStatAt(int minute, TimelineStat stat) {
-    int value = -1;
-    if (infos.get(minute) != null) {
-      value = getValue(minute, stat);
-    } else if (!infos.isEmpty()) {
-      value = getValue(getLastMinute(), stat);
-    }
-
-    return value;
+    return infos.get(minute) != null ? getValue(minute, stat) : getValue(getLastMinute(), stat);
   }
 
   public Position getPositionAt(int minute) {

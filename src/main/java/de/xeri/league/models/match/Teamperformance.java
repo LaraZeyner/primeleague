@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.ToIntFunction;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -24,6 +25,7 @@ import javax.persistence.Transient;
 import de.xeri.league.models.enums.DragonSoul;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
+import de.xeri.league.models.match.playerperformance.JunglePath;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
@@ -202,13 +204,28 @@ public class Teamperformance implements Serializable {
   @Enumerated(EnumType.STRING)
   private DragonSoul soul;
 
+  @Column(name = "team_damage_mitigated", nullable = false)
+  private int damageMitigated;
+
+  @Column(name = "team_immobilizations")
+  private short immobilizations;
+
+  @Column(name = "team_vision", nullable = false)
+  private short vision;
+
+  @Column(name = "jungletime_wasted")
+  private short jungleTimeWasted;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "jungle_path")
+  private JunglePath junglePath;
+
   @OneToMany(mappedBy = "teamperformance")
   private final Set<Playerperformance> playerperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "teamperformance")
   private final Set<TeamperformanceBounty> bounties = new LinkedHashSet<>();
 
-  // TODO: 14.04.2022 Determine deprecated attributes + remove
   public Teamperformance(boolean firstPick, boolean win, int totalDamage, int totalDamageTaken, int totalGold, int totalCs, int totalKills,
                          int towers, int drakes, int inhibs, int heralds, int barons, boolean firstTower, boolean firstDrake) {
     this.firstPick = firstPick;
@@ -258,6 +275,10 @@ public class Teamperformance implements Serializable {
   public short firstTurretTime() {
     return (short) (firstTower ? playerperformances.stream().mapToInt(Playerperformance::getFirstturretAdvantage).max().orElse(-1) :
         playerperformances.stream().mapToInt(Playerperformance::getFirstturretAdvantage).min().orElse(-1));
+  }
+
+  public double getTeamStat(ToIntFunction<? super Playerperformance> function) {
+    return playerperformances.stream().mapToInt(function).sum();
   }
 
   //<editor-fold desc="getter and setter">

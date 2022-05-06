@@ -3,7 +3,6 @@ package de.xeri.league.models.match.neu;
 /**
  * Created by Lara on 25.04.2022 for web
  */
-// TODO Es soll für ALLE Spiele funktionieren
 public final class StatText {
   public static final String OBJECTIVE_PRESSURE = "Generelle Kontrolle über Objectives <br /> " +
       "Stats: <br />" +

@@ -107,7 +107,6 @@ public class PlayerperformanceInfo extends Position {
   @Column(name = "info_resource_current", nullable = false)
   private short currentResource;
 
-
   @Column(name = "info_movespeed", nullable = false)
   private short movementSpeed;
 
