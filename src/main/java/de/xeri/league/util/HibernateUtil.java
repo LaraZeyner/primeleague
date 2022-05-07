@@ -235,7 +235,7 @@ public final class HibernateUtil {
 
   private static <T> T performSingle(Class<T> entityClass, String primaryKey) {
     final Query<T> query = perform(entityClass, primaryKey);
-    return query.getSingleResult();
+    return query.setMaxResults(1).getSingleResult();
   }
 
   private static <T> Query<T> perform(Class<T> entityClass, String primaryKey) {
@@ -262,8 +262,13 @@ public final class HibernateUtil {
   }
 
   private static <T> T performSingle(Class<T> entityClass, String[] params, Object[] values, String subquery) {
-    final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
-    return query.getSingleResult();
+    try {
+      final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
+      return query.setMaxResults(1).getSingleResult();
+    } catch (ClassCastException ex) {
+     ex.printStackTrace();
+    }
+    return null;
   }
 
   private static <T> List<T> performList(Class<T> entityClass, String[] params, Object[] values, String subquery) {

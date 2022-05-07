@@ -37,6 +37,8 @@ import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NamedQuery;
 import org.hibernate.annotations.Type;
 
@@ -49,6 +51,8 @@ import org.hibernate.annotations.Type;
 @NamedQuery(name = "Champion.findAll", query = "FROM Champion c")
 @NamedQuery(name = "Champion.findById", query = "FROM Champion c WHERE id = :pk")
 @NamedQuery(name = "Champion.findBy", query = "FROM Champion c WHERE name = :name")
+@Getter
+@NoArgsConstructor
 public class Champion implements Serializable {
 
   @Transient
@@ -177,11 +181,7 @@ public class Champion implements Serializable {
       indexes = @Index(name = "idx_championclass", columnList = "champion, championclass", unique = true))
   @Enumerated(EnumType.STRING)
   @Column(name = "championclass")
-  private Set<Championclass> classes = new LinkedHashSet<>();
-
-  // default constructor
-  public Champion() {
-  }
+  private final Set<Championclass> classes = new LinkedHashSet<>();
 
   public Champion(short id, String name) {
     this.id = id;
@@ -196,12 +196,12 @@ public class Champion implements Serializable {
     this.health = health;
     this.secondary = secondary;
     this.moveSpeed = moveSpeed;
-    this.resist = new BigDecimal(resist);
+    this.resist = BigDecimal.valueOf(resist);
     this.attackRange = attackRange;
-    this.healthRegen = new BigDecimal(healthRegen);
-    this.spellRegen = new BigDecimal(spellRegen);
+    this.healthRegen = BigDecimal.valueOf(healthRegen);
+    this.spellRegen = BigDecimal.valueOf(spellRegen);
     this.damage = damage;
-    this.attackSpeed = new BigDecimal(attackSpeed);
+    this.attackSpeed = BigDecimal.valueOf(attackSpeed);
   }
 
   public Ability addAbility(Ability ability) {
@@ -258,64 +258,8 @@ public class Champion implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public Set<Ability> getAbilities() {
-    return this.abilities;
-  }
-
-  public Set<ChampionSelection> getChampionSelections() {
-    return this.championSelections;
-  }
-
-  public Set<Playstyle> getPlaystyles() {
-    return this.playstyles;
-  }
-
-  public Set<Playerperformance> getPlayerperformancesEnemy() {
-    return this.playerperformancesEnemy;
-  }
-
-  public Set<Playerperformance> getPlayerperformancesOwn() {
-    return this.playerperformancesOwn;
-  }
-
-  public Set<Wincondition> getWinconditions() {
-    return this.winconditions;
-  }
-
-  public Set<ChampionRelationship> getChampionRelationshipsTo() {
-    return this.championRelationshipsTo;
-  }
-
-  public Set<ChampionRelationship> getChampionRelationshipsFrom() {
-    return this.championRelationshipsFrom;
-  }
-
-  public FightStyle getFightStyle() {
-    return this.fightStyle;
-  }
-
-  public void setFightStyle(FightStyle fightStyle) {
-    this.fightStyle = fightStyle;
-  }
-
-  public FightType getFightType() {
-    return this.fightType;
-  }
-
-  public void setFightType(FightType fightType) {
-    this.fightType = fightType;
-  }
-
   public double getAttackSpeed() {
     return this.attackSpeed.doubleValue();
-  }
-
-  public void setAttackSpeed(double attackSpeed) {
-    this.attackSpeed = new BigDecimal(attackSpeed);
-  }
-
-  public short getDamage() {
-    return this.damage;
   }
 
   public void setDamage(short damage) {
@@ -326,124 +270,32 @@ public class Champion implements Serializable {
     return this.spellRegen.doubleValue();
   }
 
-  public void setSpellRegen(double spellRegen) {
-    this.spellRegen = new BigDecimal(spellRegen);
-  }
-
   public double getHealthRegen() {
-    return this.healthRegen.doubleValue();
-  }
-
-  public void setHealthRegen(double healthRegen) {
-    this.healthRegen = new BigDecimal(healthRegen);
-  }
-
-  public short getAttackRange() {
-    return this.attackRange;
-  }
-
-  public void setAttackRange(short attackRange) {
-    this.attackRange = attackRange;
+    return healthRegen.doubleValue();
   }
 
   public double getResist() {
-    return this.resist.doubleValue();
-  }
-
-  public void setResist(double resist) {
-    this.resist = new BigDecimal(resist);
-  }
-
-  public short getMoveSpeed() {
-    return this.moveSpeed;
-  }
-
-  public void setMoveSpeed(short moveSpeed) {
-    this.moveSpeed = moveSpeed;
-  }
-
-  public short getSecondary() {
-    return this.secondary;
-  }
-
-  public void setSecondary(short secondary) {
-    this.secondary = secondary;
-  }
-
-  public short getHealth() {
-    return this.health;
-  }
-
-  public void setHealth(short health) {
-    this.health = health;
-  }
-
-  public byte getSpell() {
-    return this.spell;
-  }
-
-  public void setSpell(byte spell) {
-    this.spell = spell;
-  }
-
-  public byte getDefense() {
-    return this.defense;
-  }
-
-  public void setDefense(byte defense) {
-    this.defense = defense;
-  }
-
-  public byte getAttack() {
-    return this.attack;
-  }
-
-  public void setAttack(byte attack) {
-    this.attack = attack;
-  }
-
-  public Resource getResource() {
-    return this.resource;
+    return resist.doubleValue();
   }
 
   public void setResource(Resource resource) {
     this.resource = resource;
   }
 
-  public Subclass getSubclass() {
-    return this.subclass;
-  }
-
   public void setSubclass(Subclass subclass) {
     this.subclass = subclass;
-  }
-
-  public String getTitle() {
-    return this.title;
   }
 
   public void setTitle(String championTitle) {
     title = championTitle;
   }
 
-  public String getName() {
-    return this.name;
-  }
-
   public void setName(String championName) {
     name = championName;
   }
 
-  public short getId() {
-    return this.id;
-  }
-
   public void setId(short id) {
     this.id = id;
-  }
-
-  public Set<Championclass> getClasses() {
-    return this.classes;
   }
 
   @Override
@@ -451,7 +303,7 @@ public class Champion implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Champion)) return false;
     final Champion champion = (Champion) o;
-    return this.getId() == champion.getId() && this.getAttack() == champion.getAttack() && this.getDefense() == champion.getDefense() && this.getSpell() == champion.getSpell() && this.getHealth() == champion.getHealth() && this.getSecondary() == champion.getSecondary() && this.getMoveSpeed() == champion.getMoveSpeed() && Double.compare(champion.getResist(), this.getResist()) == 0 && this.getAttackRange() == champion.getAttackRange() && Double.compare(champion.getHealthRegen(), this.getHealthRegen()) == 0 && Double.compare(champion.getSpellRegen(), this.getSpellRegen()) == 0 && this.getDamage() == champion.getDamage() && Double.compare(champion.getAttackSpeed(), this.getAttackSpeed()) == 0 && this.getName().equals(champion.getName()) && this.getTitle().equals(champion.getTitle()) && this.getSubclass() == champion.getSubclass() && this.getResource().equals(champion.getResource()) && this.getFightType() == champion.getFightType() && this.getFightStyle() == champion.getFightStyle() && this.getChampionRelationshipsFrom().equals(champion.getChampionRelationshipsFrom()) && this.getChampionRelationshipsTo().equals(champion.getChampionRelationshipsTo()) && this.getWinconditions().equals(champion.getWinconditions()) && this.getPlayerperformancesOwn().equals(champion.getPlayerperformancesOwn()) && this.getPlayerperformancesEnemy().equals(champion.getPlayerperformancesEnemy()) && this.getPlaystyles().equals(champion.getPlaystyles()) && this.getChampionSelections().equals(champion.getChampionSelections()) && this.getAbilities().equals(champion.getAbilities()) && this.getClasses().equals(champion.getClasses());
+    return this.getId() == champion.getId() && this.getName().equals(champion.getName());
   }
 
   @Override

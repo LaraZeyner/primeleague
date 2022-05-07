@@ -78,7 +78,7 @@ public class Item implements Serializable {
   private ItemType type;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "item_subtype", nullable = false, length = 15)
+  @Column(name = "item_subtype", length = 15)
   private ItemSubType subtype;
 
   @Column(name = "item_name", nullable = false, length = 50)

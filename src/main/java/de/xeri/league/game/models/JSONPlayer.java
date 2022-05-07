@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import de.xeri.league.game.RiotGameRequester;
+import de.xeri.league.game.GameAnalyser;
 import de.xeri.league.game.events.items.ExperienceCalculator;
 import de.xeri.league.game.events.items.Inventory;
 import de.xeri.league.game.events.location.Position;
@@ -31,13 +31,7 @@ import org.json.JSONObject;
 
 @Getter
 public class JSONPlayer {
-  public static JSONPlayer getPlayer(int id) {
-    return RiotGameRequester.jsonTeams.stream()
-        .flatMap(team -> team.getAllPlayers().stream())
-        .filter(jsonPlayer -> jsonPlayer.getId() == id)
-        .findFirst().orElse(null);
-  }
-
+  private final int highestMinute;
   private final int id;
   private final Account account;
   private final String puuid;
@@ -47,14 +41,15 @@ public class JSONPlayer {
   private final List<JSONObject> infos;
   private final boolean firstPick;
 
-  public JSONPlayer(int id, JSONObject json, String puuid, boolean firstPick, int minute) {
+  public JSONPlayer(int id, JSONObject json, String puuid, boolean firstPick, int highestMinute) {
     this.id = id;
     this.json = json;
     this.puuid = puuid;
     this.infos = new ArrayList<>();
-    IntStream.range(0, minute+1).forEach(i -> this.infos.add(null));
+    IntStream.range(0, highestMinute + 1).forEach(i -> this.infos.add(null));
     this.account = Account.hasPuuid(puuid) ? Account.findPuuid(puuid) : null;
     this.firstPick = firstPick;
+    this.highestMinute = highestMinute;
   }
 
   public int getPId() {
@@ -120,10 +115,6 @@ public class JSONPlayer {
     return null;
   }
 
-  public Integer getMedium(StoredStat challenge, StoredStat alternative) {
-    return getMedium(challenge) != null ? getMedium(challenge) : getMedium(alternative);
-  }
-
   /**
    * TINYINT(3) : (00.255)
    * SMALLINT(5) : -32.768 → 32.767
@@ -132,21 +123,11 @@ public class JSONPlayer {
    * @return Short for tinyint unsigned and smallint signed
    */
   public Short getSmall(StoredStat storedStat) {
-    if (getMedium(storedStat) != null) {
-      return Short.parseShort(String.valueOf(getMedium(storedStat)));
+    final Integer statInteger = getMedium(storedStat);
+    if (statInteger != null) {
+      return Short.parseShort(String.valueOf(statInteger));
     }
     return null;
-  }
-
-  public Short getSmall(StoredStat storedStat, int factor) {
-    if (getMedium(storedStat) != null) {
-      return Short.parseShort(String.valueOf(getMedium(storedStat)));
-    }
-    return null;
-  }
-
-  public Short getSmall(StoredStat challenge, StoredStat alternative) {
-    return getSmall(challenge) != null ? getSmall(challenge) : getSmall(alternative);
   }
 
   /**
@@ -156,8 +137,9 @@ public class JSONPlayer {
    * @return Byte for tinyint signed
    */
   public Byte getTiny(StoredStat storedStat) {
-    if (getMedium(storedStat) != null) {
-      return Byte.parseByte(String.valueOf(getMedium(storedStat)));
+    final Integer statInteger = getMedium(storedStat);
+    if (statInteger != null) {
+      return Byte.parseByte(String.valueOf(statInteger));
     }
     return null;
   }
@@ -192,19 +174,15 @@ public class JSONPlayer {
   }
 
   private List<JSONPlayer> getJSONPlayers() {
-    return RiotGameRequester.jsonTeams.stream()
+    return GameAnalyser.jsonTeams.stream()
         .flatMap(jsonTeam -> jsonTeam.getAllPlayers().stream())
         .collect(Collectors.toList());
   }
 
-  private List<JSONPlayer> findJSONPlayersWith(String value) {
-    return getJSONPlayers().stream()
-        .filter(player -> player.get(StoredStat.LANE).equals(value))
-        .collect(Collectors.toList());
-  }
-
   public JSONPlayer getEnemy() {
-    val jsonPlayers = findJSONPlayersWith(get(StoredStat.LANE)).stream()
+    val jsonPlayers = getJSONPlayers().stream()
+        .filter(player -> player.get(StoredStat.LANE).equals(get(StoredStat.LANE)))
+        .collect(Collectors.toList()).stream()
         .filter(player -> player.getId() != this.id)
         .collect(Collectors.toList());
     return jsonPlayers.isEmpty() ? null : jsonPlayers.get(0);
@@ -241,14 +219,27 @@ public class JSONPlayer {
   }
 
   public int getLeadAt(int minute, TimelineStat stat) {
-    if (hasEnemy()) {
+    if (hasEnemy() && minute <= highestMinute) {
       return getStatAt(minute, stat) - getEnemy().getStatAt(minute, stat);
     }
     return 0;
   }
 
   public int getLeadDifferenceAt(int start, int end, TimelineStat stat) {
-    return getLeadAt(end, stat) - getLeadAt(start, stat);
+    if (start < highestMinute) {
+      if (end <= highestMinute) {
+        return getLeadAt(end, stat) - getLeadAt(start, stat);
+      } else {
+        return getLeadAt(highestMinute, stat) - getLeadAt(start, stat);
+      }
+    }
+    return 0;
+  }
+
+  public List<JSONObject> getEvents(EventTypes... types) {
+    return Arrays.stream(types)
+        .flatMap(type -> getEvents(type, 0).stream())
+        .collect(Collectors.toCollection(ArrayList::new));
   }
 
   public List<JSONObject> getEvents(EventTypes type) {
@@ -288,11 +279,12 @@ public class JSONPlayer {
   }
 
   public JSONTeam getTeam() {
-    return JSONTeam.getTeam(isFirstPick() ? 100 : 200);
+    return isFirstPick() ? GameAnalyser.jsonTeams.get(0) : GameAnalyser.jsonTeams.get(1);
   }
 
   /**
    * Ermittelt den prozentualen Wert im Verhältnis zum maximalen Wert sofern vorhanden
+   *
    * @param stat zu analysierende Stat
    * @return Prozentualer Anteil zum Maximalwert
    * @throws IllegalArgumentException sofern dieser Stat nicht ueber einen <b>CURRENT</b> und einen <b>TOTAL</b> Wert verfuegt

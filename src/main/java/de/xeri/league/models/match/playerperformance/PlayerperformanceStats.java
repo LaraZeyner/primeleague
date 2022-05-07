@@ -431,7 +431,7 @@ public class PlayerperformanceStats implements Serializable {
     if (teamperformance.getTowers() == 0) {
       turretParticipation = 0;
     } else {
-      turretParticipation = playerperformance.getTurretTakedowns() * 1d / teamperformance.getTowers();
+      turretParticipation = Util.div(playerperformance.getTurretTakedowns(), teamperformance.getTowers());
     }
     this.turretParticipation = BigDecimal.valueOf(turretParticipation);
 
@@ -439,7 +439,7 @@ public class PlayerperformanceStats implements Serializable {
     if (playerperformance.getDivesDone() == 0) {
       divesOwn = 0;
     } else {
-      divesOwn = playerperformance.getDivesSuccessful() * 1d / playerperformance.getDivesDone();
+      divesOwn = Util.div(playerperformance.getDivesSuccessful(),playerperformance.getDivesDone());
     }
     this.divesOwn = BigDecimal.valueOf(divesOwn);
 
@@ -447,17 +447,17 @@ public class PlayerperformanceStats implements Serializable {
     if (playerperformance.getDivesGotten() == 0) {
       divesEnemy = 0;
     } else {
-      divesEnemy = playerperformance.getDivesProtected() * 1d / playerperformance.getDivesGotten();
+      divesEnemy = Util.div(playerperformance.getDivesProtected(), playerperformance.getDivesGotten());
     }
 
     this.divesEnemy = BigDecimal.valueOf(divesEnemy);
 
     this.divesDied = (byte) (playerperformance.getDivesGotten() - playerperformance.getDivesProtected());
 
-    final double teamDamage = playerperformance.getDamageTotal() * 1d / teamperformance.getTotalDamage();
+    final double teamDamage = Util.div(playerperformance.getDamageTotal(), teamperformance.getTotalDamage());
     this.teamDamage = BigDecimal.valueOf(teamDamage);
 
-    final double teamDamageTaken = playerperformance.getDamageTaken() * 1d / teamperformance.getTotalDamageTaken();
+    final double teamDamageTaken = Util.div(playerperformance.getDamageTaken(), teamperformance.getTotalDamageTaken());
     this.teamDamage = BigDecimal.valueOf(teamDamageTaken);
 
     this.acesAndClean = (byte) (teamperformance.getEarlyAces() +
@@ -482,21 +482,25 @@ public class PlayerperformanceStats implements Serializable {
         .count();
 
     this.antiHealTime = (short) playerperformance.getItems().stream()
+        .filter(item -> item.getItem().getSubtype() != null)
         .filter(item -> item.getItem().getSubtype().equals(ItemSubType.GRIEVOUS_WOUNDS))
         .mapToInt(item -> item.getBuyTime() / 1000)
         .min().orElse(0);
 
     this.penetrationTime = (short) playerperformance.getItems().stream()
+        .filter(item -> item.getItem().getSubtype() != null)
         .filter(item -> item.getItem().getSubtype().equals(ItemSubType.PENETRATION))
         .mapToInt(item -> item.getBuyTime() / 1000)
         .min().orElse(0);
 
     this.amplifierTime = (short) playerperformance.getItems().stream()
+        .filter(item -> item.getItem().getSubtype() != null)
         .filter(item -> item.getItem().getSubtype().equals(ItemSubType.AMPLIFIER))
         .mapToInt(item -> item.getBuyTime() / 1000)
         .min().orElse(0);
 
     this.durabilityTime = (short) playerperformance.getItems().stream()
+        .filter(item -> item.getItem().getSubtype() != null)
         .filter(item -> item.getItem().getSubtype().equals(ItemSubType.DURABILITY))
         .mapToInt(item -> item.getBuyTime() / 1000)
         .min().orElse(0);
@@ -564,7 +568,8 @@ public class PlayerperformanceStats implements Serializable {
   }
 
   public void setTeamDamageMitigated(Playerperformance playerperformance, int totalTeamDamage) {
-    final double damageMitigated = (playerperformance.getDamageMitigated() + playerperformance.getDamageShielded()) * 1d / totalTeamDamage;
+    final double damageMitigated =
+        Util.div(playerperformance.getDamageMitigated() + playerperformance.getDamageShielded(), totalTeamDamage);
     this.teamDamageMitigated = BigDecimal.valueOf(damageMitigated);
   }
 
@@ -573,7 +578,7 @@ public class PlayerperformanceStats implements Serializable {
   }
 
   public void setDuels(Playerperformance playerperformance, int duelWins, int duelLosses) {
-    final double duelWinrate = duelWins * 1d / (duelWins + duelLosses);
+    final double duelWinrate = Util.div(duelWins, duelWins + duelLosses);
     this.duelWinrate = BigDecimal.valueOf(duelWinrate);
     this.duelWins = (byte) duelWins;
     this.soloKillAdvantage = (byte) (playerperformance.getSoloKills() - duelLosses);

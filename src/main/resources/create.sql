@@ -690,12 +690,12 @@ CREATE TABLE `summonerspell`
 CREATE TABLE `playerperformance_summonerspell`
 (
     playerperformance INTEGER(7)          NOT NULL,
-    summonerspell     VARCHAR(8)          NOT NULL,
+    summonerspell     TINYINT(2) UNSIGNED NOT NULL,
     usages            TINYINT(2) UNSIGNED NOT NULL,
     PRIMARY KEY (playerperformance, summonerspell),
     FOREIGN KEY (playerperformance) REFERENCES `playerperformance` (playerperformance_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    FOREIGN KEY (summonerspell) REFERENCES `summonerspell` (summonerspell_name)
+    FOREIGN KEY (summonerspell) REFERENCES `summonerspell` (summonerspell_id)
         ON DELETE RESTRICT ON UPDATE CASCADE
 );
 

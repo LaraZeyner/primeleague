@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import de.xeri.league.game.RiotGameRequester;
 import de.xeri.league.models.enums.EventTypes;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.enums.StoredStat;
@@ -20,16 +19,6 @@ import org.json.JSONObject;
  */
 @Getter
 public class JSONTeam {
-  public static JSONTeam getTeam(int id) {
-    if (id == 100) {
-      return RiotGameRequester.jsonTeams.get(0);
-
-    } else if (id == 200) {
-      return RiotGameRequester.jsonTeams.get(1);
-
-    }
-    return null;
-  }
 
   private final int id;
   private final List<JSONPlayer> allPlayers = new ArrayList<>();

@@ -17,12 +17,16 @@ import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.logger.Logger;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "ScheduledGame")
 @Table(name = "scheduledgame")
 @NamedQuery(name = "ScheduledGame.findAll", query = "FROM ScheduledGame s")
 @NamedQuery(name = "ScheduledGame.findById", query = "FROM ScheduledGame s WHERE id = :pk")
+@Getter
+@NoArgsConstructor
 public class ScheduledGame implements Serializable {
 
   @Transient
@@ -67,30 +71,22 @@ public class ScheduledGame implements Serializable {
   @Column(name = "queuetype")
   private QueueType queueType;
 
-  // default constructor
-  public ScheduledGame() {
-  }
+  @Column(name = "prioritized", nullable = false)
+  private boolean prioritized;
 
-  public ScheduledGame(String id, QueueType queueType) {
+  public ScheduledGame(String id, QueueType queueType, boolean prioritized) {
     this.id = id;
     this.queueType = queueType;
+    this.prioritized = prioritized;
   }
 
   //<editor-fold desc="getter and setter">
-  public QueueType getQueueType() {
-    return queueType;
-  }
-
   public void setQueueType(QueueType queueType) {
     this.queueType = queueType;
   }
 
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
+  public void setPrioritized(boolean prioritized) {
+    this.prioritized = prioritized;
   }
 
   @Override

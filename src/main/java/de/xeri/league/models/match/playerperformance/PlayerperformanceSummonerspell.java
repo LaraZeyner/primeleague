@@ -20,6 +20,9 @@ import de.xeri.league.models.dynamic.Summonerspell;
 import de.xeri.league.models.ids.PlayerperformanceSummonerspellId;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "PlayerperformanceSummonerspell")
@@ -28,6 +31,9 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "PlayerperformanceSummonerspell.findAll", query = "FROM PlayerperformanceSummonerspell p")
 @NamedQuery(name = "PlayerperformanceSummonerspell.findBy",
     query = "FROM PlayerperformanceSummonerspell p WHERE playerperformance = :playerperformance AND summonerspell = :spell")
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class PlayerperformanceSummonerspell implements Serializable {
   @Transient
   private static final long serialVersionUID = 330336380785350420L;
@@ -69,41 +75,7 @@ public class PlayerperformanceSummonerspell implements Serializable {
   @Column(name = "usages", nullable = false)
   private byte usages;
 
-  // default constructor
-  public PlayerperformanceSummonerspell() {
-  }
-
-  public PlayerperformanceSummonerspell(Playerperformance playerperformance, Summonerspell summonerspell, byte usages) {
-    this.playerperformance = playerperformance;
-    this.summonerspell = summonerspell;
-    this.usages = usages;
-  }
-
   //<editor-fold desc="getter and setter">
-  public byte getUsages() {
-    return usages;
-  }
-
-  public void setUsages(byte usages) {
-    this.usages = usages;
-  }
-
-  public Summonerspell getSummonerspell() {
-    return summonerspell;
-  }
-
-  public void setSummonerspell(Summonerspell summonerspell) {
-    this.summonerspell = summonerspell;
-  }
-
-  public Playerperformance getPlayerperformance() {
-    return playerperformance;
-  }
-
-  public void setPlayerperformance(Playerperformance playerperformance) {
-    this.playerperformance = playerperformance;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

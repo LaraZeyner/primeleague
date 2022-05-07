@@ -41,8 +41,6 @@ public class Data {
   }
 
   //<editor-fold desc="getter and setter">
-
-
   public League getCurrentGroup() {
     return currentGroup;
   }

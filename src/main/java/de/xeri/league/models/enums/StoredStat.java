@@ -18,7 +18,7 @@ public enum StoredStat {
   BOUNTY_GOLD("bountyGold", true),
   BUFFS_STOLEN("buffsStolen", true),
   BUFFS_INITIAL("initialBuffCount", true),
-  CHAMPION("championName", false),
+  CHAMPION("championId", false),
   CONTROL_WARDS_BOUGHT("visionWardsBoughtInGame", false),
   CONTROL_WARDS_PLACED("controlWardsPlaced", true),
   CONTROL_WARDS_UPTIME("controlWardTimeCoverageInRiverOrEnemyHalf", true),

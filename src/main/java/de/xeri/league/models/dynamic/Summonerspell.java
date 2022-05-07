@@ -16,6 +16,10 @@ import javax.persistence.Transient;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceSummonerspell;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Summonerspell")
@@ -23,6 +27,9 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Summonerspell.findAll", query = "FROM Summonerspell s")
 @NamedQuery(name = "Summonerspell.findById", query = "FROM Summonerspell s WHERE id = :pk")
 @NamedQuery(name = "Summonerspell.findBy", query = "FROM Summonerspell s WHERE name = :name")
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Summonerspell implements Serializable {
 
   @Transient
@@ -64,36 +71,12 @@ public class Summonerspell implements Serializable {
   private String name;
 
   @OneToMany(mappedBy = "summonerspell")
+  @Getter(AccessLevel.NONE)
   private final Set<PlayerperformanceSummonerspell> summonerspells = new LinkedHashSet<>();
-
-  // default constructor
-  public Summonerspell() {
-  }
-
-  public Summonerspell(byte id, String name) {
-    this.id = id;
-    this.name = name;
-  }
 
   //<editor-fold desc="getter and setter">
   public Set<PlayerperformanceSummonerspell> getPlayerperformances() {
     return summonerspells;
-  }
-
-  public byte getId() {
-    return id;
-  }
-
-  public void setId(byte id) {
-    this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   @Override

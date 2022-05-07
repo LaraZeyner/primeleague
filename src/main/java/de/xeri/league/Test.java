@@ -14,6 +14,7 @@ public class Test {
   private static final Logger logger = Logger.getLogger("Test");
 
   public static void main(String[] args) {
+
     try {
       if (Const.check()) {
         final Date date = new Date();
@@ -37,5 +38,13 @@ public class Test {
       //TODO (Abgie) 30.04.2022: Remove after testing!!! -> Bad code
       ex.printStackTrace();
     }
+
+
+
+
+
+
+
+
   }
 }

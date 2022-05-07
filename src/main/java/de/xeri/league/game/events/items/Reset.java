@@ -11,7 +11,6 @@ import de.xeri.league.models.enums.EventTypes;
 import de.xeri.league.util.Const;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.val;
 import org.json.JSONObject;
 
 /**
@@ -54,11 +53,13 @@ public class Reset {
   }
 
   public int getStart() {
-    return transactions.stream().mapToInt(ItemTransaction::getTimestamp).min().orElse(11_999) - 12_000;
+    final int start = transactions.stream().mapToInt(ItemTransaction::getTimestamp).min().orElse(11_999) - 12_000;
+    return Math.max(start, 0);
   }
 
   public int getEnd() {
-    return transactions.stream().mapToInt(ItemTransaction::getTimestamp).max().orElse(-20_001) + 20_000;
+    final int end = transactions.stream().mapToInt(ItemTransaction::getTimestamp).max().orElse(-20_001) + 20_000;
+    return Math.min(end, player.getHighestMinute() * 60_000);
   }
 
   public int getGoldUnspent() {

@@ -29,6 +29,8 @@ import de.xeri.league.models.match.Game;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "PlayerperformanceKill")
@@ -39,6 +41,8 @@ import org.hibernate.annotations.NamedQuery;
     query = "FROM PlayerperformanceKill p WHERE playerperformance = :playerperformance AND time = :time")
 @NamedQuery(name = "PlayerperformanceKill.findByGame",
     query = "FROM PlayerperformanceKill p WHERE playerperformance.teamperformance.game = :game AND time = :time")
+@Getter
+@NoArgsConstructor
 public class PlayerperformanceKill implements Serializable {
   @Transient
   private static final long serialVersionUID = 8813809418539948714L;
@@ -75,7 +79,7 @@ public class PlayerperformanceKill implements Serializable {
   }
   //</editor-fold>
   public static int lastId() {
-    final List<PlayerperformanceKill> kills = Util.query("Playerperformance_Kills ORDER BY id DESC");
+    final List<PlayerperformanceKill> kills = Util.query("PlayerperformanceKill ORDER BY id DESC");
     return kills.isEmpty() ? 0 : kills.get(0).getId();
   }
 
@@ -108,12 +112,6 @@ public class PlayerperformanceKill implements Serializable {
   @Column(name = "kill_streak", nullable = false)
   private byte streak = 0;
 
-
-
-  // default constructor
-  public PlayerperformanceKill() {
-  }
-
   public PlayerperformanceKill(int id, int time, Position position, short bounty, KillRole role, KillType type, byte streak) {
     this.id = id;
     this.time = time;
@@ -125,52 +123,12 @@ public class PlayerperformanceKill implements Serializable {
   }
 
   //<editor-fold desc="getter and setter">
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public Playerperformance getPlayerperformance() {
-    return playerperformance;
-  }
-
   public void setPlayerperformance(Playerperformance playerperformance) {
     this.playerperformance = playerperformance;
   }
 
-  public int getTime() {
-    return time;
-  }
-
-  public void setTime(int time) {
-    this.time = time;
-  }
-
-  public Position getPosition() {
-    return new Position(position.getX(), position.getY());
-  }
-
-  public short getBounty() {
-    return bounty;
-  }
-
-  public KillRole getRole() {
-    return role;
-  }
-
-  public KillType getType() {
-    return type;
-  }
-
   public void setType(KillType type) {
     this.type = type;
-  }
-
-  public byte getStreak() {
-    return streak;
   }
 
   @Override
@@ -178,7 +136,7 @@ public class PlayerperformanceKill implements Serializable {
     if (this == o) return true;
     if (!(o instanceof PlayerperformanceKill)) return false;
     final PlayerperformanceKill that = (PlayerperformanceKill) o;
-    return getId() == that.getId() && getTime() == that.getTime() && getBounty() == that.getBounty() && getStreak() == that.getStreak() && getPlayerperformance().equals(that.getPlayerperformance()) && getPosition().equals(that.getPosition()) && getRole() == that.getRole() && getType() == that.getType();
+    return getId() == that.getId() && getPlayerperformance().equals(that.getPlayerperformance());
   }
 
   @Override

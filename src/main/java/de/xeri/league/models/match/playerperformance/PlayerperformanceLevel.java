@@ -19,6 +19,8 @@ import javax.persistence.Transient;
 import de.xeri.league.models.ids.PlayerperformanceLevelId;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "PlayerperformanceLevel")
@@ -26,7 +28,9 @@ import org.hibernate.annotations.NamedQuery;
 @IdClass(PlayerperformanceLevelId.class)
 @NamedQuery(name = "PlayerperformanceLevel.findAll", query = "FROM PlayerperformanceLevel p")
 @NamedQuery(name = "PlayerperformanceLevel.findBy",
-    query = "FROM PlayerperformanceLevel p WHERE playerperformance = :playerperformance AND time = :time")
+    query = "FROM PlayerperformanceLevel p WHERE playerperformance = :playerperformance AND level = :level")
+@Getter
+@NoArgsConstructor
 public class PlayerperformanceLevel implements Serializable {
   @Transient
   private static final long serialVersionUID = 6147476273247281841L;
@@ -46,12 +50,12 @@ public class PlayerperformanceLevel implements Serializable {
     return neu;
   }
 
-  public static boolean has(Playerperformance playerperformance, int level) {
+  public static boolean has(Playerperformance playerperformance, byte level) {
     return HibernateUtil.has(PlayerperformanceLevel.class, new String[]{"playerperformance", "level"},
         new Object[]{playerperformance, level});
   }
 
-  public static PlayerperformanceLevel find(Playerperformance playerperformance, int level) {
+  public static PlayerperformanceLevel find(Playerperformance playerperformance, byte level) {
     return HibernateUtil.find(PlayerperformanceLevel.class, new String[]{"playerperformance", "level"},
         new Object[]{playerperformance, level});
   }
@@ -69,30 +73,14 @@ public class PlayerperformanceLevel implements Serializable {
   @Column(name = "levelup_time", nullable = false)
   private int time;
 
-  // default constructor
-  public PlayerperformanceLevel() {
-  }
-
   public PlayerperformanceLevel(byte level, int time) {
     this.level = level;
     this.time = time;
   }
   
   //<editor-fold desc="getter and setter">
-  public Playerperformance getPlayerperformance() {
-    return playerperformance;
-  }
-
   public void setPlayerperformance(Playerperformance playerperformance) {
     this.playerperformance = playerperformance;
-  }
-
-  public byte getLevel() {
-    return level;
-  }
-
-  public int getTime() {
-    return time;
   }
 
   @Override
@@ -100,7 +88,7 @@ public class PlayerperformanceLevel implements Serializable {
     if (this == o) return true;
     if (!(o instanceof PlayerperformanceLevel)) return false;
     final PlayerperformanceLevel level = (PlayerperformanceLevel) o;
-    return getLevel() == level.getLevel() && getTime() == level.getTime() && getPlayerperformance().equals(level.getPlayerperformance());
+    return getLevel() == level.getLevel() && getPlayerperformance().equals(level.getPlayerperformance());
   }
 
   @Override

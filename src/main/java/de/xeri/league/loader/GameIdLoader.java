@@ -53,6 +53,11 @@ public final class GameIdLoader {
     int start = 0;
     while (true) {
       val scheduled = load(queueType, account, start);
+      /* for (ScheduledGame scheduledGame : scheduled) {
+        scheduledGame.setPrioritized(true);
+        Data.getInstance().save(scheduledGame);
+      } */
+
       start += 100;
       if (scheduled != null) {
         if (scheduled.size() == 100) continue;
@@ -72,7 +77,7 @@ public final class GameIdLoader {
             .map(String::valueOf)
             .collect(Collectors.toList());
         return gameIds.stream()
-            .map(gameId -> ScheduledGame.get(new ScheduledGame(gameId, queueType)))
+            .map(gameId -> ScheduledGame.get(new ScheduledGame(gameId, queueType, account.isValueable())))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
       }
@@ -80,7 +85,7 @@ public final class GameIdLoader {
     return new ArrayList<>();
   }
 
-  private static JSON determineJSON(QueueType queueType, Account account, int start) {
+  public static JSON determineJSON(QueueType queueType, Account account, int start) {
     val matchGenerator = RiotURLGenerator.getMatch();
     if (queueType.getQueueId() == -2) {
       return matchGenerator.getMatchList(account, start);

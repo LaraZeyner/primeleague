@@ -25,6 +25,8 @@ import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "PlayerperformanceInfo")
@@ -35,6 +37,7 @@ import org.hibernate.annotations.NamedQuery;
     query = "FROM PlayerperformanceInfo p WHERE playerperformance = :playerperformance AND minute = :minute")
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 public class PlayerperformanceInfo extends Position {
   @Transient
@@ -65,6 +68,7 @@ public class PlayerperformanceInfo extends Position {
   @Id
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "playerperformance", nullable = false)
+  @ToString.Exclude
   private Playerperformance playerperformance;
 
   @Id
@@ -141,31 +145,14 @@ public class PlayerperformanceInfo extends Position {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof PlayerperformanceInfo)) return false;
-    if (!super.equals(o)) return false;
-    final PlayerperformanceInfo that = (PlayerperformanceInfo) o;
-    return getMinute() == that.getMinute() && getTotalGold() == that.getTotalGold() && getCurrentGold() == that.getCurrentGold() && getEnemyControlled() == that.getEnemyControlled() && getExperience() == that.getExperience() && getCreepScore() == that.getCreepScore() && getTotalDamage() == that.getTotalDamage() && getPlayerperformance().equals(that.getPlayerperformance()) && getPosition().equals(that.getPosition());
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final PlayerperformanceInfo info = (PlayerperformanceInfo) o;
+    return playerperformance != null && playerperformance.equals(info.getPlayerperformance()) && minute == info.getMinute();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), getPlayerperformance(), getMinute(), getTotalGold(), getCurrentGold(), getEnemyControlled(), getPosition(), getExperience(), getCreepScore(), getTotalDamage());
-  }
-
-  @Override
-  public String toString() {
-    return "PlayerperformanceInfo{" +
-        "playerperformance=" + playerperformance +
-        ", minute=" + minute +
-        ", totalGold=" + totalGold +
-        ", currentGold=" + currentGold +
-        ", enemyControlled=" + enemyControlled +
-        ", position=" + position +
-        ", experience=" + experience +
-        ", creepScore=" + creepScore +
-        ", totalDamage=" + totalDamage +
-        '}';
+    return Objects.hash(playerperformance, minute);
   }
   //</editor-fold>
-
 }
