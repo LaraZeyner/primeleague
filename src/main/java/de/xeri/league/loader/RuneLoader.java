@@ -2,7 +2,7 @@ package de.xeri.league.loader;
 
 import de.xeri.league.models.dynamic.Rune;
 import de.xeri.league.models.dynamic.Runetree;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.JSONList;
 import de.xeri.league.util.io.JSONParser;
 import de.xeri.league.util.io.json.JSON;

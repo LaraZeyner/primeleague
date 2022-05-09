@@ -35,7 +35,7 @@ import de.xeri.league.models.match.ChampionSelection;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

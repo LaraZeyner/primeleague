@@ -26,7 +26,7 @@ import de.xeri.league.models.ids.PlayerperformanceKillId;
 import de.xeri.league.game.events.location.KillPosition;
 import de.xeri.league.game.events.location.Position;
 import de.xeri.league.models.match.Game;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
 import lombok.Getter;

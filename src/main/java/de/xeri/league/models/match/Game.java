@@ -27,7 +27,7 @@ import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NamedQuery;

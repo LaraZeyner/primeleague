@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
-import javax.faces.bean.ApplicationScoped;
+import javax.faces.bean.RequestScoped;
 import javax.inject.Named;
 
 import de.xeri.league.servlet.datatables.objects.PickBanObject;
@@ -13,7 +13,7 @@ import de.xeri.league.servlet.datatables.objects.PickBanObject;
  * Created by Lara on 24.04.2022 for web
  */
 @Named
-@ApplicationScoped
+@RequestScoped
 public class PickBanService {
 
   private List<PickBanObject> pickBans;

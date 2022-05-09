@@ -14,7 +14,7 @@ import javax.persistence.IdClass;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NamedQuery;

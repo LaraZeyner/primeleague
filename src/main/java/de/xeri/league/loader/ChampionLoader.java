@@ -11,7 +11,7 @@ import de.xeri.league.models.dynamic.Champion;
 import de.xeri.league.models.dynamic.Resource;
 import de.xeri.league.models.enums.Abilitytype;
 import de.xeri.league.models.enums.Championclass;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.DataType;
 import de.xeri.league.util.io.JSONElement;
 import de.xeri.league.util.io.JSONParser;

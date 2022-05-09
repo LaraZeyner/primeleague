@@ -22,7 +22,7 @@ import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.util.Const;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.request.RequestManager;

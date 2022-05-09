@@ -4,7 +4,7 @@ import de.xeri.league.models.league.Schedule;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.util.Const;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 
 /**
  * Created by Lara on 06.04.2022 for web

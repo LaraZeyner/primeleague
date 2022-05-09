@@ -25,7 +25,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.ScheduleType;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 

@@ -32,7 +32,7 @@ import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.match.Gametype;
 import de.xeri.league.models.match.Teamperformance;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

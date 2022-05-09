@@ -18,7 +18,7 @@ import de.xeri.league.models.league.Matchlog;
 import de.xeri.league.models.league.Player;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.logger.Logger;
 import lombok.val;
 import lombok.var;

@@ -21,7 +21,7 @@ import javax.persistence.Transient;
 import de.xeri.league.models.dynamic.Champion;
 import de.xeri.league.models.enums.SelectionType;
 import de.xeri.league.models.ids.ChampionSelectionId;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NamedQuery;

@@ -17,7 +17,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.ids.PlayerperformanceLevelId;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

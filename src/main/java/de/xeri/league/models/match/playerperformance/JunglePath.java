@@ -20,7 +20,7 @@ import de.xeri.league.game.events.location.JungleCamp;
 import de.xeri.league.game.events.location.Position;
 import de.xeri.league.models.match.Teamperformance;
 import de.xeri.league.util.Const;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
 import lombok.Getter;

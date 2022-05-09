@@ -7,7 +7,7 @@ import de.xeri.league.models.enums.EloQueueType;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.SeasonElo;
 import de.xeri.league.util.Const;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import lombok.val;
 import org.json.JSONObject;
 

@@ -20,18 +20,20 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.league.game.Clash;
 import de.xeri.league.loader.TeamLoader;
+import de.xeri.league.manager.Data;
 import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.QueueType;
+import de.xeri.league.models.enums.Result;
 import de.xeri.league.models.enums.StageType;
 import de.xeri.league.models.match.Game;
-import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.models.match.Teamperformance;
-import de.xeri.league.game.Clash;
-import de.xeri.league.util.Data;
+import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
 import de.xeri.league.util.logger.Logger;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -51,8 +53,8 @@ import org.hibernate.annotations.NamedQuery;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class Team implements Serializable {
-
   @Transient
   private static final long serialVersionUID = 2656015802095877363L;
 
@@ -235,8 +237,14 @@ public class Team implements Serializable {
   }
 
   public List<Teamperformance> getCompetitivePerformances() {
-    return Teamperformance.get().stream()
-        .filter(teamperformance -> teamperformance.getTeam().equals(this) && Util.inRange(teamperformance.getGame().getGameStart()))
+    return teamperformances.stream()
+        .filter(teamperformance -> Util.inRange(teamperformance.getGame().getGameStart()))
+        .collect(Collectors.toList());
+  }
+
+  public List<Teamperformance> getLeaguePerformances() {
+    return teamperformances.stream()
+        .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch().getLeague().equals(Data.getInstance().getCurrentGroup()))
         .collect(Collectors.toList());
   }
 
@@ -286,6 +294,63 @@ public class Team implements Serializable {
     return allmatches;
   }
 
+  public String getBilance() {
+    int wins = 0;
+    int ties = 0;
+    int defeats = 0;
+    for (TurnamentMatch turnamentMatch : getTurnamentMatches()) {
+      if (turnamentMatch.getLeague().equals(Data.getInstance().getCurrentGroup())) {
+        final Result result = turnamentMatch.getResult(this);
+        if (result.equals(Result.VICTORY)) {
+          wins++;
+        } else if (result.equals(Result.TIE)) {
+          ties++;
+        } else if (result.equals(Result.DEFEAT)) {
+          defeats++;
+        }
+      }
+    }
+
+    return wins + "   " + ties + "   " + defeats;
+  }
+
+  public String getWinsPerMatch() {
+    int wins = 0;
+    int ties = 0;
+    int defeats = 0;
+    int score1 = 0;
+    for (TurnamentMatch turnamentMatch : getTurnamentMatches()) {
+      if (turnamentMatch.getLeague().equals(Data.getInstance().getCurrentGroup())) {
+        final Result result = turnamentMatch.getResult(this);
+        if (result.equals(Result.VICTORY)) {
+          wins++;
+        } else if (result.equals(Result.TIE)) {
+          ties++;
+        } else if (result.equals(Result.DEFEAT)) {
+          defeats++;
+        }
+        score1 += turnamentMatch.getPointsOfTeam(this);
+      }
+    }
+    final int games = wins + ties + defeats;
+    final double winsPerMatch = games == 0 ? 0 : score1 * 1d / games;
+    return Math.round(winsPerMatch * 100) + "%";
+  }
+
+  public String getTeamScore() {
+    int score1 = 0;
+    int score2 = 0;
+    for (TurnamentMatch turnamentMatch : getTurnamentMatches()) {
+      if (turnamentMatch.getLeague().equals(Data.getInstance().getCurrentGroup())) {
+        score1 += turnamentMatch.getPointsOfTeam(this);
+        final Team otherTeam = turnamentMatch.getOtherTeam(this);
+        if (otherTeam != null) {
+          score2 += turnamentMatch.getPointsOfTeam(otherTeam);
+        }
+      }
+    }
+    return score1 + ":" + score2;
+  }
   //<editor-fold desc="getter and setter">
 
   @Override
@@ -313,4 +378,147 @@ public class Team implements Serializable {
         '}';
   }
   //</editor-fold>
+
+
+  public int getMatchtime() {
+    int wintime = (int) getLeaguePerformances().stream()
+        .filter(Teamperformance::isWin)
+        .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
+        .average().orElse(0);
+    int losetime = (int) getLeaguePerformances().stream()
+        .filter(teamperformance -> !teamperformance.isWin())
+        .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
+        .average().orElse(0);
+    return wintime + losetime;
+  }
+
+  public int getGames() {
+    return getWins() + getLosses();
+  }
+
+  public int getWins() {
+    return (int) getLeaguePerformances().stream().filter(Teamperformance::isWin).count();
+  }
+
+  public int getLosses() {
+    return (int) getLeaguePerformances().stream().filter(teamperformance -> !teamperformance.isWin()).count();
+  }
+
+  public String getKills() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).sum() + ":" +
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalKills).sum();
+  }
+
+  public int getKillDiff() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).sum() -
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalKills).sum();
+  }
+
+  public String getKillsPerMatch() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).average().orElse(0) * 2 + ":" +
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .mapToInt(Teamperformance::getTotalKills).average().orElse(0) * 2;
+  }
+
+  public String getGold() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).sum() + ":" +
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalGold).sum();
+  }
+
+  public int getGoldDiff() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).sum() -
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalGold).sum();
+  }
+
+  public String getGoldPerMatch() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).average().orElse(0) * 2 + ":" +
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .mapToInt(Teamperformance::getTotalGold).average().orElse(0) * 2;
+  }
+
+
+  public String getCreeps() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).sum() + ":" +
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalCs).sum();
+  }
+
+  public int getCreepDiff() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).sum() -
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalCs).sum();
+  }
+
+  public String getCreepsPerMatch() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).average().orElse(0) * 2 + ":" +
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+            .mapToInt(Teamperformance::getTotalCs).average().orElse(0) * 2;
+  }
+
+  public int getObjectives() {
+    return getTowers() + getDrakes() + getHeralds() + getInhibs() + getBarons();
+  }
+
+  public int getObjectivesPerMatch() {
+    if (getGames() == 0) {
+      return 0;
+    }
+    return getObjectives() * 2 / getGames();
+  }
+
+
+  public int getTowers() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTowers).sum();
+  }
+
+  public int getTowersPerMatch() {
+    return (int) Util.div(getTowers() * 2, getGames());
+  }
+
+  public int getDrakes() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getDrakes).sum();
+  }
+
+  public int getDrakesPerMatch() {
+    return (int) Util.div(getDrakes() * 2, getGames());
+  }
+
+  public int getInhibs() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getInhibs).sum();
+  }
+
+  public int getInhibsPerMatch() {
+    return (int) Util.div(getInhibs() * 2, getGames());
+  }
+
+  public int getHeralds() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getHeralds).sum();
+  }
+
+  public int getHeraldsPerMatch() {
+    return (int) Util.div(getHeralds() * 2, getGames());
+  }
+
+  public int getBarons() {
+    return getLeaguePerformances().stream().mapToInt(Teamperformance::getBarons).sum();
+  }
+
+  public int getBaronsPerMatch() {
+    return (int) Util.div(getBarons() * 2, getGames());
+  }
+
+  public long getScore() {
+    final int idScore = id;                                      //                -10.000   10.000
+    final int csScore = getCreepDiff() * 10_000;                             //             10.000.000    1.000
+    final long goldScore = getGoldDiff() * 10_000_000L;                      //      1.000.000.000.000  100.000
+    final long killScore = getKillDiff() * 1_000_000_000_000L;               //    100.000.000.000.000      100
+    final long winsScore = (long) Integer.parseInt(getWinsPerMatch().replace("%", "")) * 1_000_000_000_000L;
+    return idScore + csScore + goldScore + killScore + winsScore;
+  }
+
+
 }

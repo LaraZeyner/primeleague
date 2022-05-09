@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 import de.xeri.league.models.league.Player;
 import de.xeri.league.models.league.Team;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.logger.Logger;
 import org.jsoup.Jsoup;

@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import de.xeri.league.game.events.location.Position;
+import de.xeri.league.manager.Data;
 import org.hibernate.Session;
 
 /**

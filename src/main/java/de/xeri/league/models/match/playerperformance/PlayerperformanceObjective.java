@@ -22,7 +22,7 @@ import javax.persistence.Transient;
 import de.xeri.league.models.enums.KillRole;
 import de.xeri.league.models.enums.Lane;
 import de.xeri.league.models.enums.ObjectiveSubtype;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

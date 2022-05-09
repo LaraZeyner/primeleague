@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.faces.bean.ManagedBean;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -21,14 +22,20 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.league.manager.Data;
+import de.xeri.league.models.enums.LogAction;
 import de.xeri.league.models.enums.Matchstate;
+import de.xeri.league.models.enums.Result;
 import de.xeri.league.models.enums.ScheduleType;
 import de.xeri.league.models.enums.StageType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.util.Const;
-import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.NamedQuery;
+import org.jetbrains.annotations.Nullable;
 
 @Entity(name = "TurnamentMatch")
 @Table(name = "turnament_match", indexes = {
@@ -40,6 +47,10 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "TurnamentMatch.findAll", query = "FROM TurnamentMatch t")
 @NamedQuery(name = "TurnamentMatch.findById", query = "FROM TurnamentMatch t WHERE id = :pk")
 @NamedQuery(name = "TurnamentMatch.findByTeams", query = "FROM TurnamentMatch t WHERE homeTeam = :home AND guestTeam = :guest")
+@ManagedBean
+@Getter
+@Setter
+@NoArgsConstructor
 public class TurnamentMatch implements Serializable {
 
   @Transient
@@ -110,12 +121,7 @@ public class TurnamentMatch implements Serializable {
   @OneToMany(mappedBy = "match")
   private final Set<Matchlog> logEntries = new LinkedHashSet<>();
 
-  // default constructor
-  public TurnamentMatch() {
-  }
-
   /**
-   * Usage: Contructor — setStart() — setState() — Foreach: addGame(), addEntry()
    * @param id matchID
    * @param score matchEndscore
    */
@@ -161,6 +167,7 @@ public class TurnamentMatch implements Serializable {
     return !state.equals(Matchstate.CLOSED) || (isOpen() && start.before(new Date(limit)));
   }
 
+  @Nullable
   public Team getOtherTeam(Team team) {
     return team.equals(homeTeam) ? guestTeam : team.equals(guestTeam) ? homeTeam : null;
   }
@@ -177,83 +184,62 @@ public class TurnamentMatch implements Serializable {
     return null;
   }
 
+  public byte getPointsOfTeam(Team team) {
+    if (homeTeam.equals(team) || guestTeam.equals(team)) {
+      if (score.equals("-:-")) {
+        if (state.ordinal() < 10) {
+          return 0;
+        } else {
+          return (byte) logEntries.stream()
+              .filter(logEntry -> logEntry.getLogAction().equals(LogAction.REPORT))
+              .map(Matchlog::getTeam)
+              .filter(winningTeam -> winningTeam != null && winningTeam.equals(team))
+              .count();
+        }
+
+      } else if (homeTeam.equals(team)) {
+        final String team1String = score.split(":")[0];
+        return (byte) Integer.parseInt(team1String);
+
+      } else if (guestTeam.equals(team)) {
+        final String team2String = score.split(":")[1];
+        return (byte) Integer.parseInt(team2String);
+      }
+    }
+    return 0;
+  }
+
+  public Result getResult(Team team) {
+    if (homeTeam.equals(team) || guestTeam.equals(team)) {
+      if (score.equals("-:-")) {
+        return Result.UPCOMING;
+      } else if (score.equals("0:0")) {
+        return Result.CLOSED;
+      } else if (score.contains(":")) {
+        final String team1String = score.split(":")[0];
+        final int team1Score = Integer.parseInt(team1String);
+
+        final String team2String = score.split(":")[1];
+        final int team2Score = Integer.parseInt(team2String);
+
+        if (team1Score > team2Score) {
+          return team.equals(homeTeam) ? Result.VICTORY : Result.DEFEAT;
+        } else if (team1Score < team2Score) {
+          return team.equals(guestTeam) ? Result.VICTORY : Result.DEFEAT;
+        } else {
+          return Result.TIE;
+        }
+      }
+    }
+
+    return null;
+  }
+
   public boolean hasTeam(Team team) {
     return homeTeam != null && homeTeam.equals(team) || guestTeam != null && guestTeam.equals(team);
   }
 
   //<editor-fold desc="getter and setter">
-  public Set<Game> getGames() {
-    return games;
-  }
-
-  public Matchstate getState() {
-    return state;
-  }
-
-  public void setState(Matchstate matchstate) {
-    this.state = matchstate;
-  }
-
-  public String getScore() {
-    return score;
-  }
-
-  public void setScore(String score) {
-    this.score = score;
-  }
-
-  public Team getGuestTeam() {
-    return guestTeam;
-  }
-
-  void setGuestTeam(Team guestTeam) {
-    this.guestTeam = guestTeam;
-  }
-
-  public Team getHomeTeam() {
-    return homeTeam;
-  }
-
-  void setHomeTeam(Team homeTeam) {
-    this.homeTeam = homeTeam;
-  }
-
-  public Date getStart() {
-    return start;
-  }
-
-  public void setStart(Date matchStart) {
-    this.start = matchStart;
-  }
-
-  public Matchday getMatchday() {
-    return matchday;
-  }
-
-  public void setMatchday(Matchday matchday) {
-    this.matchday = matchday;
-  }
-
-  public League getLeague() {
-    return league;
-  }
-
-  public void setLeague(League league) {
-    this.league = league;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int id) {
-    this.id = id;
-  }
-
-  public Set<Matchlog> getLogEntries() {
-    return logEntries;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

@@ -34,7 +34,7 @@ import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.util.Const;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import de.xeri.league.util.Util;
 import lombok.Getter;

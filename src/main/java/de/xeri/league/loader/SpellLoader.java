@@ -3,7 +3,7 @@ package de.xeri.league.loader;
 import java.util.Arrays;
 
 import de.xeri.league.models.dynamic.Summonerspell;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.JSONElement;
 import de.xeri.league.util.io.JSONParser;
 import de.xeri.league.util.io.json.JSON;

@@ -23,7 +23,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -161,7 +161,7 @@ public class League implements Serializable {
     if (this == o) return true;
     if (!(o instanceof League)) return false;
     final League league = (League) o;
-    return getId() == league.getId() && getStage().equals(league.getStage()) && getName().equals(league.getName()) && getMatches().equals(league.getMatches());
+    return getId() == league.getId() && getStage().equals(league.getStage()) && getName().equals(league.getName());
   }
 
   @Override

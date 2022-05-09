@@ -2,7 +2,7 @@ package de.xeri.league.game;
 
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.match.ScheduledGame;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.riot.RiotURLGenerator;
 import lombok.val;
 

@@ -6,7 +6,7 @@ import java.util.Map;
 
 import de.xeri.league.models.match.Gametype;
 import de.xeri.league.models.dynamic.LeagueMap;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.json.JSON;
 import de.xeri.league.util.io.JSONList;
 import de.xeri.league.util.io.JSONParser;

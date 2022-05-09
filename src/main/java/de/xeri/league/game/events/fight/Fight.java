@@ -99,7 +99,8 @@ public class Fight {
   public boolean isGankOf(Lane lane, JSONPlayer player, JSONPlayer enemy) {
     if (new ArrayList<>(kills).get(0).getTimestamp() < Const.EARLYGAME_UNTIL_MINUTE * 60_000) {
       for (Kill kill : kills) {
-        if (enemy != null && kill.isInvolved(player.getId() + 1) && !lane.isInArea(kill.getPosition(), player.isFirstPick())) {
+        if (enemy != null && player != null && kill.isInvolved(player.getId() + 1) && !lane.isInArea(kill.getPosition(),
+            player.isFirstPick())) {
           return !kill.isInvolved(enemy.getId() + 1) || (!getFighttype().equals(Fighttype.DUEL));
         }
       }

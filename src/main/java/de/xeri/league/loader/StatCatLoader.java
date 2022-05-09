@@ -8,7 +8,7 @@ import de.xeri.league.models.match.neu.DisplaystatType;
 import de.xeri.league.models.match.neu.Rating;
 import de.xeri.league.models.match.neu.StatCategory;
 import de.xeri.league.models.match.neu.StatSubcategory;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 
 /**
  * Created by Lara on 26.04.2022 for web

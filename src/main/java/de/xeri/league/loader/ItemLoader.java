@@ -7,7 +7,7 @@ import de.xeri.league.models.dynamic.Item;
 import de.xeri.league.models.dynamic.ItemStat;
 import de.xeri.league.models.dynamic.Itemstyle;
 import de.xeri.league.models.enums.ItemType;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.DataType;
 import de.xeri.league.util.io.JSONElement;
 import de.xeri.league.util.io.JSONParser;

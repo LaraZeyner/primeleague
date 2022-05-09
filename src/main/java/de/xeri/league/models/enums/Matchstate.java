@@ -10,10 +10,8 @@ public enum Matchstate {
   SCHEDULED("Termin bestätigt"),
   LINEUP_SUBMITTED("Lineup bestätigt"),
   LINEUPS_SUBMITTED("Lineups bestätigt"),
-
   TEAM_READY("Team bereit"),
   TEAMS_READY("Teams bereit"),
-
   LOBBY_REQUESTED("Warte auf Spiel 1"),
   GAME_1_OPEN("Spiel 1 läuft"),
   GAME_1_ENDED("Warte auf Spiel 2"),

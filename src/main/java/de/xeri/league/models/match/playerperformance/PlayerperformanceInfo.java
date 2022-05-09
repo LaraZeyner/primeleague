@@ -20,7 +20,7 @@ import javax.persistence.Transient;
 import de.xeri.league.game.events.location.PlayerPosition;
 import de.xeri.league.game.events.location.Position;
 import de.xeri.league.models.ids.PlayerperformanceInfoId;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

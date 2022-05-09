@@ -146,7 +146,9 @@ CREATE TABLE `game`
     duration       SMALLINT(4) UNSIGNED NOT NULL CHECK ( duration > 100 ),
     gametype       SMALLINT(4)          NOT NULL,
     FOREIGN KEY (turnamentmatch) REFERENCES `turnament_match` (match_id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
+        ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (gametype) REFERENCES `gametype` (gametype_id)
+        ON DELETE RESTRICT ON UPDATE RESTRICT
 );
 
 CREATE TABLE `abilitystyle`

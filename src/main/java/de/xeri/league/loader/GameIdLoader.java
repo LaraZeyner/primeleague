@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.match.ScheduledGame;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.json.JSON;
 import de.xeri.league.util.io.riot.RiotURLGenerator;
 import lombok.val;

@@ -25,7 +25,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.league.models.enums.StageType;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -174,7 +174,7 @@ public class Stage implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Stage)) return false;
     final Stage stage = (Stage) o;
-    return getId() == stage.getId() && getSeason().equals(stage.getSeason()) && getStageType() == stage.getStageType() && getStageStart().equals(stage.getStageStart()) && getStageEnd().equals(stage.getStageEnd()) && getMatchdays().equals(stage.getMatchdays()) && Objects.equals(getLeagues(), stage.getLeagues());
+    return getId() == stage.getId() && getSeason().equals(stage.getSeason()) && getStageType() == stage.getStageType() && getStageStart().equals(stage.getStageStart()) && getStageEnd().equals(stage.getStageEnd());
   }
 
   @Override

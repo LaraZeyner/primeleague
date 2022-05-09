@@ -19,7 +19,7 @@ import de.xeri.league.models.league.Player;
 import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.Util;
 import de.xeri.league.util.io.json.HTML;
 import de.xeri.league.util.io.riot.RiotAccountURLGenerator;

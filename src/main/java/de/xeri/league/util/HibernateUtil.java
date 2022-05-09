@@ -9,6 +9,7 @@ import java.util.Properties;
 import javax.persistence.NoResultException;
 import javax.persistence.metamodel.EntityType;
 
+import de.xeri.league.manager.Data;
 import de.xeri.league.models.dynamic.Ability;
 import de.xeri.league.models.dynamic.Abilitystyle;
 import de.xeri.league.models.dynamic.Champion;

@@ -4,7 +4,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:f="http://java.sun.com/jsf/core">
+      xmlns:p="http://primefaces.org/ui"
+>
 <h:head>
     <title>Technical Really Unique Esports</title>
     <h:outputStylesheet library="css" name="styles.css"/>
@@ -19,6 +20,26 @@
 
     <h:panelGrid styleClass="maincontrainer" columns="2">
         <h:panelGroup styleClass="content" id="content" layout="block">
+            <h:form>
+               <!-- <p:dataTable var="team" value="#{shortTable.teams}" size="small">
+                    <p:column headerText="Abbr">
+                        <h:graphicImage value="#{team.logoUrl}"/>
+                        <h:outputText value="#{team.abbreviation}"/>
+                    </p:column>
+
+                    <p:column headerText="Win">
+                        <h:outputText value="#{team.winsPerMatch}"/>
+                    </p:column>
+
+                    <p:column headerText="Score">
+                        <h:outputText value="#{team.teamScore}"/>
+                    </p:column>
+
+                    <p:column headerText="S  U  N">
+                        <h:outputText value="#{team.bilance}"/>
+                    </p:column>
+                </p:dataTable>-->
+            </h:form>
             Lorem ipsum dolorsit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum.
         </h:panelGroup>
         <ui:insert name="sidebar">

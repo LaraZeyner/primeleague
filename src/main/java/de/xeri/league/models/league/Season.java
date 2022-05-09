@@ -17,7 +17,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -171,7 +171,7 @@ public class Season implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Season)) return false;
     final Season season = (Season) o;
-    return getId() == season.getId() && getSeasonName().equals(season.getSeasonName()) && getSeasonStart().equals(season.getSeasonStart()) && getSeasonEnd().equals(season.getSeasonEnd()) && getStages().equals(season.getStages()) && getSeasonElos().equals(season.getSeasonElos());
+    return getId() == season.getId() && getSeasonName().equals(season.getSeasonName()) && getSeasonStart().equals(season.getSeasonStart()) && getSeasonEnd().equals(season.getSeasonEnd());
   }
 
   @Override

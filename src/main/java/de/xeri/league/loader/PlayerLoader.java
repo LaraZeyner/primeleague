@@ -6,7 +6,7 @@ import java.util.Set;
 import de.xeri.league.models.league.Account;
 import de.xeri.league.models.league.Player;
 import de.xeri.league.models.league.Team;
-import de.xeri.league.util.Data;
+import de.xeri.league.manager.Data;
 import de.xeri.league.util.io.riot.RiotAccountRequester;
 import de.xeri.league.util.logger.Logger;
 
