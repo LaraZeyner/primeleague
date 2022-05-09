@@ -2,6 +2,7 @@ package de.xeri.league.game.events.items;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import de.xeri.league.game.models.JSONPlayer;
 import de.xeri.league.models.dynamic.Item;
@@ -37,7 +38,7 @@ public class Inventory {
         final int itemId = event.getInt("itemId");
         if (Item.has((short) itemId)) {
           item = Item.find((short) itemId);
-          balance = item.getCost() * -1;
+          balance = (int) (item.getCost() * -0.5);
           transactionType = ItemTransactionType.ADD;
         } else {
           continue;
@@ -106,7 +107,7 @@ public class Inventory {
   }
 
   public List<ItemStack> getItemsAt(int millis) {
-    val items = new ArrayList<ItemStack>();
+    var items = new ArrayList<ItemStack>();
     var trinket = Item.find("Stealth Ward");
     for (ItemTransaction transaction : transactions) {
       if (transaction.getTimestamp() <= millis) {
@@ -128,7 +129,30 @@ public class Inventory {
     }
 
     items.add(new ItemStack(trinket));
+    checkItemSize(items);
     return items;
+  }
+
+  private void checkItemSize(ArrayList<ItemStack> items) {
+    if (items.size() > 7) {
+      boolean nullTrinket = items.contains(null);
+      int min = items.stream()
+          .filter(Objects::nonNull)
+          .filter(itemStack -> itemStack.getItem() != null)
+          .mapToInt(itemStack -> itemStack.getItem().getCost()).min().orElse(-1);
+      if (min > -1) {
+        final ItemStack toRemove = items.stream().filter(itemStack -> itemStack.getItem().getCost() == min).findFirst().orElse(null);
+        if (toRemove != null) {
+          items.remove(toRemove);
+          if (items.size() > 6) {
+            checkItemSize(items);
+          }
+        }
+      }
+      if (nullTrinket) {
+        items.add(null);
+      }
+    }
   }
 
   private void addItem(List<ItemStack> items, Item item) {
@@ -136,12 +160,9 @@ public class Inventory {
     if (stack != null && item.getType().equals(ItemType.CONSUMABLE)) {
       stack.add();
 
-    } else if (items.size() < 6) {
+    } else {
       val stack1 = new ItemStack(item);
       items.add(stack1);
-
-    } else {
-      throw new IndexOutOfBoundsException("Nur Platz fuer 6 Items + Trinket");
     }
   }
 
@@ -166,13 +187,15 @@ public class Inventory {
   public List<Reset> getResets() {
     val resets = new ArrayList<Reset>();
     for (ItemTransaction transaction : transactions) {
-      val validReset = resets.stream()
-          .filter(reset -> reset.getEnd() >= transaction.getTimestamp() - Const.TIME_BETWEEN_FIGHTS * 1000)
-          .findFirst().orElse(null);
-      if (validReset == null) {
-        resets.add(new Reset(player, transaction));
-      } else {
-        validReset.addTransaction(transaction);
+      if (transaction.getTimestamp() >= 60_000) {
+        val validReset = resets.stream()
+            .filter(reset -> reset.getEnd() >= transaction.getTimestamp() - 90_000)
+            .findFirst().orElse(null);
+        if (validReset == null) {
+          resets.add(new Reset(player, transaction));
+        } else {
+          validReset.addTransaction(transaction);
+        }
       }
     }
     return resets;

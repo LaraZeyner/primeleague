@@ -63,7 +63,7 @@ public class Reset {
   }
 
   public int getGoldUnspent() {
-    return getGoldPreReset() - transactions.stream().mapToInt(ItemTransaction::getBalance).sum();
+    return getGoldPreReset() + transactions.stream().mapToInt(ItemTransaction::getBalance).sum();
   }
 
   public List<ItemStack> getInventory() {

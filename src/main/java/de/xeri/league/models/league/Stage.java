@@ -2,6 +2,7 @@ package de.xeri.league.models.league;
 
 import java.io.Serializable;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -109,6 +110,10 @@ public class Stage implements Serializable {
     this.stageType = stageType;
     this.stageStart = stageStart;
     this.stageEnd = stageEnd;
+  }
+
+  public boolean isInSeason(Date date) {
+    return season.getSeasonStart().before(date) && season.getSeasonEnd().after(date);
   }
 
   public Matchday addMatchday(Matchday matchday) {

@@ -145,7 +145,8 @@ public class JSONPlayer {
   }
 
   public Byte getTiny(StoredStat challenge, StoredStat alternative) {
-    return getTiny(challenge) != null ? getTiny(challenge) : getTiny(alternative);
+    final Byte stat1 = getTiny(challenge);
+    return stat1 != null ? stat1 : getTiny(alternative);
   }
 
   public JSONObject object(StoredStat storedStat) {
@@ -216,6 +217,17 @@ public class JSONPlayer {
       }
       return value;
     }
+  }
+
+  public int getStatDifference(int start, int end, TimelineStat stat) {
+    if (start < highestMinute) {
+      if (end <= highestMinute) {
+        return getStatAt(end, stat) - getStatAt(start, stat);
+      } else {
+        return getStatAt(highestMinute, stat) - getStatAt(start, stat);
+      }
+    }
+    return 0;
   }
 
   public int getLeadAt(int minute, TimelineStat stat) {

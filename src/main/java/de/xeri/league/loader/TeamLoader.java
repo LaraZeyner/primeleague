@@ -39,7 +39,7 @@ public class TeamLoader {
   private static final Map<Team, Long> updated = new HashMap<>();
 
   public static Team handleTeam(int turnamentId) {
-    return handleTeam(turnamentId, Season.current(), true, null);
+    return handleTeam(turnamentId, Data.getInstance().getCurrentSeason(), true, null);
   }
 
   public static Team handleTeam(int turnamentId, Season season, boolean updateMatches, String name) {
@@ -165,7 +165,7 @@ public class TeamLoader {
       try {
         final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
         final Document doc = Jsoup.parse(html.toString());
-        handleSeason(Season.current(), doc, team);
+        handleSeason(Data.getInstance().getCurrentSeason(), doc, team);
         updated.put(team, System.currentTimeMillis());
         logger.info("Team " + team.getId() + ": " + team.getTeamName() + " aktualisiert");
         return team;

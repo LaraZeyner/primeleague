@@ -5,7 +5,6 @@ import java.util.HashMap;
 import de.xeri.league.models.enums.Elo;
 import de.xeri.league.models.enums.EloQueueType;
 import de.xeri.league.models.league.Account;
-import de.xeri.league.models.league.Season;
 import de.xeri.league.models.league.SeasonElo;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.Data;
@@ -30,7 +29,7 @@ public final class RiotAccountRequester {
 
   public static void loadElo(Account account) {
     if (account != null && account.getSummonerId() != null) {
-      val season = Season.current();
+      val season = Data.getInstance().getCurrentSeason();
       val json = Data.getInstance().getRequester().requestRiotJSON(
           "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/" + account.getSummonerId() + Const.API_KEY);
       if (json != null) {

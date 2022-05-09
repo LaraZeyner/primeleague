@@ -16,7 +16,6 @@ import javax.persistence.Transient;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceSummonerspell;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.HibernateUtil;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -71,7 +70,6 @@ public class Summonerspell implements Serializable {
   private String name;
 
   @OneToMany(mappedBy = "summonerspell")
-  @Getter(AccessLevel.NONE)
   private final Set<PlayerperformanceSummonerspell> summonerspells = new LinkedHashSet<>();
 
   //<editor-fold desc="getter and setter">
@@ -84,7 +82,7 @@ public class Summonerspell implements Serializable {
     if (this == o) return true;
     if (!(o instanceof Summonerspell)) return false;
     final Summonerspell summonerspell = (Summonerspell) o;
-    return getId() == summonerspell.getId() && getName().equals(summonerspell.getName()) && getPlayerperformances().equals(summonerspell.getPlayerperformances());
+    return getId() == summonerspell.getId() && getName().equals(summonerspell.getName());
   }
 
   @Override

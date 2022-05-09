@@ -72,7 +72,7 @@ public class Item_Stat implements Serializable {
   public Item_Stat(Item item, ItemStat stat, double statAmount) {
     this.item = item;
     this.stat = stat;
-    this.statAmount = new BigDecimal(statAmount);
+    this.statAmount = BigDecimal.valueOf(statAmount);
   }
 
   //<editor-fold desc="getter and setter">
@@ -82,7 +82,7 @@ public class Item_Stat implements Serializable {
   }
 
   public void setStatAmount(double statAmount) {
-    this.statAmount = new BigDecimal(statAmount);
+    this.statAmount = BigDecimal.valueOf(statAmount);
   }
 
   public ItemStat getStat() {

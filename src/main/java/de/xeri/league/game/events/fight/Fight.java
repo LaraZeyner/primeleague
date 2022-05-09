@@ -12,6 +12,7 @@ import de.xeri.league.game.events.location.Position;
 import de.xeri.league.game.models.JSONPlayer;
 import de.xeri.league.game.models.TimelineStat;
 import de.xeri.league.models.enums.Lane;
+import de.xeri.league.models.enums.StoredStat;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.Util;
 import lombok.val;
@@ -146,14 +147,23 @@ public class Fight {
     final int start = getStart(player);
     int end = getEnd(player);
     if (end == start) {
-      end++;
+      end+= 60_000;
     }
-    return damageBetween(player, start, end);
+    if (end / 60_000 <= player.getLastMinute()) {
+      return damageBetween(player, start, end);
+    }
+    return 0;
   }
 
   private static int damageBetween(JSONPlayer player, int start, int end) {
     final int startDamage = player.getStatAt(start / 60_000, TimelineStat.DAMAGE);
-    final int endDamage = player.getStatAt(end / 60_000, TimelineStat.DAMAGE);
+    final int endDamage;
+    if (end / 60_000 <= player.getLastMinute()) {
+      endDamage = player.getStatAt(end / 60_000, TimelineStat.DAMAGE);
+    } else {
+      endDamage = player.getMedium(StoredStat.DAMAGE_TOTAL);
+    }
+
     return endDamage - startDamage;
   }
 

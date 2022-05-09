@@ -74,22 +74,24 @@ public class JSONTeam {
 
   public Map<Team, List<JSONPlayer>> getTeams() {
     final Map<Team, List<JSONPlayer>> map = new HashMap<>();
-    allPlayers.stream().filter(JSONPlayer::hasTeam).forEach(player -> {
-      player.getTeams().forEach(team -> {
-        if (map.containsKey(team)) {
-          map.get(team).add(player);
-        } else  {
-          map.put(team, new ArrayList<>(Collections.singletonList(player)));
+    for (JSONPlayer player : allPlayers) {
+      if (player.hasTeam()) {
+        for (Team team : player.getTeams()) {
+          if (map.containsKey(team)) {
+            map.get(team).add(player);
+          } else {
+            map.put(team, new ArrayList<>(Collections.singletonList(player)));
+          }
         }
-      });
-      if (player.getOfficialTeam() != null && !player.getTeams().contains(player.getOfficialTeam())) {
-        if (map.containsKey(player.getOfficialTeam())) {
-          map.get(player.getOfficialTeam()).add(player);
-        } else  {
-          map.put(player.getOfficialTeam(), new ArrayList<>(Collections.singletonList(player)));
+        if (player.getOfficialTeam() != null && !player.getTeams().contains(player.getOfficialTeam())) {
+          if (map.containsKey(player.getOfficialTeam())) {
+            map.get(player.getOfficialTeam()).add(player);
+          } else {
+            map.put(player.getOfficialTeam(), new ArrayList<>(Collections.singletonList(player)));
+          }
         }
       }
-    });
+    }
     return map;
   }
 

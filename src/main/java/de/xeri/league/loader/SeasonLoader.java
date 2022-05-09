@@ -51,7 +51,7 @@ public final class SeasonLoader {
       Data.getInstance().commit();
 
       //TODO Do this at night
-      updateSeason(Season.current().getId());
+      updateSeason(Data.getInstance().getCurrentSeason().getId());
       logger.info("Season wurde aktualisiert.");
 
     } catch (FileNotFoundException exception) {

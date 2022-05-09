@@ -1,6 +1,11 @@
 package de.xeri.league.loader;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import de.xeri.league.models.league.Account;
+import de.xeri.league.models.league.Player;
+import de.xeri.league.models.league.Team;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.io.riot.RiotAccountRequester;
 import de.xeri.league.util.logger.Logger;
@@ -12,12 +17,29 @@ public final class PlayerLoader {
   static {
     Logger logger = Logger.getLogger("Spieler laden");
 
-    Account.get().stream().filter(Account::isValueable).filter(Account::isActive).forEach(RiotAccountRequester::loadElo);
-    logger.info("Elos wurden aktualisiert.");
-    Account.get().stream().filter(a -> !a.isActive()).filter(Account::isPlaying).forEach(a -> a.setActive(true));
-    Account.get().stream().filter(Account::isValueable).filter(Account::isActive).forEach(GameIdLoader::loadGameIds);
-    logger.info("Aktuelle Liga wurde aktualisiert.");
-    Account.get().stream().filter(a -> !a.isValueable()).filter(Account::isActive).forEach(GameIdLoader::loadGameIds);
+    Set<Team> teamList = new LinkedHashSet<>(Data.getInstance().getCurrentGroup().getTeams());
+    teamList.addAll(Team.findScrim());
+
+    for (Team team : teamList) {
+      for (Player player : team.getPlayers()) {
+        final Account account = player.getActiveAccount();
+        if (account != null) {
+          if (account.isActive()) {
+            if (account.isValueable()) {
+              RiotAccountRequester.loadElo(account);
+            }
+            GameIdLoader.loadGameIds(account);
+            logger.info("Spieler " + player.getName() + " geladen");
+
+          } else if (!account.isActive()) {
+            if (account.isPlaying()) {
+              account.setActive(true);
+            }
+          }
+        }
+      }
+    }
+
     logger.info("Alle Spieler wurden aktualisiert.");
   }
 

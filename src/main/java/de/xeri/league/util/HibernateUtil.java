@@ -38,6 +38,10 @@ import de.xeri.league.models.match.ChampionSelection;
 import de.xeri.league.models.match.Game;
 import de.xeri.league.models.match.GamePause;
 import de.xeri.league.models.match.Gametype;
+import de.xeri.league.models.match.ScheduledGame;
+import de.xeri.league.models.match.Teamperformance;
+import de.xeri.league.models.match.TeamperformanceBounty;
+import de.xeri.league.models.match.neu.Rating;
 import de.xeri.league.models.match.playerperformance.JunglePath;
 import de.xeri.league.models.match.playerperformance.Playerperformance;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceInfo;
@@ -46,10 +50,6 @@ import de.xeri.league.models.match.playerperformance.PlayerperformanceKill;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceLevel;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceObjective;
 import de.xeri.league.models.match.playerperformance.PlayerperformanceSummonerspell;
-import de.xeri.league.models.match.ScheduledGame;
-import de.xeri.league.models.match.Teamperformance;
-import de.xeri.league.models.match.TeamperformanceBounty;
-import de.xeri.league.models.match.neu.Rating;
 import de.xeri.league.models.others.ChampionRelationship;
 import de.xeri.league.models.others.Playstyle;
 import de.xeri.league.util.logger.Logger;
@@ -138,6 +138,18 @@ public final class HibernateUtil {
     return query.list();
   }
 
+  public static <T> List<T> findList(Class<T> entityClass, String identifier, boolean bool) {
+    if (bool) {
+      final Session session = Data.getInstance().getSession();
+      final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
+      final String entityClassName = storedEntity.getName();
+
+      final Query<T> query = session.getNamedQuery(entityClassName + "." + identifier);
+      return query.list();
+    }
+    return findList(entityClass, identifier);
+  }
+
   public static <T> List<T> findList(Class<T> entityClass, long primaryKey) {
     return findList(entityClass, String.valueOf(primaryKey));
   }
@@ -174,27 +186,24 @@ public final class HibernateUtil {
     try {
       return performSingle(entityClass, primaryKey);
     } catch (NoResultException exception) {
-      Logger.getLogger("Entity-Query").attention("Eintrag nicht vorhanden", exception);
+      return null;
     }
-    return null;
   }
 
   public static <T> T find(Class<T> entityClass, String[] params, Object[] values) {
     try {
       return performSingle(entityClass, params, values, "findBy");
     } catch (NoResultException exception) {
-      Logger.getLogger("Entity-Query").warning("Eintrag nicht vorhanden", exception);
+      return null;
     }
-    return null;
   }
 
   public static <T> T find(Class<T> entityClass, String[] params, Object[] values, String subQuery) {
     try {
       return performSingle(entityClass, params, values, subQuery);
     } catch (NoResultException exception) {
-      Logger.getLogger("Entity-Query").warning("Eintrag nicht vorhanden", exception);
+      return null;
     }
-    return null;
   }
 
   public static <T> boolean has(Class<T> entityClass, long primaryKey) {
@@ -266,7 +275,7 @@ public final class HibernateUtil {
       final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
       return query.setMaxResults(1).getSingleResult();
     } catch (ClassCastException ex) {
-     ex.printStackTrace();
+      ex.printStackTrace();
     }
     return null;
   }

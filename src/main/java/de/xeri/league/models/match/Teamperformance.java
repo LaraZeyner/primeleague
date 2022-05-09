@@ -287,7 +287,7 @@ public class Teamperformance implements Serializable {
   }
 
   public void setRiftTurrets(double riftTurrets) {
-    this.riftTurrets = new BigDecimal(riftTurrets);
+    this.riftTurrets = BigDecimal.valueOf(riftTurrets);
   }
 
   //</editor-fold>

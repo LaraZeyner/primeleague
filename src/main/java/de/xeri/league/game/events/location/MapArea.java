@@ -4,6 +4,7 @@ import java.awt.Polygon;
 import java.util.Arrays;
 import java.util.List;
 
+import de.xeri.league.models.enums.Lane;
 import de.xeri.league.util.Util;
 import lombok.Getter;
 
@@ -12,6 +13,20 @@ import lombok.Getter;
  */
 @Getter
 public class MapArea {
+
+  public static Lane getNearestLane(Position position) {
+    final double topDistance = Util.distance(TOPLANE.getCenter(), position);
+    final double midDistance = Util.distance(MIDLANE.getCenter(), position);
+    final double botDistance = Util.distance(BOTLANE.getCenter(), position);
+    final double min = Math.min(Math.min(topDistance, midDistance), botDistance);
+    if (min == topDistance) {
+      return Lane.TOP;
+    } else if (min == botDistance) {
+      return Lane.BOTTOM;
+    }
+    return Lane.MIDDLE;
+  }
+
   private static final RelativePosition TOPLANE_BLUE_OUTER = new RelativePosition(0, 0.24954); // A
   private static final RelativePosition TOPLANE_BLUE_INNER = new RelativePosition(0.11409, 0.24954); // B
   private static final RelativePosition TOPLANE_INNER_LEFT = new RelativePosition(0.11409, 0.60708); // C

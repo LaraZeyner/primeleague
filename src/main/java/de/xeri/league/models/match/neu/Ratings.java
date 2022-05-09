@@ -105,7 +105,7 @@ public class Ratings {
       return handleValues(legendaryItems, itemsBought, mejaisTime, grievousWoundsAndPenetrationTime, startitemSold);
 
     } else if (subcategory.equals(StatSubcategory.SURVIVAL)) {
-      return handleValues(playtimeLive, timeWithoutDying, survivedClose, deathPositioning);
+      return handleValues(playtimeLive, timeDead, survivedClose, deathPositioning);
 
     } else if (subcategory.equals(StatSubcategory.EARLY_SURVIVAL)) {
       return handleValues(firstKillDeath, firstBaseThroughRecall, laneLeadDeficitThroughDeaths, laneLeadWithoutDeaths);
@@ -288,7 +288,7 @@ public class Ratings {
       .nullable();
 
   public Stat controlWardsProtected = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getWardsGuarded)
+      .map(Playerperformance::getGuardedWards)
       .nullable();
 
   public Stat controlWardsEnemyJungle = new Stat(playerperformances, OutputType.TIME, 2)
@@ -333,7 +333,7 @@ public class Ratings {
       .nullable();
 
   public Stat jungleCampsStolen = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getCreepsInvade)
+      .map(Playerperformance::getInvadedCreeps)
       .nullable();
 
   public Stat midgameGoldXPEfficiency = new Stat(playerperformances, OutputType.PERCENT, 4)
@@ -502,7 +502,7 @@ public class Ratings {
   //</editor-fold>
   //<editor-fold desc="Kategorie 3.2: PLAYMAKING">
   public Stat aggressiveFlash = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getFlashAggressive)
+      .map(Playerperformance::getAggressiveFlash)
       .nullable();
 
   public Stat levelupAllins = new Stat(playerperformances, OutputType.NUMBER, 2)
@@ -778,7 +778,7 @@ public class Ratings {
       .map(p -> p.getStats().getFirstFullItem());
 
   public Stat earlyCreepScore = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getCreepsEarly);
+      .map(Playerperformance::getEarlyCreeps);
 
   public Stat farmSupportitemEfficiency = new Stat(playerperformances, OutputType.PERCENT, 3)
       .map(p -> p.getStats().getEarlyFarmEfficiency())
@@ -790,7 +790,7 @@ public class Ratings {
   public Stat creepsPerMinute = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(p -> p.getStats().getCsPerMinute())
       .nullable()
-      .sub("Total CS", Playerperformance::getCreepsTotal)
+      .sub("Total CS", Playerperformance::getTotalCreeps)
       .sub("Minuten", p -> p.getTeamperformance().getGame().getDuration() * 1d / 60);
 
   public Stat xpPerMinute = new Stat(playerperformances, OutputType.NUMBER, 3)
@@ -806,9 +806,9 @@ public class Ratings {
       .sub("Minuten", p -> p.getTeamperformance().getGame().getDuration() * 1d / 60);
 
   public Stat creepAdvantage = new Stat(playerperformances, OutputType.NUMBER, 2)
-      .map(Playerperformance::getFlamehorizonAdvantage)
+      .map(Playerperformance::getCreepScoreAdvantage)
       .nullable()
-      .sub("Total CS", Playerperformance::getCreepsTotal);
+      .sub("Total CS", Playerperformance::getTotalCreeps);
 
   public Stat trueKDA = new Stat(playerperformances, OutputType.TEXT, 12) {
     @Override
@@ -850,8 +850,10 @@ public class Ratings {
       .sub("Todeszeit", Playerperformance::getTimeDead)
       .sub("Minuten", p -> p.getTeamperformance().getGame().getDuration() * 1d / 60);
 
-  public Stat timeWithoutDying = new Stat(playerperformances, OutputType.TIME, 2)
-      .map(Playerperformance::getTimeAlive);
+  public Stat timeDead = new Stat(playerperformances, OutputType.TIME, 2)
+      .map(p -> p.getStats().getTimeAlive())
+      .reverse()
+      .sub("Längste Zeit am Leben", Playerperformance::getTimeAlive);
 
   public Stat survivedClose = new Stat(playerperformances, OutputType.NUMBER, 2)
       .map(Playerperformance::getSurvivedClose);
@@ -1109,10 +1111,10 @@ public class Ratings {
       .sub("verbleibend", p -> p.getStats().getResetGoldUnspent());
 
   public Stat goldLostThroughResets = new Stat(playerperformances, OutputType.NUMBER, 3)
-      .map(p -> p.getStats().getResetGoldLost())
+      .map(p -> p.getStats().getResetGoldGain())
       .nullable()
       .sub("Resets gesamt", p -> p.getStats().getResets())
-      .sub("Gold pro Reset", p -> p.getStats().getResets() == 0 ? 0 : p.getStats().getResetGoldLost() * 1d / p.getStats().getResets());
+      .sub("Gold pro Reset", p -> p.getStats().getResets() == 0 ? 0 : p.getStats().getResetGoldGain() * 1d / p.getStats().getResets());
 
   public Stat resetsWithTeam = new Stat(playerperformances, OutputType.PERCENT, 3)
       .map(p -> p.getStats().getResetsTogether())
@@ -1484,7 +1486,7 @@ public class Ratings {
 
     @Override
     public double calculate() {
-      return handleValues(playtimeLive, timeWithoutDying, survivedClose, deathPositioning, firstKillDeath, firstBaseThroughRecall,
+      return handleValues(playtimeLive, timeDead, survivedClose, deathPositioning, firstKillDeath, firstBaseThroughRecall,
           laneLeadDeficitThroughDeaths, laneLeadWithoutDeaths, damageShielded, crowdControl, enemiesControlled, teammatesSaved,
           utilityScore, healthState, resourceState, wavesOrJungleClear, planedResets, minionEfficiency, isolationXPEfficiency, wardsUsed,
           damageTrading, resetAmount);

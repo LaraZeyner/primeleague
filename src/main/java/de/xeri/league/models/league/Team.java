@@ -46,6 +46,7 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Team.findAll", query = "FROM Team t")
 @NamedQuery(name = "Team.findById", query = "FROM Team t WHERE id = :pk")
 @NamedQuery(name = "Team.findBy", query = "FROM Team t WHERE teamName = :name")
+@NamedQuery(name = "Team.findByScrim", query = "FROM Team t WHERE scrims = :scrims")
 @NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE turneyId = :tid")
 @Getter
 @Setter
@@ -131,6 +132,10 @@ public class Team implements Serializable {
     }
     final List<Schedule> last = Schedule.last();
     return last.get(last.size() - 1).getEnemyTeam();
+  }
+
+  public static List<Team> findScrim() {
+    return HibernateUtil.findList(Team.class, new String[]{"scrims"}, new Object[]{true}, "findByScrim");
   }
 
   @Id

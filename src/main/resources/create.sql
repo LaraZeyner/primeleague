@@ -143,7 +143,7 @@ CREATE TABLE `game`
     game_id        VARCHAR(16) PRIMARY KEY,
     turnamentmatch INTEGER(7) UNSIGNED  NULL,
     game_start     TIMESTAMP            NOT NULL,
-    duration       SMALLINT(4) UNSIGNED NOT NULL CHECK ( duration > 300 ),
+    duration       SMALLINT(4) UNSIGNED NOT NULL CHECK ( duration > 100 ),
     gametype       SMALLINT(4)          NOT NULL,
     FOREIGN KEY (turnamentmatch) REFERENCES `turnament_match` (match_id)
         ON DELETE RESTRICT ON UPDATE CASCADE

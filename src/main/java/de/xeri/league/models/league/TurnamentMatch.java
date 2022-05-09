@@ -39,6 +39,7 @@ import org.hibernate.annotations.NamedQuery;
 })
 @NamedQuery(name = "TurnamentMatch.findAll", query = "FROM TurnamentMatch t")
 @NamedQuery(name = "TurnamentMatch.findById", query = "FROM TurnamentMatch t WHERE id = :pk")
+@NamedQuery(name = "TurnamentMatch.findByTeams", query = "FROM TurnamentMatch t WHERE homeTeam = :home AND guestTeam = :guest")
 public class TurnamentMatch implements Serializable {
 
   @Transient
@@ -66,6 +67,10 @@ public class TurnamentMatch implements Serializable {
 
   public static TurnamentMatch find(int id) {
     return HibernateUtil.find(TurnamentMatch.class, id);
+  }
+
+  public static TurnamentMatch findTeams(Team home, Team guest) {
+    return HibernateUtil.find(TurnamentMatch.class, new String[]{"home", "guest"}, new Object[]{home, guest});
   }
 
   @Id

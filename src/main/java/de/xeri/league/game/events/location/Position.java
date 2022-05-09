@@ -2,6 +2,7 @@ package de.xeri.league.game.events.location;
 
 import java.io.Serializable;
 
+import de.xeri.league.util.Const;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,7 +33,7 @@ public class Position implements Serializable {
    * @return Aggressionswert
    */
   public double getTotalAggression(boolean blue) {
-    return blue ? ((x + y) / 16_390.0 - 1) : (((x + y) / 16_390.0 - 1) * -1);
+    return blue ? ((x + y) * 1d / Const.MAP_SIZE - 1) : (((x + y) * 1d / Const.MAP_SIZE - 1) * -1);
   }
 
 }

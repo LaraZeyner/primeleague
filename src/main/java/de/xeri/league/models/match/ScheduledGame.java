@@ -1,9 +1,8 @@
 package de.xeri.league.models.match;
 
 import java.io.Serializable;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,6 +24,7 @@ import org.hibernate.annotations.NamedQuery;
 @Table(name = "scheduledgame")
 @NamedQuery(name = "ScheduledGame.findAll", query = "FROM ScheduledGame s")
 @NamedQuery(name = "ScheduledGame.findById", query = "FROM ScheduledGame s WHERE id = :pk")
+@NamedQuery(name = "ScheduledGame.findByMode", query = "FROM ScheduledGame s WHERE queueType = :queue")
 @Getter
 @NoArgsConstructor
 public class ScheduledGame implements Serializable {
@@ -32,18 +32,14 @@ public class ScheduledGame implements Serializable {
   @Transient
   private static final long serialVersionUID = 9033305101470944563L;
 
-  public static Set<ScheduledGame> get() {
-    return new LinkedHashSet<>(HibernateUtil.findList(ScheduledGame.class));
-  }
-
   public static ScheduledGame get(ScheduledGame neu) {
-    if (has(neu.getId())) {
-      final ScheduledGame scheduledGame = find(neu.getId());
-      scheduledGame.setQueueType(neu.getQueueType());
-      return scheduledGame;
+    final ScheduledGame game = find(neu.getId());
+    if (game != null) {
+      return game;
     }
     if (!Game.has(neu.getId())) {
       if (neu.getId().startsWith("EUW")) {
+        Logger.getLogger("Scheduled-Game-Creation").info("Spiel erstellt", neu.getId());
         Data.getInstance().save(neu);
         return neu;
       } else {
@@ -61,6 +57,10 @@ public class ScheduledGame implements Serializable {
 
   public static ScheduledGame find(String id) {
     return HibernateUtil.find(ScheduledGame.class, id);
+  }
+
+  public static List<ScheduledGame> findMode(QueueType queue) {
+    return HibernateUtil.findList(ScheduledGame.class, new String[]{"queue"}, new Object[]{queue}, "findByMode");
   }
 
   @Id

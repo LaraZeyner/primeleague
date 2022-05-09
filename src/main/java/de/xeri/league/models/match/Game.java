@@ -36,6 +36,7 @@ import org.hibernate.annotations.NamedQuery;
 @Table(name = "game", indexes = @Index(name = "turnamentmatch", columnList = "turnamentmatch"))
 @NamedQuery(name = "Game.findAll", query = "FROM Game g")
 @NamedQuery(name = "Game.findById", query = "FROM Game g WHERE id = :pk")
+@NamedQuery(name = "Game.findByTourney", query = "FROM Game g WHERE gametype < :type")
 public class Game implements Serializable {
 
   @Transient
@@ -67,14 +68,14 @@ public class Game implements Serializable {
   }
 
 
+
   public List<GamePause> getNotClosed() {
-    return HibernateUtil.findList(GamePause.class, new String[]{"game", "end"}, new Object[]{this, 0}, "findByEnd");
+    return HibernateUtil.findList(GamePause.class, new String[]{"game", "end"}, new Object[]{this, (long) 0}, "findByEnd");
   }
 
   public List<GamePause> getNotOpened() {
-    return HibernateUtil.findList(GamePause.class, new String[]{"game", "start"}, new Object[]{this, 0});
+    return HibernateUtil.findList(GamePause.class, new String[]{"game", "start"}, new Object[]{this, (long) 0});
   }
-
   @Id
   @Check(constraints = "game_id REGEXP ('^EUW')")
   @Column(name = "game_id", nullable = false, length = 16)

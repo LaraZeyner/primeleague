@@ -12,7 +12,6 @@ import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.util.Data;
 import de.xeri.league.util.io.json.JSON;
 import de.xeri.league.util.io.riot.RiotURLGenerator;
-import de.xeri.league.util.logger.Logger;
 import lombok.val;
 
 /**
@@ -20,16 +19,10 @@ import lombok.val;
  */
 public final class GameIdLoader {
 
-  private static int amount = 0;
-  private final static int max;
-
-  static {
-    max = (int) Account.get().stream().filter(Account::isActive).count();
-  }
-
   public static void loadGameIds(Account account) {
-    loadCompetitive(account);
+    load(QueueType.TOURNEY, account);
     if (account.isValueable()) {
+      load(QueueType.CLASH, account);
       load(QueueType.OTHER, account);
       if (account.getOfficialTeam() == null) {
         account.setActive(account.isPlaying());
@@ -38,25 +31,12 @@ public final class GameIdLoader {
     account.setLastUpdate(new Date());
 
     Data.getInstance().commit();
-    amount++;
-      Logger.getLogger("Game-Ids laden").info("Account " + amount + " von " + max + " geladen.");
   }
-
-
-  private static void loadCompetitive(Account account) {
-    load(QueueType.TOURNEY, account);
-    load(QueueType.CLASH, account);
-  }
-
 
   private static void load(QueueType queueType, Account account) {
     int start = 0;
     while (true) {
       val scheduled = load(queueType, account, start);
-      /* for (ScheduledGame scheduledGame : scheduled) {
-        scheduledGame.setPrioritized(true);
-        Data.getInstance().save(scheduledGame);
-      } */
 
       start += 100;
       if (scheduled != null) {

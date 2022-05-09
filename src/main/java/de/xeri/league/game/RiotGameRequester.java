@@ -27,9 +27,11 @@ public final class RiotGameRequester {
     val matchGenerator = RiotURLGenerator.getMatch();
     val game = matchGenerator.getMatch(scheduledGame.getId());
     val timeline = matchGenerator.getTimeline(scheduledGame.getId());
-    if (new GameAnalyser().validate(game, timeline, queueType))
-      ScheduledGame.get().remove(scheduledGame);
+    if (new GameAnalyser().validate(game, timeline, queueType)) {
+      Data.getInstance().remove(scheduledGame);
+    }
+    System.out.println("Spiel " + scheduledGame.getId() + " geladen");
     Data.getInstance().getSession().remove(scheduledGame);
-    //Data.getInstance().commit();
+    Data.getInstance().commit();
   }
 }

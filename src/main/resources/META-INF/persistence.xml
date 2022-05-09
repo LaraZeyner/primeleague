@@ -50,7 +50,9 @@
         <class>de.xeri.league.models.match.neu.Rating</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
-            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/test?serverTimezone=UTC" />
+            <property name="javax.persistence.jdbc.url" value="jdbc:mysql://45.85.219.163:3306/trues?serverTimezone=UTC"/>
+            <!-- <property name="javax.persistence.jdbc.url"
+                         value="jdbc:mysql://localhost:3306/test?serverTimezone=UTC" /> -->
             <property name="javax.persistence.jdbc.user" value="trues" />
             <property name="javax.persistence.jdbc.password" value="Trueszugriff1!" />
         </properties>
