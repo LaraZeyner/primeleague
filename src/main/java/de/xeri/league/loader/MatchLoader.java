@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -191,6 +192,7 @@ public final class MatchLoader {
     val teamReady = logs.stream()
         .filter(log -> log.getLogAction().equals(LogAction.SUBMIT))
         .map(Matchlog::getTeam)
+        .filter(Objects::nonNull)
         .collect(Collectors.toCollection(LinkedHashSet::new));
     if (teamReady.size() == 2) return Matchstate.LINEUPS_SUBMITTED;
     if (teamReady.size() == 1) return Matchstate.LINEUP_SUBMITTED;

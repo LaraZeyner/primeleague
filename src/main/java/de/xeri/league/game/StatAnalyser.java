@@ -70,6 +70,7 @@ public final class StatAnalyser {
 
     final long recallsPlanned = resets.stream()
         .filter(Reset::wasRecall)
+        .filter(reset -> reset.getGoldUnspent() >= -200)
         .filter(reset -> reset.getGoldUnspent() < Const.RESET_PLANNED_LIMIT).count();
     final double resetsPlanned = Util.div(recallsPlanned, resets.size());
     stats.setPlannedResets(BigDecimal.valueOf(resetsPlanned));
@@ -81,6 +82,7 @@ public final class StatAnalyser {
     stats.setResetGold((short) averageGoldAmount);
     final double averageGoldUnspent = resets.stream()
         .filter(Objects::nonNull)
+        .filter(reset -> reset.getGoldUnspent() >= -200)
         .mapToInt(Reset::getGoldUnspent)
         .average().orElse(0);
     stats.setResetGoldUnspent((short) averageGoldUnspent);
@@ -121,7 +123,9 @@ public final class StatAnalyser {
       stats.setFirstBaseResetGold((short) resetGold);
 
       final int unspentGold = firstBase.getGoldUnspent();
-      stats.setFirstBaseGoldUnspent((short) unspentGold);
+      if (unspentGold >= -200) {
+        stats.setFirstBaseGoldUnspent((short) unspentGold);
+      }
     }
 
     val secondBase = player.getInventory().getResets().size() < 2 ? null : player.getInventory().getResets().get(1);
@@ -804,7 +808,7 @@ public final class StatAnalyser {
           .filter(reset -> reset.getStart() < 420_000)
           .mapToInt(Reset::getDuration).sum();
       final int maxSeconds = 330 - resetTime / 1000;
-      if (playerperformance != null) {
+      if (playerperformance != null && maxSeconds > durationInSeconds) {
         playerperformance.getTeamperformance().setJungleTimeWasted((short) (maxSeconds - durationInSeconds));
       }
 

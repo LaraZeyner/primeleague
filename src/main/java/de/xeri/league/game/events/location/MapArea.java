@@ -52,7 +52,7 @@ public class MapArea {
   private static final RelativePosition BOTLANE_RED_RIVER = new RelativePosition(0.81452, 0.32154); // W
   private static final RelativePosition MID_BOT_RED_RIVER = new RelativePosition(0.63575, 0.5); // X
 
-  private static final MapArea MAP = new MapArea(SuperArea.ALL, new RelativePosition(0.5, 0.5)).add(
+  public static final MapArea MAP = new MapArea(SuperArea.ALL, new RelativePosition(0.5, 0.5)).add(
       BASE_BLUE, BOTLANE_ALCOVE, BASE_RED, TOPLANE_ALCOVE);
 
   public static final MapArea TOPLANE = new MapArea(SuperArea.LANE, new RelativePosition(0.11409, 0.88591)).add(

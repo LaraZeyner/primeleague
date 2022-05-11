@@ -72,24 +72,22 @@
                         <p class="p-m-0">
                             <h:form>
                                 <div class="card">
-                                    <h5>Tabelle #{shortTable.leagueName}</h5>
-                                    <p:dataTable lazy="false" var="team" value="#{shortTable.teams}" size="small">
-                                           <p:column headerText="Abbr">
-                                             <!--<h:graphicImage value="#{team.logoUrl}" /> -->
-                                              <h:outputText value="#{team.abbreviation}" />
-                                          </p:column>
-
-                                          <p:column headerText="Win">
-                                              <h:outputText value="#{team.winsPerMatch}" />
-                                          </p:column>
-
-                                          <p:column headerText="Score">
-                                              <h:outputText value="#{team.teamScore}" />
-                                          </p:column>
-
-                                          <p:column headerText="S  U  N">
-                                              <h:outputText value="#{team.bilance}" />
+                                    <h5>Tabelle #{infos.leagueName}</h5>
+                                    <p:dataTable lazy="false" var="team" value="#{shortTable.teams}" size="small"
+                                                 rowIndexVar="rowIndex" showGridlines="false"
+                                                 style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
+                                                 'row-down' : (rowIndex lt 2 ? 'row-up' : (rowIndex eq 2 ?
+                                                 'row-limit-upper' : (rowIndex eq 5 ? 'row-limit-bottiom' :
+                                                 'row-stay')))}">
+                                        <p:column width="4%" headerText="Pl">#{team.place}</p:column>
+                                        <p:column width="15%">
+                                            <h:graphicImage style="width: 100%" value="#{team.logoUrl}"/>
                                         </p:column>
+                                        <p:column width="31%" headerText="Team"
+                                                  style="font-weight: bold">#{team.abbreviation}</p:column>
+                                        <p:column width="14%" headerText="Win">#{team.winsPerMatch}</p:column>
+                                        <p:column width="14%" headerText="Pkt.">#{team.teamScore}</p:column>
+                                        <p:column width="22%" headerText="SUN">#{team.bilance}</p:column>
                                     </p:dataTable>
                                 </div>
                             </h:form>

@@ -62,6 +62,11 @@ public class Reset {
     return Math.min(end, player.getHighestMinute() * 60_000);
   }
 
+  public int getLastPurchase() {
+    final int end = transactions.stream().mapToInt(ItemTransaction::getTimestamp).max().orElse(-20_001) + 20_000;
+    return Math.min(end, player.getHighestMinute() * 60_000);
+  }
+
   public int getGoldUnspent() {
     return getGoldPreReset() + transactions.stream().mapToInt(ItemTransaction::getBalance).sum();
   }

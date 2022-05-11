@@ -627,7 +627,7 @@ CREATE TABLE `playerperformance`
     base_first_controlled               SMALLINT(4) UNSIGNED NULL,
     base_first_lead                     SMALLINT(4)          NULL,
     base_first_gold                     SMALLINT(4) UNSIGNED NULL,
-    base_first_gold_unspent             SMALLINT(4) UNSIGNED NULL,
+    base_first_gold_unspent             SMALLINT(4)          NULL,
     base_recall                         DECIMAL(9, 7)        NULL,
     base_planned                        DECIMAL(9, 7)        NULL,
     base_total                          SMALLINT(3) UNSIGNED NULL,

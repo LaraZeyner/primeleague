@@ -379,7 +379,7 @@ public class Ratings {
       .nullable()
       .sub("Earlgame Ganks", Playerperformance::getGanksEarly);
 
-  public Stat ganksEarlygameSpottedAndTimeWasted = new Stat(playerperformances, OutputType.NUMBER, 3)
+  public Stat ganksEarlygameSpottedAndTimeWasted = new Stat(playerperformances, OutputType.TIME, 3)
       .map(p -> p.getTeamperformance().getOtherTeamperformance().getJungleTimeWasted())
       .nullable()
       .sub("Jungle Time verloren", p -> p.getTeamperformance().getOtherTeamperformance().getJungleTimeWasted())

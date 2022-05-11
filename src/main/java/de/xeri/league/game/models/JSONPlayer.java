@@ -73,7 +73,8 @@ public class JSONPlayer {
   }
 
   public Lane getLane() {
-    return Lane.valueOf(get(StoredStat.LANE));
+    final String laneName = get(StoredStat.LANE);
+    return laneName.equals("") ? Lane.UNKNOWN : Lane.valueOf(laneName);
   }
 
   public String get(StoredStat storedStat) {

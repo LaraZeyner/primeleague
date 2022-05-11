@@ -4,8 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui"
->
+      xmlns:p="http://primefaces.org/ui">
 <h:head>
     <title>Technical Really Unique Esports</title>
     <h:outputStylesheet library="css" name="styles.css"/>
@@ -21,30 +20,52 @@
     <h:panelGrid styleClass="maincontrainer" columns="2">
         <h:panelGroup styleClass="content" id="content" layout="block">
             <h:form>
-               <!-- <p:dataTable var="team" value="#{shortTable.teams}" size="small">
-                    <p:column headerText="Abbr">
-                        <h:graphicImage value="#{team.logoUrl}"/>
-                        <h:outputText value="#{team.abbreviation}"/>
-                    </p:column>
-
-                    <p:column headerText="Win">
-                        <h:outputText value="#{team.winsPerMatch}"/>
-                    </p:column>
-
-                    <p:column headerText="Score">
-                        <h:outputText value="#{team.teamScore}"/>
-                    </p:column>
-
-                    <p:column headerText="S  U  N">
-                        <h:outputText value="#{team.bilance}"/>
-                    </p:column>
-                </p:dataTable>-->
+                <div class="card">
+                    <h5>Tabelle #{infos.leagueName}</h5>
+                    <p:dataTable lazy="false" var="team" value="#{shortTable.teams}" size="small"
+                                 rowIndexVar="rowIndex" showGridlines="false" rowKey="#{team.TId}"
+                                 style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
+                                                 'row-down' : (rowIndex lt 2 ? 'row-up' : (rowIndex eq 2 ?
+                                                 'row-limit-upper' : (rowIndex eq 5 ? 'row-limit-bottiom' :
+                                                 'row-stay')))}">
+                        <p:column width="1%"><p:rowToggler/></p:column>
+                        <p:column width="1%" headerText="Pl">#{team.place}</p:column>
+                        <p:column width="3%"><h:graphicImage style="width: 80%" value="#{team.logoUrl}"/></p:column>
+                        <p:column width="10%" style="font-weight: bold" headerText="Team">#{team.name}</p:column>
+                        <p:column headerText="Win">#{team.winsPerMatch}</p:column>
+                        <p:column headerText="Pkt.">#{team.teamScore}</p:column>
+                        <p:column headerText="SUN">#{team.bilance}</p:column>
+                        <p:column headerText="Kills" style="font-weight: bolder">#{team.killDiff}</p:column>
+                        <p:column style="font-weight: lighter">#{team.killsPerMatch}</p:column>
+                        <p:column headerText="Gold" style="font-weight: bolder">#{team.goldDiff}</p:column>
+                        <p:column style="font-weight: lighter">#{team.goldPerMatch}</p:column>
+                        <p:column headerText="Creeps" style="font-weight: bolder">#{team.creepDiff}</p:column>
+                        <p:column style="font-weight: lighter">#{team.creepPerMatch}</p:column>
+                        <p:column headerText="Objec." style="font-weight: bolder">#{team.objectivesPerMatch}</p:column>
+                        <p:column headerText="Towers">#{team.towersPerMatch}</p:column>
+                        <p:column headerText="Drakes">#{team.drakesPerMatch}</p:column>
+                        <p:column headerText="Inhibs">#{team.inhibsPerMatch}</p:column>
+                        <p:column headerText="Heralds">#{team.heraldsPerMatch}</p:column>
+                        <p:column headerText="Barons">#{team.baronsPerMatch}</p:column>
+                        <p:column headerText="Dauer" style="font-weight: bolder">#{team.matchTime}</p:column>
+                        <p:column headerText="Wins" style="font-weight: lighter">#{team.matchTimeWins}</p:column>
+                        <p:column headerText="Losses" style="font-weight: lighter">#{team.matchTimeLosses}</p:column>
+                        <p:rowExpansion>
+                            <div class="product">
+                            </div>
+                        </p:rowExpansion>
+                    </p:dataTable>
+                </div>
             </h:form>
+
+            <br/>
+
+
             Lorem ipsum dolorsit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum.
         </h:panelGroup>
-        <ui:insert name="sidebar">
+        <!--<ui:insert name="sidebar">
             <ui:include src="/templates/sidebar.xhtml"/>
-        </ui:insert>
+        </ui:insert>-->
     </h:panelGrid>
 </h:body>
 </html>

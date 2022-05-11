@@ -334,7 +334,7 @@ public class Team implements Serializable {
     }
     final int games = wins + ties + defeats;
     final double winsPerMatch = games == 0 ? 0 : score1 * 1d / games;
-    return Math.round(winsPerMatch * 100) + "%";
+    return Math.round(winsPerMatch * 50) + "%";
   }
 
   public String getTeamScore() {
@@ -380,16 +380,27 @@ public class Team implements Serializable {
   //</editor-fold>
 
 
-  public int getMatchtime() {
-    int wintime = (int) getLeaguePerformances().stream()
+  public String getMatchtime() {
+    int time = (int) getLeaguePerformances().stream()
+        .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
+        .average().orElse(0);
+    return time / 60 + (time % 60 < 10 ? ":0" : ":") + time % 60;
+  }
+
+  public String getWintime() {
+    int time = (int) getLeaguePerformances().stream()
         .filter(Teamperformance::isWin)
         .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
         .average().orElse(0);
-    int losetime = (int) getLeaguePerformances().stream()
+    return time / 60 + (time % 60 < 10 ? ":0" : ":") + time % 60;
+  }
+
+  public String getLosetime() {
+    int time = (int) getLeaguePerformances().stream()
         .filter(teamperformance -> !teamperformance.isWin())
         .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
         .average().orElse(0);
-    return wintime + losetime;
+    return time / 60 + (time % 60 < 10 ? ":0" : ":") + time % 60;
   }
 
   public int getGames() {

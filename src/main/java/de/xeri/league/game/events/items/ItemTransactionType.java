@@ -5,5 +5,6 @@ package de.xeri.league.game.events.items;
  */
 public enum ItemTransactionType {
   ADD,
-  REMOVE
+  REMOVE,
+  REMOVE_USE
 }

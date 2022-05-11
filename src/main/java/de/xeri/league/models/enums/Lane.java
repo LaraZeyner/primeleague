@@ -15,7 +15,8 @@ public enum Lane {
   JUNGLE("JGL", "none", MapArea.TOP_BLUE_JUNGLE, MapArea.BOT_BLUE_JUNGLE, MapArea.TOP_RED_JUNGLE, MapArea.BOT_RED_JUNGLE),
   MIDDLE("MID", "MID_LANE", MapArea.MIDLANE),
   BOTTOM("BOT", "BOT_LANE", MapArea.BOTLANE),
-  UTILITY("SUP", "BOT_LANE", MapArea.BOTLANE);
+  UTILITY("SUP", "BOT_LANE", MapArea.BOTLANE),
+  UNKNOWN("MAP", "MAP", MapArea.MAP);
 
   private final String abbreviation;
   private final String type;

@@ -32,7 +32,6 @@ import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.enums.SelectionType;
 import de.xeri.league.models.enums.StoredStat;
 import de.xeri.league.models.league.Account;
-import de.xeri.league.models.league.Stage;
 import de.xeri.league.models.league.Team;
 import de.xeri.league.models.league.TurnamentMatch;
 import de.xeri.league.models.match.ChampionSelection;
@@ -80,55 +79,56 @@ public final class GameAnalyser {
 
       val metadata = gameData.getJSONObject("metadata");
       val gameId = metadata.getString("matchId");
-      final JSONObject timelineObject = timelineJson.getJSONObject();
-      final Map<Integer, JSONObject> playerInfo = timelineObject != null ? loadTimeline(timelineObject) : new HashMap<>();
-
-      final String tCode = info.getString("tournamentCode");
-      val gametype = Gametype.find((short) (tCode.equals("") ? queueId :  -1));
-      val game = handleGame(info, gameId, gametype);
-      gametype.addGame(game, gametype);
-
-      createJsonTeams(participants, playerInfo);
-
-      val fights = handleGameEvents(game);
-      handleEventsForTeams();
-      for (int i = 0; i < jsonTeams.size(); i++) {
-        val jsonTeam = jsonTeams.get(i);
-        val teams = info.getJSONArray("teams");
-        jsonTeam.setTeamObject(teams.getJSONObject(i));
-        determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
+      Map<Integer, JSONObject> playerInfo = new HashMap<>();
+      if (timelineJson != null) {
+        final JSONObject timelineObject = timelineJson.getJSONObject();
+        playerInfo = timelineObject != null ? loadTimeline(timelineObject) : new HashMap<>();
       }
+        final String tCode = info.getString("tournamentCode");
+        val gametype = Gametype.find((short) (tCode.equals("") ? queueId : -1));
+        val game = handleGame(info, gameId, gametype);
+        gametype.addGame(game, gametype);
 
-      System.out.println("Load Players" + (System.currentTimeMillis() - millis));
-      for (final JSONTeam jsonTeam : jsonTeams) {
-        if (jsonTeam.doesExist()) {
-          val teamperformance = handleTeam(jsonTeam);
-          val team = jsonTeam.getMostUsedTeam(queueType);
-          game.addTeamperformance(teamperformance, team);
-          handleTeamEvents(teamperformance);
+        createJsonTeams(participants, playerInfo);
 
-          val players = determinePlayers(queueType, jsonTeam);
-          players.forEach(player -> handlePlayer(player, teamperformance, fights));
+        val fights = handleGameEvents(game);
+        handleEventsForTeams();
+        for (int i = 0; i < jsonTeams.size(); i++) {
+          val jsonTeam = jsonTeams.get(i);
+          val teams = info.getJSONArray("teams");
+          jsonTeam.setTeamObject(teams.getJSONObject(i));
+          determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
         }
-      }
-      final List<Team> teams = game.getTeamperformances().stream()
-          .filter(Objects::nonNull)
-          .map(Teamperformance::getTeam)
-          .collect(Collectors.toList());
-      if (teams.size() == 2 && game.getGametype().getId() < 1) {
-        List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
-        turnamentMatches.addAll(teams.get(0).getMatchesGuest());
-        final List<TurnamentMatch> collect = turnamentMatches.stream()
-            .filter(TurnamentMatch::isOpen)
-            .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
-            .filter(match -> match.hasTeam(teams.get(1)))
+
+        System.out.println("Load Players" + (System.currentTimeMillis() - millis));
+        for (final JSONTeam jsonTeam : jsonTeams) {
+          if (jsonTeam.doesExist()) {
+            val teamperformance = handleTeam(jsonTeam);
+            val team = jsonTeam.getMostUsedTeam(queueType);
+            game.addTeamperformance(teamperformance, team);
+            handleTeamEvents(teamperformance);
+
+            val players = determinePlayers(queueType, jsonTeam);
+            players.forEach(player -> handlePlayer(player, teamperformance, fights));
+          }
+        }
+        final List<Team> teams = game.getTeamperformances().stream()
+            .filter(Objects::nonNull)
+            .map(Teamperformance::getTeam)
             .collect(Collectors.toList());
+        if (teams.size() == 2 && game.getGametype().getId() < 1) {
+          List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
+          turnamentMatches.addAll(teams.get(0).getMatchesGuest());
+          final List<TurnamentMatch> collect = turnamentMatches.stream()
+              .filter(TurnamentMatch::isOpen)
+              .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
+              .filter(match -> match.hasTeam(teams.get(1)))
+              .collect(Collectors.toList());
 
-        for (TurnamentMatch turnamentMatch : collect) {
-          final Stage stage = turnamentMatch.getMatchday().getStage();
+          for (TurnamentMatch turnamentMatch : collect) {
+            turnamentMatch.addGame(game);
+          }
         }
-
-      }
 
 
       System.out.println("Match erstellt!");
@@ -146,13 +146,14 @@ public final class GameAnalyser {
       final int teamId = participant.getInt("teamId");
       val jsonPlayer = new JSONPlayer(i, participant, puuid, teamId == 100, highestMinute);
       val team = getTeam(teamId);
-      for (int timestamp : playerInfo.keySet()) {
-        int minute = timestamp / 60_000;
-        val frame = playerInfo.get(timestamp);
-        val infoStats = frame.getJSONObject(String.valueOf(jsonPlayer.getId() + 1));
-        jsonPlayer.addInfo(infoStats, minute);
+      if (playerInfo != null) {
+        for (int timestamp : playerInfo.keySet()) {
+          int minute = timestamp / 60_000;
+          val frame = playerInfo.get(timestamp);
+          val infoStats = frame.getJSONObject(String.valueOf(jsonPlayer.getId() + 1));
+          jsonPlayer.addInfo(infoStats, minute);
+        }
       }
-
       team.addPlayer(jsonPlayer);
     }
   }
@@ -291,7 +292,8 @@ public final class GameAnalyser {
     final boolean firstBlood = p.getBool(StoredStat.FIRST_BLOOD) || p.getBool(StoredStat.FIRST_BLOOD_ASSIST);
     final byte controlWards = p.getTiny(StoredStat.CONTROL_WARDS_PLACED, StoredStat.CONTROL_WARDS_BOUGHT);
     final byte wardClear = p.getTiny(StoredStat.WARDS_TAKEDOWN, StoredStat.WARDS_CLEARED);
-    val playerperformance = new Playerperformance(Lane.valueOf(p.get(StoredStat.LANE)),
+    val laneString = p.get(StoredStat.LANE);
+    val playerperformance = new Playerperformance(laneString.equals("") ? Lane.UNKNOWN : Lane.valueOf(laneString),
         p.getSmall(StoredStat.Q_USAGE), p.getSmall(StoredStat.W_USAGE), p.getSmall(StoredStat.E_USAGE),
         p.getSmall(StoredStat.R_USAGE), p.getMedium(StoredStat.DAMAGE_MAGICAL), p.getMedium(StoredStat.DAMAGE_PHYSICAL),
         p.getMedium(StoredStat.DAMAGE_TOTAL), p.getMedium(StoredStat.DAMAGE_TAKEN), p.getMedium(StoredStat.DAMAGE_MITIGATED),
@@ -956,7 +958,8 @@ public final class GameAnalyser {
     val position = new Position(positionObject.getInt("x"), positionObject.getInt("y"));
     final int xp = player.getStatAt(minute, TimelineStat.EXPERIENCE);
     final int totalGold = player.getStatAt(minute, TimelineStat.TOTAL_GOLD);
-    final int currentGold = player.getStatAt(minute, TimelineStat.CURRENT_GOLD);
+    final int cGold = player.getStatAt(minute, TimelineStat.CURRENT_GOLD);
+    final int currentGold = Math.max(cGold, 0);
     final double enemyControlled = player.getStatAt(minute, TimelineStat.ENEMY_CONTROLLED) / 1000.0;
     final int lead = player.getLeadAt(minute, TimelineStat.LEAD);
     final int creepScore = player.getStatAt(minute, TimelineStat.CREEP_SCORE);

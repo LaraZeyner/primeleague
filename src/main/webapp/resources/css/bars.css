@@ -3,12 +3,12 @@
     color: #ffffff;
 }
 
-.true-topbar .logo{
+.true-topbar .logo {
     width: 70px;
     height: auto;
 }
 
-.true-topbar .h1{
+.true-topbar .h1 {
     font-family: "Source Sans Pro", Arial, sans-serif;
     font-size: 3rem;
     text-decoration: none;
@@ -26,4 +26,50 @@
     letter-spacing: 2px;
     text-transform: uppercase;
     font-weight: 600;
+}
+
+.row-up {
+    /* background-color: darkseagreen !important;*/
+    background-color: #c2e0a8 !important;
+    background-image: none !important;
+    color: #000000 !important;
+    border : 0 !important;
+}
+
+.row-limit-upper {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+    border : 0 !important;
+    border-top: 1px solid;
+}
+
+.row-stay {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+    border : 0 !important;
+}
+
+.row-limit-bottom {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+    border : 0 !important;
+    border-bottom: 1px solid;
+}
+
+.row-down {
+    background-color: bisque !important;
+    background-image: none !important;
+    color: #000000 !important;
+    border : 0 !important;
+}
+
+.ui-datatable * {
+    text-align : center !important;
+}
+
+#shortleague thead {
+    display:none;
 }

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<h:head>
+    <title>Matchseite</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+    <h:outputStylesheet library="css" name="bars.css"/>
+    <h:outputStylesheet library="css" name="w3.css"/>
+
+    <style type="text/css">
+        .custom-marker {
+            display: flex;
+            width: 2rem;
+            height: 2rem;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .ui-chronoline-event-content,
+        .ui-chronoline-event-opposite {
+            line-height: 1;
+        }
+
+        @media screen and (max-width: 960px) {
+            .customized-chronoline .ui-chronoline-event:nth-child(even) {
+                flex-direction: row !important;
+            }
+
+            .customized-chronoline .ui-chronoline-event:nth-child(even) .ui-chronoline-event-content {
+                text-align: left !important;
+            }
+
+            .customized-chronoline .ui-chronoline-event-opposite {
+                flex: 0;
+            }
+
+            .customized-chronoline .ui-card {
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</h:head>
+
+<h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
+
+    <ui:insert name="topbar">
+        <ui:include src="/templates/topbar.xhtml"/>
+    </ui:insert>
+
+    <h:panelGrid styleClass="maincontrainer" columns="2">
+        <h:panelGroup styleClass="content" id="content" layout="block">
+            <div class="card">
+                <h5>Opposite Content</h5>
+                <p:chronoline value="#{matchView.events}" var="event">
+                    #{event.state.toString}
+
+                    <f:facet name="opposite">
+                        <small class="text-secondary">#{event.date}</small>
+                    </f:facet>
+                </p:chronoline>
+            </div>
+
+        </h:panelGroup>
+        <ui:insert name="sidebar">
+            <ui:include src="/templates/sidebar.xhtml"/>
+        </ui:insert>
+    </h:panelGrid>
+</h:body>
+
+
+</html>

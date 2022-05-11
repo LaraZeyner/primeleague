@@ -49,7 +49,7 @@ public class Inventory {
         if (Item.has((short) itemId)) {
           item = Item.find((short) itemId);
           balance = 0;
-          transactionType = ItemTransactionType.REMOVE;
+          transactionType = ItemTransactionType.REMOVE_USE;
         } else {
           continue;
         }
@@ -187,7 +187,7 @@ public class Inventory {
   public List<Reset> getResets() {
     val resets = new ArrayList<Reset>();
     for (ItemTransaction transaction : transactions) {
-      if (transaction.getTimestamp() >= 60_000) {
+      if (transaction.getTimestamp() >= 60_000 && !transaction.getType().equals(ItemTransactionType.REMOVE_USE)) {
         val validReset = resets.stream()
             .filter(reset -> reset.getEnd() >= transaction.getTimestamp() - 90_000)
             .findFirst().orElse(null);
