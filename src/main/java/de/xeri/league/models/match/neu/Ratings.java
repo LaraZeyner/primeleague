@@ -23,7 +23,11 @@ import lombok.var;
  * Created by Lara on 26.04.2022 for web
  */
 public class Ratings {
-  private final List<Playerperformance> playerperformances = new ArrayList<>();
+  private List<Playerperformance> playerperformances = new ArrayList<>();
+
+  public Ratings(List<Playerperformance> playerperformances) {
+    this.playerperformances = playerperformances;
+  }
 
   public double get(DisplaystatType type, DisplaystatSubtype subtype) {
     return Arrays.stream(StatCategory.values()).mapToDouble(category -> get(category, type, subtype)).sum();

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 import javax.persistence.metamodel.EntityType;
@@ -135,8 +136,13 @@ public final class HibernateUtil {
     final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
     final String entityClassName = storedEntity.getName();
 
-    final Query<T> query = session.getNamedQuery(entityClassName + ".findAll");
-    return query.list();
+    try {
+      final Query<Object[]> query = session.getNamedQuery(entityClassName + ".findAll");
+      return query.list().stream().map(t -> (T) t[0]).collect(Collectors.toList());
+    } catch (ClassCastException ex) {
+      final Query<T> query = session.getNamedQuery(entityClassName + ".findAll");
+      return query.list();
+    }
   }
 
   public static <T> List<T> findList(Class<T> entityClass, String identifier, boolean bool) {

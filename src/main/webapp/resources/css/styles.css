@@ -1,3 +1,72 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+body .substat-tag {
+    padding-top: 0;
+    font-weight: bolder;
+    font-size: x-small;
+    text-align: center;
+}
+
+body .stat-grid {
+    width: 14%;
+}
+
+body .substat-value {
+    font-size: smaller;
+    text-align: center;
+    padding-bottom: 0;
+    padding-top: 0;
+}
+
+body .ranked-position {
+    max-width: 100%;
+    height: auto;
+}
+
+body .games-amount {
+    width: 15%;
+}
+
+body .ranked-position-size {
+    width: 15%;
+}
+
+body .ui-card {
+    background: #ffffff;
+    color: #495057;
+    box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
+    border-radius: 4px;
+    margin: 0.1rem;
+    padding: 0.2rem;
+}
+body .ui-card-body {
+    padding: 1rem;
+}
+body .ui-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+body .ui-card-sidetitle {
+    font-size: 1.2rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+}
+body .ui-card-subtitle {
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+}
+body .ui-card-content {
+    padding: 1rem 0;
+}
+body .ui-card-footer {
+    padding: 1rem 0 0 0;
+}
+
+
 .h1 {
     box-sizing: border-box;
     display: table-cell;
@@ -21,7 +90,7 @@
 
 .side {
     height: 100%;
-    width: 500px;
+    width: 300px;
     padding: 5px;
     background-color: #fff;
     z-index: 1;

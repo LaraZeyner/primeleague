@@ -3,69 +3,249 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
-      xmlns:p="http://primefaces.org/ui">
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:f="http://java.sun.com/jsf/core"
+>
 <h:head>
     <title>Technical Really Unique Esports</title>
     <h:outputStylesheet library="css" name="styles.css"/>
-    <h:outputStylesheet library="css" name="w3.css"/>
+    <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
 </h:head>
 
 <h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
-
     <ui:insert name="topbar">
         <ui:include src="/templates/topbar.xhtml"/>
     </ui:insert>
 
-    <h:panelGrid styleClass="maincontrainer" columns="2">
-        <h:panelGroup styleClass="content" id="content" layout="block">
-            <h:form>
-                <div class="card">
-                    <h5>Tabelle #{infos.leagueName}</h5>
-                    <p:dataTable lazy="false" var="team" value="#{shortTable.teams}" size="small"
-                                 rowIndexVar="rowIndex" showGridlines="false" rowKey="#{team.TId}"
-                                 style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
-                                                 'row-down' : (rowIndex lt 2 ? 'row-up' : (rowIndex eq 2 ?
-                                                 'row-limit-upper' : (rowIndex eq 5 ? 'row-limit-bottiom' :
-                                                 'row-stay')))}">
-                        <p:column width="1%"><p:rowToggler/></p:column>
-                        <p:column width="1%" headerText="Pl">#{team.place}</p:column>
-                        <p:column width="3%"><h:graphicImage style="width: 80%" value="#{team.logoUrl}"/></p:column>
-                        <p:column width="10%" style="font-weight: bold" headerText="Team">#{team.name}</p:column>
-                        <p:column headerText="Win">#{team.winsPerMatch}</p:column>
-                        <p:column headerText="Pkt.">#{team.teamScore}</p:column>
-                        <p:column headerText="SUN">#{team.bilance}</p:column>
-                        <p:column headerText="Kills" style="font-weight: bolder">#{team.killDiff}</p:column>
-                        <p:column style="font-weight: lighter">#{team.killsPerMatch}</p:column>
-                        <p:column headerText="Gold" style="font-weight: bolder">#{team.goldDiff}</p:column>
-                        <p:column style="font-weight: lighter">#{team.goldPerMatch}</p:column>
-                        <p:column headerText="Creeps" style="font-weight: bolder">#{team.creepDiff}</p:column>
-                        <p:column style="font-weight: lighter">#{team.creepPerMatch}</p:column>
-                        <p:column headerText="Objec." style="font-weight: bolder">#{team.objectivesPerMatch}</p:column>
-                        <p:column headerText="Towers">#{team.towersPerMatch}</p:column>
-                        <p:column headerText="Drakes">#{team.drakesPerMatch}</p:column>
-                        <p:column headerText="Inhibs">#{team.inhibsPerMatch}</p:column>
-                        <p:column headerText="Heralds">#{team.heraldsPerMatch}</p:column>
-                        <p:column headerText="Barons">#{team.baronsPerMatch}</p:column>
-                        <p:column headerText="Dauer" style="font-weight: bolder">#{team.matchTime}</p:column>
-                        <p:column headerText="Wins" style="font-weight: lighter">#{team.matchTimeWins}</p:column>
-                        <p:column headerText="Losses" style="font-weight: lighter">#{team.matchTimeLosses}</p:column>
-                        <p:rowExpansion>
-                            <div class="product">
+    <div class="p-grid">
+        <div class="p-col">
+            <div class="p-grid">
+                <div class="p-col">
+                    <div class="ui-card">
+                        <div class="p-grid">
+                            <div class="p-col-fixed ui-card-sidetitle games-amount">
+                                10x
                             </div>
-                        </p:rowExpansion>
-                    </p:dataTable>
+                            <div class="p-col ui-card-title">
+                                TRUE Whitelizard
+                            </div>
+                            <div class="p-col-fixed ranked-position-size">
+                                <p:graphicImage id="topImage" styleClass="ranked-position"
+                                                url="/resources/images/ranked/position/Position_Silver-Top.png"
+                                                onmouseover=""/>
+                                <p:tooltip for="topImage" value="Silver I 96 LP -> 50 Games 50%" showEffect="clip"
+                                           hideEffect="fold"/>
+                            </div>
+                        </div>
+                        <div class="p-grid">
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">2/4/3</div>
+                                    <div class="p-col-12 substat-tag">KDA</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">-11.5</div>
+                                    <div class="p-col-12 substat-tag">Wards</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">20.2</div>
+                                    <div class="p-col-12 substat-tag">Roams</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">19.0</div>
+                                    <div class="p-col-12 substat-tag">Fight</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">45.6</div>
+                                    <div class="p-col-12 substat-tag">Gold</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">-12.5</div>
+                                    <div class="p-col-12 substat-tag">Alive</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">15.7</div>
+                                    <div class="p-col-12 substat-tag">Lane</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h:form id="formTop">
+                            <p:growl id="msgs" showDetail="true"/>
+                            <p:dataTable lazy="false" id="champsTop" var="perf" value="#{championTable.performances}"
+                                         editable="true" editMode="cell" widgetVar="cellCTop">
+
+                                <p:ajax event="cellEdit" listener="#{championTable.onCellEdit}" update=":formTop:msgs"/>
+
+                                <p:column headerText="Total: 20">
+                                    <p:cellEditor>
+                                        <f:facet name="output">
+                                            <h:outputText value="#{perf.championName}"/>
+                                        </f:facet>
+                                        <f:facet name="input">
+                                            <h:selectOneMenu value="#{perf.championName}" style="width:100%">
+                                                <f:selectItems value="#{championTable.champions}" var="champName"
+                                                               itemLabel="#{champName}" itemValue="#{champName}"/>
+                                            </h:selectOneMenu>
+                                        </f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+                                <p:column headerText="Pr">#{perf.presence}</p:column>
+                                <p:column headerText="G">#{perf.gamesComp}</p:column>
+                                <p:column headerText="G">#{perf.games}</p:column>
+                                <p:column headerText="W%">#{perf.wins}</p:column>
+                                <p:column headerText="Le">#{perf.lead}</p:column>
+                                <p:column headerText="Ef">#{perf.goldEfficency}</p:column>
+                            </p:dataTable>
+
+                            <p:contextMenu for="champsTop" widgetVar="cMenu">
+                                <p:menuitem value="Edit Cell" icon="pi pi-search"
+                                            onclick="PF('cellCTop').showCellEditor();return false;"/>
+                                <p:menuitem value="Hide Menu" icon="pi pi-times" onclick="PF('cMenu').hide()"/>
+                            </p:contextMenu>
+                        </h:form>
+                        Hier kommen irgendwann mal Stats rein
+                    </div>
+                    <div class="ui-card">
+                        <div class="p-grid">
+                            <div class="p-col-fixed ui-card-sidetitle games-amount">
+                                10x
+                            </div>
+                            <div class="p-col ui-card-title">
+                                TRUE Whitelizard
+                            </div>
+                            <div class="p-col-fixed ranked-position-size">
+                                <p:graphicImage id="top2Image" styleClass="ranked-position"
+                                                url="/resources/images/ranked/position/Position_Silver-Top.png"
+                                                onmouseover=""/>
+                                <p:tooltip for="topImage" value="Silver I 96 LP -> 50 Games 50%" showEffect="clip"
+                                           hideEffect="fold"/>
+                            </div>
+                        </div>
+                        <div class="p-grid">
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">2/4/3</div>
+                                    <div class="p-col-12 substat-tag">KDA</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">-11.5</div>
+                                    <div class="p-col-12 substat-tag">Wards</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">20.2</div>
+                                    <div class="p-col-12 substat-tag">Roams</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">19.0</div>
+                                    <div class="p-col-12 substat-tag">Fight</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">45.6</div>
+                                    <div class="p-col-12 substat-tag">Gold</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">-12.5</div>
+                                    <div class="p-col-12 substat-tag">Alive</div>
+                                </div>
+                            </div>
+                            <div class="p-col stat-grid">
+                                <div class="p-grid">
+                                    <div class="p-col-12 substat-value">15.7</div>
+                                    <div class="p-col-12 substat-tag">Lane</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h:form id="form2Top">
+                            <p:growl id="msgs2" showDetail="true"/>
+                            <p:dataTable lazy="false" id="champs2Top" var="perf" value="#{championTable.performances}"
+                                         editable="true" editMode="cell" widgetVar="cellCTop">
+
+                                <p:ajax event="cellEdit" listener="#{championTable.onCellEdit}" update=":formTop:msgs"/>
+
+                                <p:column headerText="Total: 20">
+                                    <p:cellEditor>
+                                        <f:facet name="output">
+                                            <h:outputText value="#{perf.championName}"/>
+                                        </f:facet>
+                                        <f:facet name="input">
+                                            <h:selectOneMenu value="#{perf.championName}" style="width:100%">
+                                                <f:selectItems value="#{championTable.champions}" var="champName"
+                                                               itemLabel="#{champName}" itemValue="#{champName}"/>
+                                            </h:selectOneMenu>
+                                        </f:facet>
+                                    </p:cellEditor>
+                                </p:column>
+                                <p:column headerText="Pr">#{perf.presence}</p:column>
+                                <p:column headerText="G">#{perf.gamesComp}</p:column>
+                                <p:column headerText="G">#{perf.games}</p:column>
+                                <p:column headerText="W%">#{perf.wins}</p:column>
+                                <p:column headerText="Le">#{perf.lead}</p:column>
+                                <p:column headerText="Ef">#{perf.goldEfficency}</p:column>
+                            </p:dataTable>
+
+                            <p:contextMenu for="champsTop" widgetVar="cMenu">
+                                <p:menuitem value="Edit Cell" icon="pi pi-search"
+                                            onclick="PF('cellCTop').showCellEditor();return false;"/>
+                                <p:menuitem value="Hide Menu" icon="pi pi-times" onclick="PF('cMenu').hide()"/>
+                            </p:contextMenu>
+                        </h:form>
+                        Hier kommen irgendwann mal Stats rein
+                    </div>
                 </div>
-            </h:form>
+                <div class="p-col">
+                    <div class="ui-card">
+                        <f:facet name="title">Jungler: TRUE Seven</f:facet>
+                        Hier kommen irgendwann mal Stats rein
+                    </div>
+                </div>
+                <div class="p-col">
+                    <div class="ui-card">
+                        <f:facet name="title">Middle: TRUE Oppaidragon</f:facet>
+                        Hier kommen irgendwann mal Stats rein
+                    </div>
+                </div>
+                <div class="p-col">
+                    <div class="ui-card">
+                        <f:facet name="title">Bottom: TRUE Xeri</f:facet>
+                        Hier kommen irgendwann mal Stats rein
+                    </div>
+                </div>
+                <div class="p-col">
+                    <div class="ui-card">
+                        <f:facet name="title">Support: ThorDerBabo</f:facet>
+                        Hier kommen irgendwann mal Stats rein
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="p-col-fixed" style="width:300px">
+            <ui:insert name="sidebar">
+                <ui:include src="/templates/sidebar.xhtml"/>
+            </ui:insert>
+        </div>
+    </div>
 
-            <br/>
-
-
-            Lorem ipsum dolorsit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Nam liber tempor cum soluta nobis eleifend option congue nihil imperdiet doming id quod mazim placerat facer possim assum.
-        </h:panelGroup>
-        <!--<ui:insert name="sidebar">
-            <ui:include src="/templates/sidebar.xhtml"/>
-        </ui:insert>-->
-    </h:panelGrid>
 </h:body>
 </html>

@@ -3,8 +3,10 @@ package de.xeri.league.models.league;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.faces.bean.ManagedBean;
 import javax.persistence.Column;
@@ -22,13 +24,18 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.league.game.RiotGameRequester;
+import de.xeri.league.loader.GameIdLoader;
+import de.xeri.league.loader.MatchLoader;
 import de.xeri.league.manager.Data;
 import de.xeri.league.models.enums.LogAction;
 import de.xeri.league.models.enums.Matchstate;
+import de.xeri.league.models.enums.QueueType;
 import de.xeri.league.models.enums.Result;
 import de.xeri.league.models.enums.ScheduleType;
 import de.xeri.league.models.enums.StageType;
 import de.xeri.league.models.match.Game;
+import de.xeri.league.models.match.ScheduledGame;
 import de.xeri.league.util.Const;
 import de.xeri.league.util.HibernateUtil;
 import lombok.Getter;
@@ -153,13 +160,42 @@ public class TurnamentMatch implements Serializable {
     return 10;
   }
 
+  /**
+   * Aktualisiere Matches
+   * <ul>
+   *   <li><b>Alle Matches:</b> 1 Mal beim Nachtupdate</li>
+   *   <li><b>Laufende und recent Matches:</b> Alle 15 Minuten</li>
+   *   <li><b>Eigene Liga:</b> Alle 5 Minuten</li>
+   *   <li><b>Kommende Matches eigene Liga:</b> Alle 1 Minute</li>
+   *   <li><b>Laufende Matches eigene Liga:</b> Alle 30 Sekunden</li>
+   * </ul>
+   */
+  public boolean update() {
+    getPlayers().stream().map(Player::getActiveAccount).forEach(GameIdLoader::loadGameIds);
+    ScheduledGame.findMode(QueueType.TOURNEY).forEach(RiotGameRequester::loadCompetitive);
+    return MatchLoader.analyseMatchPage(this);
+  }
+
+
+  public List<Player> getPlayers() {
+    return logEntries.stream()
+        .filter(logEntry -> logEntry.getLogAction().equals(LogAction.READY))
+        .map(Matchlog::getPlayer)
+        .collect(Collectors.toList());
+  }
+
+  public boolean isRunning() {
+    return !state.equals(Matchstate.CLOSED) && new Date().after(start);
+  }
+
   public boolean isOpen() {
-    return getGameAmount() < games.size() || matchday.getStage().getStageType().equals(StageType.PLAYOFFS) && !score.contains("2") ;
+    return getGameAmount() < games.size() || matchday.getStage().getStageType().equals(StageType.PLAYOFFS) && !score.contains("2");
   }
 
   public boolean isRecently() {
-    final long openingDate = matchday.getStart().getTime() - 7 * Const.MILLIS_PER_DAY;
-    return !state.equals(Matchstate.CLOSED) && (isOpen() && new Date().after(new Date(openingDate)) || !state.equals(Matchstate.CREATED));
+    final Date openingDate = new Date(matchday.getStart().getTime() - 7 * Const.MILLIS_PER_DAY);
+    final Date closingDate = new Date(matchday.getEnd().getTime() + 14 * Const.MILLIS_PER_DAY);
+    return new Date().before(closingDate) && new Date().after(openingDate);
   }
 
   public boolean isNotClosed() {
@@ -239,13 +275,17 @@ public class TurnamentMatch implements Serializable {
     return homeTeam != null && homeTeam.equals(team) || guestTeam != null && guestTeam.equals(team);
   }
 
+  public boolean hasChanged(Date start) {
+    return start.equals(this.start);
+  }
+
   //<editor-fold desc="getter and setter">
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (!(o instanceof TurnamentMatch)) return false;
     final TurnamentMatch turnamentMatch = (TurnamentMatch) o;
-    return getId() == turnamentMatch.getId() && getLeague().equals(turnamentMatch.getLeague()) && getMatchday().equals(turnamentMatch.getMatchday()) && getStart().equals(turnamentMatch.getStart()) && Objects.equals(getHomeTeam(), turnamentMatch.getHomeTeam()) && Objects.equals(getGuestTeam(), turnamentMatch.getGuestTeam()) && getScore().equals(turnamentMatch.getScore()) && getState() == turnamentMatch.getState() && Objects.equals(getGames(), turnamentMatch.getGames()) && logEntries.equals(turnamentMatch.logEntries);
+    return getId() == turnamentMatch.getId() && getLeague().equals(turnamentMatch.getLeague()) && getMatchday().equals(turnamentMatch.getMatchday()) && getStart().equals(turnamentMatch.getStart()) && Objects.equals(getHomeTeam(), turnamentMatch.getHomeTeam()) && Objects.equals(getGuestTeam(), turnamentMatch.getGuestTeam());
   }
 
   @Override
@@ -264,8 +304,6 @@ public class TurnamentMatch implements Serializable {
         ", guestTeam=" + guestTeam +
         ", score='" + score + '\'' +
         ", state=" + state +
-        ", games=" + games.size() +
-        ", matchlog=" + logEntries.size() +
         '}';
   }
   //</editor-fold>

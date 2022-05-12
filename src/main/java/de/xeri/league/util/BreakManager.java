@@ -15,7 +15,7 @@ public class BreakManager {
     final Set<TurnamentMatch> turnamentMatches = TurnamentMatch.get();
     for (TurnamentMatch turnamentMatch : turnamentMatches) {
       if (l == 0) break;
-      if (turnamentMatch.isNotClosed() && turnamentMatch.getStart().before(new Date())) {
+      if (turnamentMatch.isNotClosed() && turnamentMatch.isRecently()) {
         MatchLoader.analyseMatchPage(turnamentMatch);
         l--;
       }

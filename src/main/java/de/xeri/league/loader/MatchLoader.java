@@ -51,8 +51,12 @@ public final class MatchLoader {
       val score = matchData.text().contains(":") ? matchData.text() : "-:-";
       val turnamentMatch = TurnamentMatch.get(new TurnamentMatch(matchId, score, new Date(Long.parseLong(millisString))), league, matchday);
 
-      handleTeam(matchElement, turnamentMatch, true, league);
-      handleTeam(matchElement, turnamentMatch, false, league);
+      val teamPlaceholder1 = match.select("td").get(0);
+      handleTeam(teamPlaceholder1, turnamentMatch, true, league);
+
+      val teamPlaceholder2 = match.select("td").get(2);
+      handleTeam(teamPlaceholder2, turnamentMatch, false, league);
+
       analyseMatchPage(turnamentMatch);
 
       matchesLoaded.add(matchId);
@@ -63,12 +67,12 @@ public final class MatchLoader {
     }
   }
 
-  private static void handleTeam(Element match, TurnamentMatch turnamentMatch, boolean home, League league) {
-    val teamPlaceholder = match.select("td").get(home ? 0 : 2);
+  private static boolean handleTeam(Element teamPlaceholder, TurnamentMatch turnamentMatch, boolean home, League league) {
     if (!teamPlaceholder.text().equals("")) {
-      val teamName = teamPlaceholder.select("img").attr("title");
+      val img = teamPlaceholder.select("img");
+      val teamName = img.hasAttr("title") ? img.attr("title") : img.attr("alt");
       val teamAbbr = teamPlaceholder.text();
-      val teamIdString = teamPlaceholder.select("img").attr("data-src");
+      val teamIdString = img.hasAttr("data-src") ? img.attr("data-src") : img.attr("src");
       val teamString = teamIdString.split("/")[5].split("\\.")[0];
       Team team = null;
       try {
@@ -79,29 +83,53 @@ public final class MatchLoader {
         team = Team.find(teamName, league);
       }
       if (team != null) {
-        team.addMatch(turnamentMatch, home);
+        return team.addMatch(turnamentMatch, home);
       }
     }
+    return false;
   }
 
-  public static void analyseMatchPage(TurnamentMatch match) {
+  public static boolean analyseMatchPage(TurnamentMatch match) {
     val logger = Logger.getLogger("Match-Erstellung");
+    boolean changed = false;
     try {
       val html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/matches/" + match.getId());
       val doc = Jsoup.parse(html.toString());
 
       val timeString = doc.select("div#league-match-time").select("span").attr("data-time");
-      match.setStart(new Date(Long.parseLong(timeString) * 1000L));
+      final Date start = new Date(Long.parseLong(timeString) * 1000L);
+      changed = !start.equals(match.getStart());
+      match.setStart(start);
 
-      handleMatchlog(match, doc);
+      final boolean changedScore = updateScoreAndTeams(doc, match);
+      changed = changed || changedScore;
+      return handleMatchlog(match, doc);
     } catch (FileNotFoundException exception) {
       logger.warning("Match konnte nicht gefunden werden");
     } catch (IOException exception) {
       logger.severe(exception.getMessage());
     }
+    return changed;
   }
 
-  private static void handleMatchlog(TurnamentMatch match, Document doc) {
+  public static boolean updateScoreAndTeams(Document doc, TurnamentMatch match) {
+    boolean changed = false;
+    final String scoreText = doc.select("span#league-match-result").text();
+    if (scoreText.contains(":") && !match.getScore().equals(scoreText)) {
+      changed = true;
+      match.setScore(scoreText);
+    }
+
+    val teamPlaceholder1 = doc.select("content-match-head-team-top").get(0);
+    boolean changedTeam1 = handleTeam(teamPlaceholder1, match, true, match.getLeague());
+
+    val teamPlaceholder2 = doc.select("content-match-head-team-top").get(1);
+    boolean changedTeam2 = handleTeam(teamPlaceholder2, match, false, match.getLeague());
+
+    return changed || changedTeam1 || changedTeam2;
+  }
+
+  private static boolean handleMatchlog(TurnamentMatch match, Document doc) {
     for (Element entry : doc.select("section.league-match-logs").select("tbody").select("tr")) {
       val column = entry.select("span.table-cell-container");
       val stampString = column.first().select("span").attr("data-time");
@@ -140,10 +168,13 @@ public final class MatchLoader {
 
     if (!logs.isEmpty()) {
       val matchstate = determineMatchstate(match, logs);
+      boolean changed = !match.getState().equals(matchstate);
       match.setState(matchstate);
+      return changed;
     } else {
       match.setState(Matchstate.CREATED);
     }
+    return false;
   }
 
   private static Matchstate determineMatchstate(TurnamentMatch match, List<Matchlog> logs) {

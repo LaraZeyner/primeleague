@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -67,8 +68,11 @@ public final class GameAnalyser {
   public static List<JSONTeam> jsonTeams;
   private final List<JSONObject> allEvents = new ArrayList<>();
   private final List<JSONObject> gameEvents = new ArrayList<>();
+  private static Set<Champion> champions;
 
   public boolean validate(JSON gameJson, JSON timelineJson, QueueType queueType) {
+    champions = Champion.get();
+
     val gameData = gameJson.getJSONObject();
     val info = gameData.getJSONObject("info");
     final int queueId = info.getInt("queueId");
@@ -84,51 +88,51 @@ public final class GameAnalyser {
         final JSONObject timelineObject = timelineJson.getJSONObject();
         playerInfo = timelineObject != null ? loadTimeline(timelineObject) : new HashMap<>();
       }
-        final String tCode = info.getString("tournamentCode");
-        val gametype = Gametype.find((short) (tCode.equals("") ? queueId : -1));
-        val game = handleGame(info, gameId, gametype);
-        gametype.addGame(game, gametype);
+      final String tCode = info.getString("tournamentCode");
+      val gametype = Gametype.find((short) (tCode.equals("") ? queueId : -1));
+      val game = handleGame(info, gameId, gametype);
+      gametype.addGame(game, gametype);
 
-        createJsonTeams(participants, playerInfo);
+      createJsonTeams(participants, playerInfo);
 
-        val fights = handleGameEvents(game);
-        handleEventsForTeams();
-        for (int i = 0; i < jsonTeams.size(); i++) {
-          val jsonTeam = jsonTeams.get(i);
-          val teams = info.getJSONArray("teams");
-          jsonTeam.setTeamObject(teams.getJSONObject(i));
-          determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
+      val fights = handleGameEvents(game);
+      handleEventsForTeams();
+      for (int i = 0; i < jsonTeams.size(); i++) {
+        val jsonTeam = jsonTeams.get(i);
+        val teams = info.getJSONArray("teams");
+        jsonTeam.setTeamObject(teams.getJSONObject(i));
+        determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
+      }
+
+      System.out.println("Load Players" + (System.currentTimeMillis() - millis));
+      for (final JSONTeam jsonTeam : jsonTeams) {
+        if (jsonTeam.doesExist()) {
+          val teamperformance = handleTeam(jsonTeam);
+          val team = jsonTeam.getMostUsedTeam(queueType);
+          game.addTeamperformance(teamperformance, team);
+          handleTeamEvents(teamperformance);
+
+          val players = determinePlayers(queueType, jsonTeam);
+          players.forEach(player -> handlePlayer(player, teamperformance, fights));
         }
-
-        System.out.println("Load Players" + (System.currentTimeMillis() - millis));
-        for (final JSONTeam jsonTeam : jsonTeams) {
-          if (jsonTeam.doesExist()) {
-            val teamperformance = handleTeam(jsonTeam);
-            val team = jsonTeam.getMostUsedTeam(queueType);
-            game.addTeamperformance(teamperformance, team);
-            handleTeamEvents(teamperformance);
-
-            val players = determinePlayers(queueType, jsonTeam);
-            players.forEach(player -> handlePlayer(player, teamperformance, fights));
-          }
-        }
-        final List<Team> teams = game.getTeamperformances().stream()
-            .filter(Objects::nonNull)
-            .map(Teamperformance::getTeam)
+      }
+      final List<Team> teams = game.getTeamperformances().stream()
+          .filter(Objects::nonNull)
+          .map(Teamperformance::getTeam)
+          .collect(Collectors.toList());
+      if (teams.size() == 2 && game.getGametype().getId() < 1) {
+        List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
+        turnamentMatches.addAll(teams.get(0).getMatchesGuest());
+        final List<TurnamentMatch> collect = turnamentMatches.stream()
+            .filter(TurnamentMatch::isOpen)
+            .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
+            .filter(match -> match.hasTeam(teams.get(1)))
             .collect(Collectors.toList());
-        if (teams.size() == 2 && game.getGametype().getId() < 1) {
-          List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
-          turnamentMatches.addAll(teams.get(0).getMatchesGuest());
-          final List<TurnamentMatch> collect = turnamentMatches.stream()
-              .filter(TurnamentMatch::isOpen)
-              .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
-              .filter(match -> match.hasTeam(teams.get(1)))
-              .collect(Collectors.toList());
 
-          for (TurnamentMatch turnamentMatch : collect) {
-            turnamentMatch.addGame(game);
-          }
+        for (TurnamentMatch turnamentMatch : collect) {
+          turnamentMatch.addGame(game);
         }
+      }
 
 
       System.out.println("Match erstellt!");
@@ -208,8 +212,8 @@ public final class GameAnalyser {
     for (int j = 0; j < bans.length(); j++) {
       val selectionObject = bans.getJSONObject(j);
       final int championId = selectionObject.getInt("championId");
-      if (Champion.has((short) championId)) {
-        val champion = Champion.find(championId);
+      val champion = champions.stream().filter(champ -> champ.getId() == championId).findFirst().orElse(null);
+      if (champion != null) {
         game.addChampionSelection(new ChampionSelection(SelectionType.BAN, (byte) (j + 1 + id * 5)), champion);
       }
 
@@ -224,10 +228,9 @@ public final class GameAnalyser {
         .collect(Collectors.toList());
     for (int i : ints) {
       final int championId = participants.getJSONObject(i + id * 5).getInt("championId");
-      if (Champion.has((short) championId)) {
-        val champion = Champion.find(championId);
-        game.addChampionSelection(new ChampionSelection(SelectionType.PICK, (byte) (i + 1 + id * 5)), champion);
-      }
+      champions.stream()
+          .filter(champ -> champ.getId() == championId).findFirst()
+          .ifPresent(champion -> game.addChampionSelection(new ChampionSelection(SelectionType.PICK, (byte) (i + 1 + id * 5)), champion));
     }
   }
 
@@ -534,18 +537,15 @@ public final class GameAnalyser {
 
   private void handleChampionsPicked(JSONPlayer player, JSONPlayer enemy, Playerperformance playerperformance) {
     final int championOwnId = player.getMedium(StoredStat.CHAMPION);
-    if (Champion.has((short) championOwnId)) {
-      val championOwn = Champion.find(championOwnId);
-      championOwn.addPlayerperformance(playerperformance, true);
-    }
+    champions.stream()
+        .filter(champ -> champ.getId() == championOwnId).findFirst()
+        .ifPresent(championOwn -> championOwn.addPlayerperformance(playerperformance, true));
 
     if (enemy != null) {
       final int championEnemyId = enemy.getMedium(StoredStat.CHAMPION);
-      if (Champion.has((short) championEnemyId)) {
-        val championEnemy = Champion.find(championEnemyId);
-        championEnemy.addPlayerperformance(playerperformance, false);
-      }
-
+      champions.stream()
+          .filter(champ -> champ.getId() == championEnemyId).findFirst()
+          .ifPresent(championEnemy -> championEnemy.addPlayerperformance(playerperformance, false));
     }
   }
 

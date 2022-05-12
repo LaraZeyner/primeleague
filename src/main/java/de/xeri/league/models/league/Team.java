@@ -192,14 +192,22 @@ public class Team implements Serializable {
     schedule.setEnemyTeam(this);
   }
 
-  public void addMatch(TurnamentMatch match, boolean home) {
+  public boolean addMatch(TurnamentMatch match, boolean home) {
+    boolean changed = false;
     if (home) {
+      if (!matchesHome.contains(match)) {
+        changed = true;
+      }
       matchesHome.add(match);
       match.setHomeTeam(this);
     } else {
+      if (!matchesGuest.contains(match)) {
+        changed = true;
+      }
       matchesGuest.add(match);
       match.setGuestTeam(this);
     }
+    return changed;
   }
 
   public Player addPlayer(Player player) {

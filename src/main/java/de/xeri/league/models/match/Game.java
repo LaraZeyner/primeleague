@@ -42,13 +42,9 @@ public class Game implements Serializable {
   @Transient
   private static final long serialVersionUID = 4639052028429524051L;
 
-  public static Set<Game> get() {
-    return new LinkedHashSet<>(HibernateUtil.findList(Game.class));
-  }
-
   public static Game get(Game neu, Gametype gametype) {
-    if (has(neu.getId())) {
-      final Game game = find(neu.getId());
+    final Game game = find(neu.getId());
+    if (game != null) {
       game.setGameStart(neu.getGameStart());
       game.setDuration(neu.getDuration());
       return game;

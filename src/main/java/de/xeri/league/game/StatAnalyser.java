@@ -39,6 +39,7 @@ import de.xeri.league.util.Const;
 import de.xeri.league.util.Util;
 import lombok.val;
 import lombok.var;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 /**
@@ -343,7 +344,7 @@ public final class StatAnalyser {
         if (kill.getVictim() == pId) {
           if (timestamp / 60_000 + 1 <= player.getLastMinute()) {
             lead += player.getLeadDifferenceAt(timestamp / 60_000, timestamp / 60_000 + 1, TimelineStat.LEAD);
-            deathsAmount ++;
+            deathsAmount++;
           }
 
           //handle First Death time
@@ -779,7 +780,6 @@ public final class StatAnalyser {
     }
 
 
-
     if (player.getLane().equals(Lane.JUNGLE) && player.getLastMinute() >= 7) {
       JunglePath.get(playerperformance.getTeamperformance(), player.getPositionAt(2), player.getPositionAt(3),
           player.getPositionAt(4), player.getPositionAt(5), player.getPositionAt(6), player.getPositionAt(7));
@@ -787,19 +787,20 @@ public final class StatAnalyser {
     final Double proximity = determineProximity(player, playerperformance);
     if (proximity != null) {
       stats.setProximity(BigDecimal.valueOf(proximity));
-      final double enemyProximity = determineProximity(player.getEnemy(), null);
-      stats.setLaneProximityDifference(BigDecimal.valueOf(proximity - enemyProximity));
+      final Double enemyProximity = determineProximity(player.getEnemy(), null);
+      if (enemyProximity != null) {
+        stats.setLaneProximityDifference(BigDecimal.valueOf(proximity - enemyProximity));
+      }
     }
-
-
 
     playerperformance.setStats(stats);
 
     System.out.println("Analysiert + " + (System.currentTimeMillis() - millis));
   }
 
-  private Double determineProximity(JSONPlayer player, Playerperformance playerperformance) {
-    if (player.getLane().equals(Lane.JUNGLE) && player.getLastMinute() >= 7) {
+  @Nullable
+  private Double determineProximity(@Nullable JSONPlayer player, @Nullable Playerperformance playerperformance) {
+    if (player != null && player.getLane().equals(Lane.JUNGLE) && player.getLastMinute() >= 7) {
       final int cs = player.getStatAt(7, TimelineStat.CREEP_SCORE);
       final int durationInSeconds = (int) (cs * 7.5);
 
@@ -814,21 +815,19 @@ public final class StatAnalyser {
 
       return durationInSeconds / 330.0;
 
-    } else {
-      if (player.getLastMinute() >= 7) {
-        final int xpAt7 = player.getStatAt(7, TimelineStat.EXPERIENCE);
-        final int totalXP = player.getLane().getType().equals("BOT_LANE") ? 468 : 750;
-        final double proximity = xpAt7 * 1d / totalXP;
+    } else if (player != null && player.getLastMinute() >= 7) {
+      final int xpAt7 = player.getStatAt(7, TimelineStat.EXPERIENCE);
+      final int totalXP = player.getLane().getType().equals("BOT_LANE") ? 468 : 750;
+      final double proximity = xpAt7 * 1d / totalXP;
 
-        final int averageDistance = (int) IntStream.range(2, 8)
-            .mapToDouble(min -> Util.distance(player.getPositionAt(min),
-                player.getLane().getCenter(player.getPositionAt(min), player.isFirstPick())))
-            .average().orElse(0);
-        final double percentDistance = 1 - averageDistance * 1d / Const.MAP_SIZE;
-        return proximity - percentDistance;
-      }
-
+      final int averageDistance = (int) IntStream.range(2, 8)
+          .mapToDouble(min -> Util.distance(player.getPositionAt(min),
+              player.getLane().getCenter(player.getPositionAt(min), player.isFirstPick())))
+          .average().orElse(0);
+      final double percentDistance = 1 - averageDistance * 1d / Const.MAP_SIZE;
+      return proximity - percentDistance;
     }
+
     return null;
   }
 
@@ -847,7 +846,6 @@ public final class StatAnalyser {
       int bot = 0;
 
 
-
       for (Gank gank : ganks) {
         final List<Integer> involvedPlayers = gank.getFight().getInvolvedPlayers();
         final int start = gank.start();
@@ -856,7 +854,7 @@ public final class StatAnalyser {
 
         final Lane nearestLane = MapArea.getNearestLane(gankPosition);
         if (nearestLane.equals(Lane.TOP)) {
-          top ++;
+          top++;
         } else if (nearestLane.equals(Lane.BOTTOM)) {
           bot++;
         } else {
