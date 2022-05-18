@@ -1,7 +1,12 @@
 package de.xeri.prm.models.match.playerperformance;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,6 +28,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.dynamic.Item;
 import de.xeri.prm.models.dynamic.Rune;
@@ -32,7 +38,6 @@ import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.match.Gametype;
 import de.xeri.prm.models.match.Teamperformance;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -50,8 +55,8 @@ import org.hibernate.annotations.NamedQuery;
     @Index(name = "champion_own", columnList = "champion_own"),
     @Index(name = "account", columnList = "account"),
 })
-@Filter(name = "team_filter", condition = "team= :team")
-@Filter(name = "account_filter", condition = "account= :account")
+@Filter(name = "filter_team", condition = "team= :team")
+@Filter(name = "filter_account", condition = "account= :account")
 @Filter(name = "filter_lane", condition = "lane= :lane")
 @Filter(name = "filter_champion_own", condition = "championOwn= :champion")
 @Filter(name = "filter_champion_enemy", condition = "championEnemy= :champion")
@@ -61,6 +66,160 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Playerperformance.findById", query = "FROM Playerperformance p WHERE id = :pk")
 @NamedQuery(name = "Playerperformance.findBy", query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND account = :account")
 @NamedQuery(name = "Playerperformance.findByLane", query = "FROM Playerperformance p WHERE teamperformance = :teamperformance AND lane = :lane")
+@NamedQuery(name = "Playerperformance.findAvg", query = "SELECT AVG(qUsages), AVG(wUsages), AVG(eUsages), AVG(rUsages), AVG(spellsHit), " +
+    "AVG(spellsDodged), AVG(quickDodged), AVG(damageMagical), AVG(damagePhysical), AVG(damageTotal), AVG (damageTaken), AVG" +
+    "(damageMitigated), AVG(damageHealed), AVG(damageShielded), AVG(kills), AVG(deaths), AVG(assists), AVG(soloKills), AVG(levelUpAllin)," +
+    " AVG(doubleKills + tripleKills + quadraKills + pentaKills), AVG(aggressiveFlash), AVG(timeAlive), AVG(timeDead), AVG(teleportKills)," +
+    " AVG(immobilizations), AVG(controlWards), AVG(controlWardUptime), AVG(wardsPlaced), AVG(wardsCleared), AVG(guardedWards), AVG" +
+    "(visionScore), AVG(visionscoreAdvantage), AVG(objectivesStolen), AVG(firstturretAdvantage), AVG(objectivesDamage), AVG" +
+    "(baronExecutes), AVG(baronKills), AVG(buffsStolen), AVG(initialScuttles), AVG(totalScuttles), AVG(splitpushedTurrets), AVG" +
+    "(teamInvading), AVG(ganksEarly), AVG(ganksTotal), AVG(CASE WHEN ganksTop + ganksMid + ganksBot <> 0 THEN ((CAST(ganksTop AS int) - " +
+    "CAST(ganksBot AS int)) / (ganksTop + ganksMid + ganksBot)) ELSE 0 END), AVG(divesDone), AVG(divesSuccessful), AVG(divesGotten), AVG" +
+    "(divesProtected), AVG(goldTotal), AVG(bountyGold), AVG(experience), AVG(totalCreeps), AVG(earlyCreeps), AVG(invadedCreeps), AVG" +
+    "(earlyLaneLead), AVG(laneLead), AVG(turretplates), AVG(creepScoreAdvantage), AVG(itemsAmount), AVG(mejaisCompleted), AVG(firstBlood)" +
+    ", AVG(outplayed), AVG(turretTakedowns), AVG(dragonTakedowns), AVG(fastestLegendary), AVG(gankSetups), AVG(initialBuffs), AVG" +
+    "(earlyKills), AVG(junglerKillsAtObjective), AVG(ambush), AVG(earlyTurrets), AVG(levelLead), AVG(picksMade), AVG(assassinated), AVG" +
+    "(savedAlly), AVG(survivedClose), AVG(stats.objectivesStolenAndContested), AVG(stats.objectivesKilledJunglerBefore), AVG(stats" +
+    ".baronTakedownsAttempts), AVG(stats.firstTrinketSwap), AVG(stats.firstWardTime), AVG(stats.firstControlwardTime), AVG(stats" +
+    ".controlWardInventoryTime), AVG(stats.turretParticipation), AVG(stats.invadingAndBuffs), AVG(stats.divesOwn), AVG(stats.divesEnemy)," +
+    " AVG(stats.divesDied), AVG(stats.teamDamage), AVG(stats.teamDamageTaken), AVG(stats.teamDamageMitigated), AVG(stats" +
+    ".bountyDifference), AVG(stats.duelWinrate), AVG(stats.duelWins), AVG(stats.deathsEarly), AVG(stats.kdEarly), AVG(stats.ahead), AVG" +
+    "(stats.behind), AVG(stats.extendingLead), AVG(stats.comeback), AVG(stats.xpLead), AVG(stats.acesAndClean), AVG(stats.firstFullItem)," +
+    " AVG(stats.earlyFarmEfficiency), AVG(stats.csPerMinute), AVG(stats.xpPerMinute), AVG(stats.goldPerMinute), AVG(stats.legendaryItems)" +
+    ", AVG" +
+    "(CASE WHEN stats.antiHealTime <> 0 THEN 1 ELSE 0 END), AVG(CASE WHEN stats.penetrationTime <> 0 THEN 1 ELSE 0 END), AVG(CASE " +
+    "WHEN stats.amplifierTime <> 0 THEN 1 ELSE 0 END), AVG(CASE WHEN stats.durabilityTime <> 0 THEN 1 ELSE 0 END), AVG(stats" +
+    ".startItemSold), AVG(stats.timeAlivePercent), AVG(stats.soloKillAdvantage), AVG(stats.firstKillTime), AVG(stats.firstKillDeathTime)," +
+    " AVG(stats.earlyGoldAdvantage), AVG(stats.earlyObjectiveAdvantage), AVG(stats.earlyObjectives), AVG(stats.turretplateAdvantage), AVG" +
+    "(stats.enemyControlAdvantage), AVG(stats.enemyControlled), AVG(stats.keyspellsUsed), AVG(stats.totalSpellBilance), AVG(stats" +
+    ".hitBilance), AVG(stats.dodgeBilance), AVG(stats.reactionBilance), AVG(stats.enemySpellReaction), AVG(stats" +
+    ".leadDifferenceAfterDiedEarly), AVG(stats.killParticipation), AVG(stats.trueKdaValue), AVG(stats.trueKdaKills), AVG(stats" +
+    ".trueKdaDeaths), AVG(stats.trueKdaAssists), AVG(stats.enemyControlAdvantageEarly), AVG(stats.enemyControlledEarly), AVG(CASE WHEN " +
+    "stats.csDropAtMinute <> 0 THEN 1 ELSE 0 END), AVG(stats.trinketEfficiency), AVG(stats.midgameGoldXPEfficiency), AVG(stats" +
+    ".lategameLead), AVG(CASE WHEN stats.behind IS true THEN stats.farmingFromBehind ELSE NULL END), AVG(CASE WHEN stats.behind IS true THEN stats.wardingFromBehind ELSE NULL END), AVG(CASE WHEN stats.behind IS true" +
+    " THEN stats.deathsFromBehind ELSE NULL END), AVG(CASE WHEN stats.behind IS true THEN stats.goldFromBehind ELSE NULL END), AVG(CASE WHEN stats.behind IS true THEN stats.xpFromBehind ELSE NULL END), AVG(CASE WHEN stats.ahead IS true THEN stats.goldFromBehind ELSE NULL END), AVG(CASE WHEN stats.ahead IS true THEN stats.xpFromBehind ELSE NULL END), AVG(stats.levelupEarlier), AVG(stats.pickAdvantage), AVG(stats" +
+    ".teamfightAmount), AVG(stats.teamfightParticipation), AVG(stats.averageDeathOrder), AVG(stats.teamfightWinrate), AVG(stats" +
+    ".teamfightDamageRate), AVG(stats.skirmishAmount), AVG(stats.skirmishParticipation), AVG(stats.skirmishKillsPerSkirmish), AVG(stats" +
+    ".skirmishWinrate), AVG(stats.skirmishDamageRate), AVG(stats.roamCreepScoreAdvantage), AVG(stats.roamGoldXpAdvantage), AVG (stats" +
+    ".roamGoldAdvantage), AVG(stats.roamObjectiveDamageAdvantage), AVG(stats.roamSuccessScore), AVG(stats.relativeDeathPositioning), AVG" +
+    "(stats.lanePositioning), AVG(stats.midgamePositioning), AVG(stats.lategamePositioning), AVG(stats.laneKillDeathPositioning), AVG" +
+    "(stats.laneKillPositioning), AVG(stats.splitScore), AVG(stats.companionScore), AVG(stats.roamScore), AVG(stats.secondsInCombat), AVG" +
+    "(stats.firstBase), AVG(stats.firstBaseThroughRecall), AVG(stats.leadThroughDeaths), AVG(stats.firstBaseEnemyControlled), AVG(stats" +
+    ".firstBaseLead), AVG(stats.firstBaseResetGold), AVG(stats.firstBaseGoldUnspent), AVG(stats.resetsThroughRecall), AVG(stats" +
+    ".plannedResets), AVG(stats.resets), AVG(stats.resetDuration), AVG(stats.resetGold), AVG(stats.resetGoldUnspent), AVG(stats" +
+    ".resetGoldGain), AVG(stats.resetsTogether), AVG(stats.secondBase), AVG(stats.consumablesPurchased), AVG(stats.resourceConservation)," +
+    " AVG(stats.secondBaseEnemyControlled), AVG(stats.earlyDamage), AVG(stats.wardsEarlygame), AVG(stats.earlyXpEfficiency), AVG(stats" +
+    ".earlyDamageTrading), AVG(stats.averageLaneHealth), AVG(stats.averageLaneResource), (AVG(CASE WHEN lane IN ('TOP','MID','BOT') THEN " +
+    "stats.pushes ELSE NULL END) + AVG(CASE WHEN lane IN ('TOP','MID','BOT') THEN stats.freezes ELSE NULL END) * 3 + AVG(CASE WHEN lane " +
+    "IN ('TOP','MID','BOT') THEN stats.holds ELSE NULL END))/3, AVG(stats.utilityScore), AVG(stats.leadWithoutDying), AVG(stats" +
+    ".proximity), AVG(stats.laneProximityDifference), AVG(teamperformance.elderTime), AVG(teamperformance.firstDragonTime), AVG" +
+    "(teamperformance.objectiveAtSpawn), AVG(teamperformance.baronTime), AVG(teamperformance.baronPowerplay), AVG(teamperformance" +
+    ".riftTurrets), AVG(teamperformance.riftOnMultipleTurrets), AVG(teamperformance.jungleTimeWasted) FROM Playerperformance p WHERE " +
+    "teamperformance.game.gameStart >= :since AND lane IN :lanes")
+
+@NamedQuery(name = "Playerperformance.findMax", query = "SELECT MAX(qUsages), MAX(wUsages), MAX(eUsages), MAX(rUsages), MAX(spellsHit), " +
+    "MAX(spellsDodged), MAX(quickDodged), MAX(damageMagical), MAX(damagePhysical), MAX(damageTotal), MAX (damageTaken), MAX" +
+    "(damageMitigated), MAX(damageHealed), MAX(damageShielded), MAX(kills), MAX(deaths), MAX(assists), MAX(soloKills), MAX(levelUpAllin)," +
+    " MAX(doubleKills + tripleKills + quadraKills + pentaKills), MAX(aggressiveFlash), MAX(timeAlive), MAX(timeDead), MAX" +
+    "(teleportKills), MAX(immobilizations), MAX(controlWards), MAX(controlWardUptime), MAX(wardsPlaced), MAX(wardsCleared), MAX" +
+    "(guardedWards), MAX(visionScore), MAX(visionscoreAdvantage), MAX(objectivesStolen), MAX(firstturretAdvantage), MAX(objectivesDamage)" +
+    ", MAX(baronExecutes), MAX(baronKills), MAX(buffsStolen), MAX(initialScuttles), MAX(totalScuttles), MAX(splitpushedTurrets), MAX" +
+    "(teamInvading), MAX(ganksEarly), MAX(ganksTotal), MAX(CASE WHEN ganksTop + ganksMid + ganksBot <> 0 THEN ((CAST(ganksTop AS int) - " +
+    "CAST(ganksBot AS int)) / (ganksTop + ganksMid + ganksBot)) ELSE 0 END), MAX(divesDone), MAX(divesSuccessful)," +
+    " MAX(divesGotten), MAX(divesProtected), MAX(goldTotal), MAX(bountyGold), MAX(experience), MAX(totalCreeps), MAX(earlyCreeps), MAX" +
+    "(invadedCreeps), MAX(earlyLaneLead), MAX(laneLead), MAX(turretplates), MAX(creepScoreAdvantage), MAX(itemsAmount), MAX" +
+    "(mejaisCompleted), 1, MAX(outplayed), MAX(turretTakedowns), MAX(dragonTakedowns), MAX(fastestLegendary), MAX" +
+    "(gankSetups), MAX(initialBuffs), MAX(earlyKills), MAX(junglerKillsAtObjective), MAX(ambush), MAX(earlyTurrets), MAX(levelLead), MAX" +
+    "(picksMade), MAX(assassinated), MAX(savedAlly), MAX(survivedClose), MAX(stats.objectivesStolenAndContested), MAX(stats" +
+    ".objectivesKilledJunglerBefore), MAX(stats.baronTakedownsAttempts), MAX(stats.firstTrinketSwap), MAX(stats.firstWardTime), MAX(stats" +
+    ".firstControlwardTime), MAX(stats.controlWardInventoryTime), MAX(stats.turretParticipation), MAX(stats.invadingAndBuffs), MAX(stats" +
+    ".divesOwn), MAX(stats.divesEnemy), MAX(stats.divesDied), MAX(stats.teamDamage), MAX(stats.teamDamageTaken), MAX(stats" +
+    ".teamDamageMitigated), MAX(stats.bountyDifference), MAX(stats.duelWinrate), MAX(stats.duelWins), MAX(stats.deathsEarly), " +
+    "MAX(stats.kdEarly), 1, 1, 1, 1, MAX(stats.xpLead), MAX(stats" +
+    ".acesAndClean), MAX(stats.firstFullItem), MAX(stats.earlyFarmEfficiency), MAX(stats.csPerMinute), MAX(stats.xpPerMinute), MAX(stats" +
+    ".goldPerMinute), MAX(stats.legendaryItems), 1, 1, 1, 1, MAX(stats.startItemSold), MAX(stats.timeAlivePercent)," +
+    " MAX(stats" +
+    ".soloKillAdvantage), MAX(stats.firstKillTime), MAX" +
+    "(stats.firstKillDeathTime), MAX(stats.earlyGoldAdvantage), MAX(stats.earlyObjectiveAdvantage), MAX(stats.earlyObjectives), MAX(stats" +
+    ".turretplateAdvantage), MAX(stats.enemyControlAdvantage), MAX(stats.enemyControlled), MAX(stats.keyspellsUsed), MAX(stats" +
+    ".totalSpellBilance), MAX(stats.hitBilance), MAX(stats.dodgeBilance), MAX(stats.reactionBilance), MAX(stats.enemySpellReaction), " +
+    "MAX(stats.leadDifferenceAfterDiedEarly), MAX(stats.killParticipation), MAX(stats.trueKdaValue), MAX(stats.trueKdaKills), MAX(stats" +
+    ".trueKdaDeaths), MAX(stats.trueKdaAssists), MAX(stats.enemyControlAdvantageEarly), MAX(stats.enemyControlledEarly), 1, MAX(stats" +
+    ".trinketEfficiency), MAX(stats.midgameGoldXPEfficiency), MAX(stats.lategameLead), MAX(CASE WHEN stats.behind IS true THEN stats.farmingFromBehind ELSE NULL END), MAX(CASE WHEN stats.behind IS true THEN stats" +
+    ".wardingFromBehind" +
+    " ELSE NULL END), MAX(CASE WHEN stats.behind IS true THEN stats.deathsFromBehind ELSE NULL END), MAX(CASE WHEN stats.behind IS true THEN " +
+    "stats.goldFromBehind ELSE NULL END), MAX(CASE WHEN stats.behind IS true THEN stats.xpFromBehind ELSE NULL END), MAX(CASE WHEN stats" +
+    ".ahead IS true THEN stats.goldFromBehind ELSE NULL END), MAX(CASE WHEN stats.ahead IS true THEN stats.xpFromBehind ELSE NULL END), " +
+    "MAX(stats.levelupEarlier), MAX(stats.pickAdvantage), MAX(stats.teamfightAmount), MAX(stats.teamfightParticipation), MAX(stats" +
+    ".averageDeathOrder), MAX(stats.teamfightWinrate), MAX(stats.teamfightDamageRate), MAX(stats.skirmishAmount), MAX(stats" +
+    ".skirmishParticipation), MAX(stats.skirmishKillsPerSkirmish), MAX(stats.skirmishWinrate), MAX(stats.skirmishDamageRate), MAX(stats" +
+    ".roamCreepScoreAdvantage), MAX(stats.roamGoldXpAdvantage), MAX (stats.roamGoldAdvantage), MAX(stats" +
+    ".roamObjectiveDamageAdvantage), MAX(stats.roamSuccessScore), MAX(stats.relativeDeathPositioning), MAX(stats.lanePositioning), MAX" +
+    "(stats.midgamePositioning), MAX(stats.lategamePositioning), MAX(stats.laneKillDeathPositioning), MAX(stats.laneKillPositioning), MAX" +
+    "(stats.splitScore), MAX(stats.companionScore), MAX(stats.roamScore), MAX(stats.secondsInCombat), MAX(stats.firstBase), 1, MAX(stats" +
+    ".leadThroughDeaths), MAX(stats.firstBaseEnemyControlled), MAX(stats.firstBaseLead), MAX(stats" +
+    ".firstBaseResetGold), MAX(stats.firstBaseGoldUnspent), MAX(stats.resetsThroughRecall), MAX(stats.plannedResets), MAX(stats.resets), " +
+    "MAX(stats.resetDuration), MAX(stats.resetGold), MAX(stats.resetGoldUnspent), MAX(stats.resetGoldGain), MAX(stats.resetsTogether), " +
+    "MAX(stats.secondBase), 1, MAX(stats.resourceConservation), MAX(stats.secondBaseEnemyControlled), MAX" +
+    "(stats.earlyDamage), MAX(stats.wardsEarlygame), MAX(stats.earlyXpEfficiency), MAX(stats.earlyDamageTrading), MAX(stats" +
+    ".averageLaneHealth), MAX(stats.averageLaneResource), (MAX(CASE WHEN lane IN ('TOP','MID','BOT') THEN stats.pushes ELSE NULL END) + " +
+    "MAX(CASE WHEN lane IN ('TOP','MID','BOT') THEN stats.freezes ELSE NULL END) * 3 + MAX(CASE WHEN lane IN ('TOP','MID','BOT') THEN " +
+    "stats.holds ELSE NULL END))/3, MAX(stats.utilityScore), MAX(stats.leadWithoutDying), MAX(stats.proximity), MAX(stats" +
+    ".laneProximityDifference), MAX(teamperformance.elderTime), MAX(teamperformance.firstDragonTime), MAX(teamperformance" +
+    ".objectiveAtSpawn), MAX(teamperformance.baronTime), MAX(teamperformance.baronPowerplay), MAX(teamperformance.riftTurrets), MAX" +
+    "(teamperformance.riftOnMultipleTurrets), MAX(teamperformance.jungleTimeWasted) FROM Playerperformance p WHERE teamperformance.game" +
+    ".gameStart >= :since AND lane IN :lanes")
+
+@NamedQuery(name = "Playerperformance.findMin", query = "SELECT MIN(qUsages), MIN(wUsages), MIN(eUsages), MIN(rUsages), MIN(spellsHit), " +
+    "MIN(spellsDodged), MIN(quickDodged), MIN(damageMagical), MIN(damagePhysical), MIN(damageTotal), MIN (damageTaken), MIN" +
+    "(damageMitigated), MIN(damageHealed), MIN(damageShielded), MIN(kills), MIN(deaths), MIN(assists), MIN(soloKills), MIN(levelUpAllin)," +
+    " MIN(doubleKills + tripleKills + quadraKills + pentaKills), MIN(aggressiveFlash), MIN(timeAlive), MIN(timeDead), MIN" +
+    "(teleportKills), MIN(immobilizations), MIN(controlWards), MIN(controlWardUptime), MIN(wardsPlaced), MIN(wardsCleared), MIN" +
+    "(guardedWards), MIN(visionScore), MIN(visionscoreAdvantage), MIN(objectivesStolen), MIN(firstturretAdvantage), MIN(objectivesDamage)" +
+    ", MIN(baronExecutes), MIN(baronKills), MIN(buffsStolen), MIN(initialScuttles), MIN(totalScuttles), MIN(splitpushedTurrets), MIN" +
+    "(teamInvading), MIN(ganksEarly), MIN(ganksTotal), MIN(CASE WHEN ganksTop + ganksMid + ganksBot <> 0 THEN ((CAST(ganksTop AS int) - CAST(ganksBot AS int)) / (ganksTop + ganksMid + ganksBot)) ELSE 0 END), MIN(divesDone), MIN(divesSuccessful)," +
+    " MIN(divesGotten), MIN(divesProtected), MIN(goldTotal), MIN(bountyGold), MIN(experience), MIN(totalCreeps), MIN(earlyCreeps), MIN" +
+    "(invadedCreeps), MIN(earlyLaneLead), MIN(laneLead), MIN(turretplates), MIN(creepScoreAdvantage), MIN(itemsAmount), MIN" +
+    "(mejaisCompleted), 0, MIN(outplayed), MIN(turretTakedowns), MIN(dragonTakedowns), MIN(fastestLegendary), MIN" +
+    "(gankSetups), MIN(initialBuffs), MIN(earlyKills), MIN(junglerKillsAtObjective), MIN(ambush), MIN(earlyTurrets), MIN(levelLead), MIN" +
+    "(picksMade), MIN(assassinated), MIN(savedAlly), MIN(survivedClose), MIN(stats.objectivesStolenAndContested), MIN(stats" +
+    ".objectivesKilledJunglerBefore), MIN(stats.baronTakedownsAttempts), MIN(stats.firstTrinketSwap), MIN(stats.firstWardTime), MIN(stats" +
+    ".firstControlwardTime), MIN(stats.controlWardInventoryTime), MIN(stats.turretParticipation), MIN(stats.invadingAndBuffs), MIN(stats" +
+    ".divesOwn), MIN(stats.divesEnemy), MIN(stats.divesDied), MIN(stats.teamDamage), MIN(stats.teamDamageTaken), MIN(stats" +
+    ".teamDamageMitigated), MIN(stats.bountyDifference), MIN(stats.duelWinrate), MIN(stats.duelWins), MIN(stats.deathsEarly), " +
+    "MIN(stats.kdEarly), 0, 0, 0, 0, MIN(stats.xpLead), MIN(stats" +
+    ".acesAndClean), MIN(stats.firstFullItem), MIN(stats.earlyFarmEfficiency), MIN(stats.csPerMinute), MIN(stats.xpPerMinute), MIN(stats" +
+    ".goldPerMinute), MIN(stats.legendaryItems), 0, 0, 0, 0, MIN(stats.startItemSold), MIN(stats.timeAlivePercent), MIN(stats" +
+    ".soloKillAdvantage), MIN(stats.firstKillTime), MIN" +
+    "(stats.firstKillDeathTime), MIN(stats.earlyGoldAdvantage), MIN(stats.earlyObjectiveAdvantage), MIN(stats.earlyObjectives), MIN(stats" +
+    ".turretplateAdvantage), MIN(stats.enemyControlAdvantage), MIN(stats.enemyControlled), MIN(stats.keyspellsUsed), MIN(stats" +
+    ".totalSpellBilance), MIN(stats.hitBilance), MIN(stats.dodgeBilance), MIN(stats.reactionBilance), MIN(stats.enemySpellReaction), " +
+    "MIN(stats.leadDifferenceAfterDiedEarly), MIN(stats.killParticipation), MIN(stats.trueKdaValue), MIN(stats.trueKdaKills), MIN(stats" +
+    ".trueKdaDeaths), MIN(stats.trueKdaAssists), MIN(stats.enemyControlAdvantageEarly), MIN(stats.enemyControlledEarly), 0, MIN(stats" +
+    ".trinketEfficiency), MIN(stats.midgameGoldXPEfficiency), MIN(stats.lategameLead), MIN(CASE WHEN stats.behind IS true THEN stats.farmingFromBehind ELSE NULL END), MIN(CASE WHEN stats.behind IS true THEN stats" +
+    ".wardingFromBehind" +
+    " ELSE NULL END), MIN(CASE WHEN stats.behind IS true THEN stats.deathsFromBehind ELSE NULL END), MIN(CASE WHEN stats.behind IS true THEN " +
+    "stats.goldFromBehind ELSE NULL END), MIN(CASE WHEN stats.behind IS true THEN stats.xpFromBehind ELSE NULL END), MIN(CASE WHEN stats" +
+    ".ahead IS true THEN stats.goldFromBehind ELSE NULL END), MIN(CASE WHEN stats.ahead IS true THEN stats.xpFromBehind ELSE NULL END), " +
+    "MIN(stats.levelupEarlier), MIN(stats.pickAdvantage), MIN(stats.teamfightAmount), MIN(stats.teamfightParticipation), MIN(stats" +
+    ".averageDeathOrder), MIN(stats.teamfightWinrate), MIN(stats.teamfightDamageRate), MIN(stats.skirmishAmount), MIN(stats" +
+    ".skirmishParticipation), MIN(stats.skirmishKillsPerSkirmish), MIN(stats.skirmishWinrate), MIN(stats.skirmishDamageRate), MIN(stats" +
+    ".roamCreepScoreAdvantage), MIN(stats.roamGoldXpAdvantage), MIN (stats.roamGoldAdvantage), MIN(stats" +
+    ".roamObjectiveDamageAdvantage), MIN(stats.roamSuccessScore), MIN(stats.relativeDeathPositioning), MIN(stats.lanePositioning), MIN" +
+    "(stats.midgamePositioning), MIN(stats.lategamePositioning), MIN(stats.laneKillDeathPositioning), MIN(stats.laneKillPositioning), MIN" +
+    "(stats.splitScore), MIN(stats.companionScore), MIN(stats.roamScore), MIN(stats.secondsInCombat), MIN(stats.firstBase), 0, MIN(stats" +
+    ".leadThroughDeaths), MIN(stats.firstBaseEnemyControlled), MIN(stats.firstBaseLead), MIN(stats" +
+    ".firstBaseResetGold), MIN(stats.firstBaseGoldUnspent), MIN(stats.resetsThroughRecall), MIN(stats.plannedResets), MIN(stats.resets), " +
+    "MIN(stats.resetDuration), MIN(stats.resetGold), MIN(stats.resetGoldUnspent), MIN(stats.resetGoldGain), MIN(stats.resetsTogether), " +
+    "MIN(stats.secondBase), 0, MIN(stats.resourceConservation), MIN(stats.secondBaseEnemyControlled), MIN" +
+    "(stats.earlyDamage), MIN(stats.wardsEarlygame), MIN(stats.earlyXpEfficiency), MIN(stats.earlyDamageTrading), MIN(stats" +
+    ".averageLaneHealth), MIN(stats.averageLaneResource), (MIN(CASE WHEN lane IN ('TOP','MID','BOT') THEN stats.pushes ELSE NULL END) + " +
+    "MIN(CASE WHEN lane IN ('TOP','MID','BOT') THEN stats.freezes ELSE NULL END) * 3 + MAX(CASE WHEN lane IN ('TOP','MID','BOT') THEN " +
+    "stats.holds ELSE NULL END))/3, MIN(stats.utilityScore), MIN(stats.leadWithoutDying), MIN(stats.proximity), MIN(stats" +
+    ".laneProximityDifference), MIN(teamperformance.elderTime), MIN(teamperformance.firstDragonTime), MIN(teamperformance" +
+    ".objectiveAtSpawn), MIN(teamperformance.baronTime), MIN(teamperformance.baronPowerplay), MIN(teamperformance.riftTurrets), MIN" +
+    "(teamperformance.riftOnMultipleTurrets), MIN(teamperformance.jungleTimeWasted) FROM Playerperformance p WHERE teamperformance.game" +
+    ".gameStart >= :since AND lane IN :lanes")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -68,8 +227,75 @@ public class Playerperformance implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 6290895798073708343L;
+  private static Map<Lane, Map<String, Value>> values;
+
+  public static void update() {
+    values = new HashMap<>();
+    for (Lane lane : Lane.values()) {
+      if (!lane.toString().startsWith("UNKNOWN") || lane.equals(Lane.UNKNOWN)) {
+        values.put(lane, update(lane));
+      }
+    }
+  }
 
   //<editor-fold desc="Queries">
+  public static Map<String, Value> update(Lane lane) {
+    Object[] avg = HibernateUtil.stats("Playerperformance.findAvg", lane);
+    Object[] max = HibernateUtil.stats("Playerperformance.findMax", lane);
+    Object[] min = HibernateUtil.stats("Playerperformance.findMin", lane);
+
+    List<String> names = Arrays.asList("qUsages", "wUsages", "eUsages", "rUsages", "spellsHit", "spellsDodged", "quickDodged",
+        "damageMagical", "damagePhysical", "damageTotal", " damageTaken", "damageMitigated", "damageHealed", "damageShielded", "kills",
+        "deaths", "assists", "soloKills", "levelUpAllin", "multiKills", "aggressiveFlash", "timeAlive", "timeDead", "teleportKills",
+        "immobilizations", "controlWards", "controlWardUptime", "wardsPlaced", "wardsCleared", "guardedWards", "visionScore",
+        "visionscoreAdvantage", "objectivesStolen", "firstturretAdvantage", "objectivesDamage", "baronExecutes", "baronKills",
+        "buffsStolen", "initialScuttles", "totalScuttles", "splitpushedTurrets", "teaminvading", "ganksEarly", "ganksTotal",
+        "gankPriority", "divesDone", "divesSuccessful", "divesGotten", "divesProtected", "goldTotal", "bountyGold", "experience",
+        "totalCreeps", "earlyCreeps", "invadedCreeps", "earlyLaneLead", "laneLead", "turretplates", "creepScoreAdvantage", "itemsAmount",
+        "mejaisCompleted", "firstBlood", "outplayed", "turretTakedowns", "dragonTakedowns", "fastestLegendary", "gankSetups",
+        "initialBuffs", "earlyKills", "junglerKillsAtObjective", "ambush", "earlyTurrets", "levelLead", "picksMade", "assassinated",
+        "savedAlly", "survivedClose", "objectivesStolenAndContested", "objectivesKilledJunglerBefore", "baronTakedownsAttempts",
+        "firstTrinketSwap", "firstWardTime", "firstControlwardTime", "controlWardInventoryTime", "turretParticipation", "invadingAndBuffs",
+        "divesOwn", "divesEnemy", "divesDied", "teamDamage", "teamDamageTaken", "teamDamageMitigated", "bountyDifference", "duelWinrate",
+        "duelWins", "deathsEarly", "kdEarly", "ahead", "behind", "extendingLead", "comeback", "xpLead", "acesAndClean", "firstFullItem",
+        "earlyFarmEfficiency", "csPerMinute", "xpPerMinute", "goldPerMinute", "legendaryItems", "antiHealing", "penetration", "damageBuild",
+        "resistanceBuild", "startItemSold", "timeAlivePercent", "soloKillAdvantage", "firstKillTime", "firstKillDeathTime",
+        "earlyGoldAdvantage", "earlyObjectiveAdvantage", "earlyObjectives", "turretplateAdvantage", "enemyControlAdvantage",
+        "enemyControlled", "keyspellsUsed", "totalSpellBilance", "hitBilance", "dodgeBilance", "reactionBilance", "enemySpellReaction",
+        "leadDifferenceAfterDiedEarly", "killParticipation", "trueKdaValue", "trueKdaKills", "trueKdaDeaths", "trueKdaAssists",
+        "enemyControlAdvantageEarly", "enemyControlledEarly", "farmstop", "trinketEfficiency", "midgameGoldXPEfficiency", "lategameLead",
+        "farmingFromBehind", "wardingFromBehind", "deathsFromBehind", "goldFromBehind", "xpFromBehind", "goldFromAhead", "xpFromAhead",
+        "levelupEarlier", "pickAdvantage", "teamfightAmount", "teamfightParticipation", "averageDeathOrder", "teamfightWinrate",
+        "teamfightDamageRate", "skirmishAmount", "skirmishParticipation", "skirmishKillsPerSkirmish", "skirmishWinrate",
+        "skirmishDamageRate", "roamCreepScoreAdvantage", "roamGoldXpAdvantage", " roamGoldAdvantage", "roamObjectiveDamageAdvantage",
+        "roamSuccessScore", "relativeDeathPositioning", "lanePositioning", "midgamePositioning", "lategamePositioning",
+        "laneKillDeathPositioning", "laneKillPositioning", "splitScore", "companionScore", "roamScore", "secondsInCombat", "firstBase",
+        "firstBaseThroughRecall", "leadThroughDeaths", "firstBaseEnemyControlled", "firstBaseLead", "firstBaseResetGold",
+        "firstBaseGoldUnspent", "resetsThroughRecall", "plannedResets", "resets", "resetDuration", "resetGold", "resetGoldUnspent",
+        "resetGoldGain", "resetsTogether", "secondBase", "consumablesPurchased", "resourceConservation", "secondBaseEnemyControlled",
+        "earlyDamage", "wardsEarlygame", "earlyXpEfficiency", "earlyDamageTrading", "averageLaneHealth", "averageLaneResource",
+        "waveState", "utilityScore", "leadWithoutDying", "proximity", "laneProximityDifference", "elderTime", "dragonTime",
+        "objectiveAfterSpawn", "baronTime", "baronPowerplay", "heraldTurrets", "heraldMulticharge", "jungleTimeWasted");
+    Map<String, Value> vals = new HashMap<>();
+    for (int i = 0; i < avg.length; i++) {
+      Double average = avg[i] == null ? 0 : Double.parseDouble(avg[i].toString());
+      Double highest = max[i] == null ? 0 : Double.parseDouble(max[i].toString());
+      Double lowest = min[i] == null ? 0 : Double.parseDouble(min[i].toString());
+      Value value = new Value(lowest, average, highest);
+
+      String name = names.get(i);
+      vals.put(name, value);
+    }
+    return vals;
+  }
+
+  public static Map<Lane, Map<String, Value>> getValues() {
+    if (values == null) {
+      update();
+    }
+    return values;
+  }
+
   public static Set<Playerperformance> get() {
     return new LinkedHashSet<>(HibernateUtil.findList(Playerperformance.class));
   }
@@ -130,7 +356,7 @@ public class Playerperformance implements Serializable {
   private Account account;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "lane", nullable = false, length = 7)
+  @Column(name = "lane", nullable = false, length = 8)
   private Lane lane;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -362,7 +588,6 @@ public class Playerperformance implements Serializable {
   @Column(name = "gank_setups")
   private byte gankSetups;
 
-  @Check(constraints = "initial_buffs BETWEEN 0 and 2")
   @Column(name = "buffs_initial")
   private byte initialBuffs;
 
@@ -575,6 +800,14 @@ public class Playerperformance implements Serializable {
 
   public boolean wasPresent(Champion champion) {
     return teamperformance.getGame().getChampionSelections().stream().anyMatch(selection -> selection.getChampion().equals(champion));
+  }
+
+  public boolean isCompetitiveLike() {
+    return teamperformance.getTeam() != null || teamperformance.getGame().isCompetitive();
+  }
+
+  public int getSoulratePerfect() {
+    return (teamperformance.isPerfectSoul() ? 1 : 0) * 5 + (teamperformance.getSoul() != null ? 1 : 0);
   }
 
   @Override

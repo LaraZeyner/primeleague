@@ -7,35 +7,35 @@ import lombok.val;
  * Created by Lara on 05.05.2022 for web
  */
 public enum JungleCamp {
-  TOP_SCUTTLE(new Position(4250, 9800), new Position(4250, 9800), "River 1"),
-  BLUE(new Position(3650, 8000), new Position(11100, 6750), "Blue"),
-  GROMP(new Position(2250, 8450), new Position(12750, 6550), "Gromp"),
-  WOLVES(new Position(3550, 6525), new Position(11450, 8475), "Wolves"),
-  BOT_SCUTTLE(new Position(10250, 5300), new Position(10250, 5300), "River 2"),
-  RED(new Position(7650, 3800), new Position(7000, 11350), "Red"),
-  KRUGS(new Position(8450, 2525), new Position(6550, 12475), "Krugs"),
-  RAPTORS(new Position(7000, 5300), new Position(8000, 9700), "Raptors");
+  TOP_SCUTTLE(new RelativePosition(.28947, .65697), new RelativePosition(.28947, .65697), "River 1"),
+  BLUE(new RelativePosition(.24856, .53358), new RelativePosition(.75144, .46642), "Blue"),
+  GROMP(new RelativePosition(.14733, .56836), new RelativePosition(.85267, .43164), "Gromp"),
+  WOLVES(new RelativePosition(.25073, .43620), new RelativePosition(.74927, .56380), "Wolves"),
+  BOT_SCUTTLE(new RelativePosition(.71053, .34303), new RelativePosition(.71053, .34303), "River 2"),
+  RED(new RelativePosition(.52249, .25960), new RelativePosition(.47751, .74040), "Red"),
+  KRUGS(new RelativePosition(.56918, .16873), new RelativePosition(.43082, .83127), "Krugs"),
+  RAPTORS(new RelativePosition(.48000, .35000), new RelativePosition(.52000, .65000), "Raptors");
 
-  private final Position position1;
-  private final Position position2;
+  private final RelativePosition position1;
+  private final RelativePosition position2;
   private final String name;
 
-  JungleCamp(Position position1, Position position2, String name) {
+  JungleCamp(RelativePosition position1, RelativePosition position2, String name) {
     this.position1 = position1;
     this.position2 = position2;
     this.name = name;
   }
 
   public double distance(Position position) {
-    return Math.min(Util.distance(position, position1), Util.distance(position, position2));
+    return Math.min(Util.distance(position, position1.getPosition()), Util.distance(position, position2.getPosition()));
   }
 
   public static String getClosestCampName(Position position, boolean blueSide) {
     val camp = getClosestCampToPosition(position);
-    if (camp.distance(position) > 2000) {
+    if (camp == null) {
       return "";
     }
-    boolean blueCloser = Util.distance(position, camp.position1) <= Util.distance(position, camp.position2);
+    boolean blueCloser = Util.distance(position, camp.position1.getPosition()) <= Util.distance(position, camp.position2.getPosition());
     if (blueCloser != blueSide) {
       return "Enemy " + camp.name;
     }
@@ -46,7 +46,7 @@ public enum JungleCamp {
     JungleCamp campo = null;
     for (JungleCamp camp : JungleCamp.values()) {
       final double distance = camp.distance(position);
-      if (campo == null || campo.distance(position) > distance) {
+      if (camp.distance(position) > 2250 && (campo == null || campo.distance(position) > distance)) {
         campo = camp;
       }
     }

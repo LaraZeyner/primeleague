@@ -55,6 +55,7 @@ public class Fight {
 
   /**
    * Ermittelt, inwiefern der Spieler am Fight beteiligt war
+   *
    * @param pId angepasste PID
    * @return ob am Fight beteiligt
    */
@@ -64,6 +65,7 @@ public class Fight {
 
   /**
    * Ermittelt, inwiefern der Spieler im Fight gestorben ist
+   *
    * @param player Spieler
    * @return ob im Fight gestorben
    */
@@ -97,15 +99,9 @@ public class Fight {
    * </ul>
    */
   public boolean isGankOf(Lane lane, JSONPlayer player, JSONPlayer enemy) {
-    if (new ArrayList<>(kills).get(0).getTimestamp() < Const.EARLYGAME_UNTIL_MINUTE * 60_000) {
-      for (Kill kill : kills) {
-        if (enemy != null && player != null && kill.isInvolved(player.getId() + 1) && !lane.isInArea(kill.getPosition(),
-            player.isFirstPick())) {
-          return !kill.isInvolved(enemy.getId() + 1) || (!getFighttype().equals(Fighttype.DUEL));
-        }
-      }
-    }
-    return false;
+    return new ArrayList<>(kills).get(0).getTimestamp() < Const.EARLYGAME_UNTIL_MINUTE * 60_000 &&
+        kills.stream().anyMatch(kill -> enemy != null && player != null && kill.isInvolved(player.getPId()) &&
+            (player.getLane().equals(Lane.JUNGLE) || !lane.isInArea(kill.getPosition(), player.isFirstPick())));
   }
 
   public int getMultiKillCount(int pId) {
@@ -141,6 +137,7 @@ public class Fight {
 
   /**
    * Ermittelt den Schaden eines Spielers an Champions waehrend eines Fights
+   *
    * @param player Spieler
    * @return Gesamtschaden durch den Spieler verursacht
    */
@@ -148,7 +145,7 @@ public class Fight {
     final int start = getStart(player);
     int end = getEnd(player);
     if (end == start) {
-      end+= 60_000;
+      end += 60_000;
     }
     if (end / 60_000 <= player.getLastMinute()) {
       return damageBetween(player, start, end);
@@ -190,6 +187,7 @@ public class Fight {
 
   /**
    * Ermittelt den Startzeitpunkt des Fights fuer den Spieler
+   *
    * @param player Spieler
    * @return Start-Millis
    */
@@ -202,6 +200,7 @@ public class Fight {
 
   /**
    * Ermittelt den Endzeitpunkt des Fights fuer den Spieler
+   *
    * @param player Spieler
    * @return End-Millis
    */
@@ -214,17 +213,19 @@ public class Fight {
 
   /**
    * Ermittelt, inwiefern der Fight innerhalb des Zeitraumes stattfand
+   *
    * @param player Spieler
    * @param startMinute Startminute
    * @param endMinute Endminute
    * @return ob Fight im Zeitraum stattfand
    */
   public boolean isInsideMinutes(JSONPlayer player, int startMinute, int endMinute) {
-    return getStart(player) > startMinute * 60_000 &&  getEnd(player) < endMinute * 60_000;
+    return getStart(player) > startMinute * 60_000 && getEnd(player) < endMinute * 60_000;
   }
 
   /**
    * Ermittelt die Dauer des Fights fuer einen Spieler
+   *
    * @param player Spieler
    * @return Dauer in Millis
    */

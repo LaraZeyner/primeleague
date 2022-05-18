@@ -16,7 +16,10 @@ import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.StoredStat;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.Team;
+import de.xeri.prm.util.io.exception.NoChallengeException;
+import de.xeri.prm.util.logger.Logger;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.val;
 import org.json.JSONObject;
 
@@ -56,11 +59,11 @@ public class JSONPlayer {
     return id + 1;
   }
 
-  public void addEvent(JSONObject event) {
+  public void addEvent(@NonNull JSONObject event) {
     events.add(event);
   }
 
-  public void addInfo(JSONObject info, int minute) {
+  public void addInfo(@NonNull JSONObject info, int minute) {
     infos.set(minute, info);
   }
 
@@ -77,7 +80,7 @@ public class JSONPlayer {
     return laneName.equals("") ? Lane.UNKNOWN : Lane.valueOf(laneName);
   }
 
-  public String get(StoredStat storedStat) {
+  public String get(@NonNull StoredStat storedStat) {
     if (storedStat.isChallenge() && json.has("challenges")) {
       return json.getJSONObject("challenges").getString(storedStat.getKey());
     } else if (json.has(storedStat.getKey())) {
@@ -86,17 +89,19 @@ public class JSONPlayer {
     return null;
   }
 
-  public boolean has(StoredStat storedStat) {
-    return storedStat.isChallenge() && json.has("challenges") || json.has(storedStat.getKey());
+  public boolean has(@NonNull StoredStat storedStat) {
+    return storedStat.isChallenge() && json.has("challenges") && json.getJSONObject("challenges").has(storedStat.getKey()) || json.has(storedStat.getKey());
   }
 
-  public Boolean getBool(StoredStat storedStat) {
+  public Boolean getBool(@NonNull StoredStat storedStat) {
     if (storedStat.isChallenge() && json.has("challenges")) {
-      return json.getJSONObject("challenges").getBoolean(storedStat.getKey());
-    } else if (json.has(storedStat.getKey())) {
-      return json.getBoolean(storedStat.getKey());
+      final JSONObject challenges = json.getJSONObject("challenges");
+      if (challenges.has(storedStat.getKey())) {
+        return challenges.getBoolean(storedStat.getKey());
+      }
     }
-    return null;
+
+    return json.has(storedStat.getKey()) ? json.getBoolean(storedStat.getKey()) : null;
   }
 
   /**
@@ -107,13 +112,33 @@ public class JSONPlayer {
    * @param storedStat stat from JSON
    * @return Integer for smallint unsigned, mediumint and integer signed
    */
-  public Integer getMedium(StoredStat storedStat) {
-    if (storedStat.isChallenge() && json.has("challenges")) {
-      return json.getJSONObject("challenges").getInt(storedStat.getKey());
-    } else if (json.has(storedStat.getKey())) {
-      return json.getInt(storedStat.getKey());
+  public Integer getMedium(@NonNull StoredStat storedStat) {
+    try {
+      return handleStat(storedStat);
+
+    } catch (NoChallengeException exception) {
+      if (!GameAnalyser.noChallengeWarned) {
+        Logger.getLogger("Spielanalyse").fine(exception.getMessage(), exception);
+        GameAnalyser.noChallengeWarned = true;
+      }
+
+      return null;
     }
-    return null;
+  }
+
+  private Integer handleStat(@NonNull StoredStat storedStat) throws NoChallengeException {
+    if (storedStat.isChallenge()) {
+      if (json.has("challenges")) {
+        final JSONObject challenges = json.getJSONObject("challenges");
+        if (challenges.has(storedStat.getKey())) {
+          return challenges.getInt(storedStat.getKey());
+        }
+      } else {
+        throw new NoChallengeException("Challenges nicht erstellt");
+      }
+    }
+
+    return json.has(storedStat.getKey()) ? json.getInt(storedStat.getKey()) : null;
   }
 
   /**
@@ -123,7 +148,7 @@ public class JSONPlayer {
    * @param storedStat stat from JSON
    * @return Short for tinyint unsigned and smallint signed
    */
-  public Short getSmall(StoredStat storedStat) {
+  public Short getSmall(@NonNull StoredStat storedStat) {
     final Integer statInteger = getMedium(storedStat);
     if (statInteger != null) {
       return Short.parseShort(String.valueOf(statInteger));
@@ -137,7 +162,7 @@ public class JSONPlayer {
    * @param storedStat stat from JSON
    * @return Byte for tinyint signed
    */
-  public Byte getTiny(StoredStat storedStat) {
+  public Byte getTiny(@NonNull StoredStat storedStat) {
     final Integer statInteger = getMedium(storedStat);
     if (statInteger != null) {
       return Byte.parseByte(String.valueOf(statInteger));
@@ -145,18 +170,20 @@ public class JSONPlayer {
     return null;
   }
 
-  public Byte getTiny(StoredStat challenge, StoredStat alternative) {
+  public Byte getTiny(@NonNull StoredStat challenge, @NonNull StoredStat alternative) {
     final Byte stat1 = getTiny(challenge);
     return stat1 != null ? stat1 : getTiny(alternative);
   }
 
-  public JSONObject object(StoredStat storedStat) {
+  public JSONObject object(@NonNull StoredStat storedStat) {
     if (storedStat.isChallenge() && json.has("challenges")) {
-      return json.getJSONObject("challenges").getJSONObject(storedStat.getKey());
-    } else if (json.has(storedStat.getKey())) {
-      return json.getJSONObject(storedStat.getKey());
+      final JSONObject challenges = json.getJSONObject("challenges");
+      if (challenges.has(storedStat.getKey())) {
+        return challenges.getJSONObject(storedStat.getKey());
+      }
     }
-    return null;
+
+    return json.has(storedStat.getKey()) ? json.getJSONObject(storedStat.getKey()) : null;
   }
 
   public boolean isListed() {
@@ -194,7 +221,7 @@ public class JSONPlayer {
     return getEnemy() != null;
   }
 
-  public int getStatAt(int minute, TimelineStat stat) {
+  public int getStatAt(int minute, @NonNull TimelineStat stat) {
     return infos.get(minute) != null ? getValue(minute, stat) : getValue(getLastMinute(), stat);
   }
 
@@ -202,11 +229,11 @@ public class JSONPlayer {
     return new Position(getStatAt(minute, TimelineStat.POSITION_X), getStatAt(minute, TimelineStat.POSITION_Y));
   }
 
-  public double getStatPerMinute(int minute, TimelineStat stat) {
+  public double getStatPerMinute(int minute, @NonNull TimelineStat stat) {
     return getStatAt(minute, stat) * 1d / minute;
   }
 
-  private int getValue(int minute, TimelineStat stat) {
+  private int getValue(int minute, @NonNull TimelineStat stat) {
     if (stat.getQueries()[0].startsWith("/")) {
       val jsonObject = infos.get(minute).getJSONObject(stat.getQueries()[0].substring(1));
       return jsonObject.getInt(stat.getQueries()[1]);
@@ -220,7 +247,7 @@ public class JSONPlayer {
     }
   }
 
-  public int getStatDifference(int start, int end, TimelineStat stat) {
+  public int getStatDifference(int start, int end, @NonNull TimelineStat stat) {
     if (start < highestMinute) {
       if (end <= highestMinute) {
         return getStatAt(end, stat) - getStatAt(start, stat);
@@ -231,14 +258,14 @@ public class JSONPlayer {
     return 0;
   }
 
-  public int getLeadAt(int minute, TimelineStat stat) {
+  public int getLeadAt(int minute, @NonNull TimelineStat stat) {
     if (hasEnemy() && minute <= highestMinute) {
       return getStatAt(minute, stat) - getEnemy().getStatAt(minute, stat);
     }
     return 0;
   }
 
-  public int getLeadDifferenceAt(int start, int end, TimelineStat stat) {
+  public int getLeadDifferenceAt(int start, int end, @NonNull TimelineStat stat) {
     if (start < highestMinute) {
       if (end <= highestMinute) {
         return getLeadAt(end, stat) - getLeadAt(start, stat);
@@ -249,17 +276,17 @@ public class JSONPlayer {
     return 0;
   }
 
-  public List<JSONObject> getEvents(EventTypes... types) {
+  public List<JSONObject> getEvents(@NonNull EventTypes... types) {
     return Arrays.stream(types)
         .flatMap(type -> getEvents(type, 0).stream())
         .collect(Collectors.toCollection(ArrayList::new));
   }
 
-  public List<JSONObject> getEvents(EventTypes type) {
+  public List<JSONObject> getEvents(@NonNull EventTypes type) {
     return getEvents(type, 0);
   }
 
-  public List<JSONObject> getEvents(EventTypes type, int startMillis) {
+  public List<JSONObject> getEvents(@NonNull EventTypes type, int startMillis) {
     return getEvents(type, startMillis, Integer.MAX_VALUE);
   }
 
@@ -270,7 +297,7 @@ public class JSONPlayer {
         .collect(Collectors.toList());
   }
 
-  public List<JSONObject> getEvents(EventTypes type, int startMillis, int endMillis) {
+  public List<JSONObject> getEvents(@NonNull EventTypes type, int startMillis, int endMillis) {
     val allowedTypes = type == EventTypes.ALL_ITEMEVENTS ? Arrays.asList(EventTypes.ITEM_DESTROYED, EventTypes.ITEM_PURCHASED,
         EventTypes.ITEM_SOLD, EventTypes.ITEM_UNDO) : Collections.singletonList(type);
 

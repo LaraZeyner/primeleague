@@ -50,6 +50,7 @@ import de.xeri.prm.models.match.playerperformance.PlayerperformanceLevel;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceObjective;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.Util;
+import de.xeri.prm.util.io.exception.ConstraintException;
 import de.xeri.prm.util.io.json.JSON;
 import de.xeri.prm.util.io.riot.RiotAccountURLGenerator;
 import de.xeri.prm.util.logger.Logger;
@@ -73,6 +74,7 @@ public final class GameAnalyser {
   private static Set<Champion> champions;
   private static Set<Summonerspell> summonerSpells;
   public static Map<Short, Item> items;
+  public static boolean noChallengeWarned;
 
   private final List<JSONObject> allEvents = new ArrayList<>();
   private final List<JSONObject> gameEvents = new ArrayList<>();
@@ -80,11 +82,14 @@ public final class GameAnalyser {
   private int highestMinute;
   private final Set<PlayerperformanceKill> kills;
   public int lastKillId;
+  private int unknownLaneCount;
 
   public GameAnalyser() {
     this.highestMinute = 0;
     this.kills = new HashSet<>();
     this.lastKillId = PlayerperformanceKill.lastId();
+    this.unknownLaneCount = 0;
+    noChallengeWarned = false;
   }
 
   public boolean validate(JSON gameJson, JSON timelineJson, QueueType queueType) {
@@ -112,53 +117,58 @@ public final class GameAnalyser {
       }
       final String tCode = info.getString("tournamentCode");
       val gametype = Gametype.find((short) (tCode.equals("") ? queueId : -1));
-      val game = handleGame(info, gameId, gametype);
-      gametype.addGame(game, gametype);
+      try {
+        val game = handleGame(info, gameId, gametype);
+        gametype.addGame(game, gametype);
 
-      createJsonTeams(participants, playerInfo);
+        createJsonTeams(participants, playerInfo);
 
-      val fights = handleGameEvents(game);
-      handleEventsForTeams();
-      for (int i = 0; i < jsonTeams.size(); i++) {
-        val jsonTeam = jsonTeams.get(i);
-        val teams = info.getJSONArray("teams");
-        jsonTeam.setTeamObject(teams.getJSONObject(i));
-        determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
-      }
-
-      for (final JSONTeam jsonTeam : jsonTeams) {
-        if (jsonTeam.doesExist()) {
-          val teamperformance = handleTeam(jsonTeam);
-          val team = jsonTeam.getMostUsedTeam(queueType);
-          game.addTeamperformance(teamperformance, team);
-          handleTeamEvents(teamperformance);
-
-          val players = determinePlayers(queueType, jsonTeam);
-          players.forEach(player -> handlePlayer(player, teamperformance, fights));
+        val fights = handleGameEvents(game);
+        handleEventsForTeams();
+        for (int i = 0; i < jsonTeams.size(); i++) {
+          val jsonTeam = jsonTeams.get(i);
+          val teams = info.getJSONArray("teams");
+          jsonTeam.setTeamObject(teams.getJSONObject(i));
+          determineBansAndPicks(teams.getJSONObject(i), i, game, participants);
         }
-      }
-      final List<Team> teams = game.getTeamperformances().stream()
-          .filter(Objects::nonNull)
-          .map(Teamperformance::getTeam)
-          .collect(Collectors.toList());
-      if (teams.size() == 2 && game.getGametype().getId() < 1) {
-        List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
-        turnamentMatches.addAll(teams.get(0).getMatchesGuest());
-        final List<TurnamentMatch> collect = turnamentMatches.stream()
-            .filter(TurnamentMatch::isOpen)
-            .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
-            .filter(match -> match.hasTeam(teams.get(1)))
+
+        for (final JSONTeam jsonTeam : jsonTeams) {
+          if (jsonTeam.doesExist()) {
+            val teamperformance = handleTeam(jsonTeam);
+            val team = jsonTeam.getMostUsedTeam(queueType);
+            game.addTeamperformance(teamperformance, team);
+            handleTeamEvents(teamperformance);
+
+            val players = determinePlayers(queueType, jsonTeam);
+            players.forEach(player -> handlePlayer(player, teamperformance, fights));
+          }
+        }
+        final List<Team> teams = game.getTeamperformances().stream()
+            .map(Teamperformance::getTeam)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
+        if (teams.size() == 2 && game.getGametype().getId() < 1) {
+          List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
+          turnamentMatches.addAll(teams.get(0).getMatchesGuest());
+          final List<TurnamentMatch> collect = turnamentMatches.stream()
+              .filter(TurnamentMatch::isOpen)
+              .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
+              .filter(match -> match.hasTeam(teams.get(1)))
+              .collect(Collectors.toList());
 
-        for (TurnamentMatch turnamentMatch : collect) {
-          turnamentMatch.addGame(game);
+          for (TurnamentMatch turnamentMatch : collect) {
+            turnamentMatch.addGame(game);
+          }
         }
+        logger.info("Match " + gameId  + " vom " + new SimpleDateFormat("dd.MM.yyyy HH:mm")
+            .format(game.getGameStart()) + " geladen in " + (System.currentTimeMillis() - millis) / 1000 + "s");
+        return true;
+
+      } catch (ConstraintException exception) {
+        logger.warning(exception.getMessage());
       }
-      logger.info("Match " + gameId  + " vom " + new SimpleDateFormat("dd.MM.yyyy HH:mm")
-          .format(game.getGameStart()) + " geladen in " + (System.currentTimeMillis() - millis) / 1000 + "s");
-      return true;
     }
-    logger.config("Match entfernt");
+    logger.attention("Match entfernt");
     return false;
   }
 
@@ -317,12 +327,18 @@ public final class GameAnalyser {
     final byte controlWards = p.getTiny(StoredStat.CONTROL_WARDS_PLACED, StoredStat.CONTROL_WARDS_BOUGHT);
     final byte wardClear = p.getTiny(StoredStat.WARDS_TAKEDOWN, StoredStat.WARDS_CLEARED);
     val laneString = p.get(StoredStat.LANE);
-    val playerperformance = new Playerperformance(laneString.equals("") ? Lane.UNKNOWN : Lane.valueOf(laneString),
-        p.getSmall(StoredStat.Q_USAGE), p.getSmall(StoredStat.W_USAGE), p.getSmall(StoredStat.E_USAGE),
-        p.getSmall(StoredStat.R_USAGE), p.getMedium(StoredStat.DAMAGE_MAGICAL), p.getMedium(StoredStat.DAMAGE_PHYSICAL),
-        p.getMedium(StoredStat.DAMAGE_TOTAL), p.getMedium(StoredStat.DAMAGE_TAKEN), p.getMedium(StoredStat.DAMAGE_MITIGATED),
-        p.getMedium(StoredStat.DAMAGE_HEALED), shiedling, p.getTiny(StoredStat.KILLS), p.getTiny(StoredStat.DEATHS),
-        p.getTiny(StoredStat.ASSISTS), p.getTiny(StoredStat.KILLS_DOUBLE), p.getTiny(StoredStat.KILLS_TRIPLE),
+    Lane lane;
+    if (laneString.equals("")) {
+      lane = unknownLaneCount == 0 ? Lane.UNKNOWN : Lane.valueOf("UNKNOWN" + unknownLaneCount);
+      unknownLaneCount++;
+    } else {
+      lane = Lane.valueOf(laneString);
+    }
+    val playerperformance = new Playerperformance(lane, p.getSmall(StoredStat.Q_USAGE), p.getSmall(StoredStat.W_USAGE),
+        p.getSmall(StoredStat.E_USAGE), p.getSmall(StoredStat.R_USAGE), p.getMedium(StoredStat.DAMAGE_MAGICAL),
+        p.getMedium(StoredStat.DAMAGE_PHYSICAL), p.getMedium(StoredStat.DAMAGE_TOTAL), p.getMedium(StoredStat.DAMAGE_TAKEN),
+        p.getMedium(StoredStat.DAMAGE_MITIGATED), p.getMedium(StoredStat.DAMAGE_HEALED), shiedling, p.getTiny(StoredStat.KILLS),
+        p.getTiny(StoredStat.DEATHS), p.getTiny(StoredStat.ASSISTS), p.getTiny(StoredStat.KILLS_DOUBLE), p.getTiny(StoredStat.KILLS_TRIPLE),
         p.getTiny(StoredStat.KILLS_QUADRA), p.getTiny(StoredStat.KILLS_PENTA), p.getSmall(StoredStat.TIME_ALIVE),
         p.getSmall(StoredStat.TIME_DEAD), p.getSmall(StoredStat.WARDS_PLACED), stolen, p.getMedium(StoredStat.OBJECTIVES_DAMAGE),
         p.getTiny(StoredStat.BARON_KILLS), p.getMedium(StoredStat.GOLD_TOTAL), p.getMedium(StoredStat.EXPERIENCE_TOTAL), creeps,
@@ -336,7 +352,9 @@ public final class GameAnalyser {
     if (spellsLanded != null) {
       playerperformance.setSpellsHit(spellsLanded);
       playerperformance.setSpellsDodged(p.getSmall(StoredStat.SPELL_DODGE));
-      playerperformance.setQuickDodged(p.getSmall(StoredStat.SPELL_DODGE_QUICK));
+      if (p.has(StoredStat.SPELL_DODGE_QUICK)) {
+        playerperformance.setQuickDodged(p.getSmall(StoredStat.SPELL_DODGE_QUICK));
+      }
     }
 
     final Byte soloKills = p.getTiny(StoredStat.SOLO_KILLS);
@@ -344,9 +362,13 @@ public final class GameAnalyser {
       playerperformance.setSoloKills(soloKills);
     }
 
-    final Byte levelUpAllin = p.getTiny(StoredStat.LEVELUP_TAKEDOWNS);
-    if (levelUpAllin != null) {
-      playerperformance.setLevelUpAllin(levelUpAllin);
+    try {
+      final Byte levelUpAllin = handleLevelup(p);
+      if (levelUpAllin != null) {
+        playerperformance.setLevelUpAllin(levelUpAllin);
+      }
+    } catch (ConstraintException exception) {
+      logger.config(exception.getMessage(), exception);
     }
 
     final Byte aggressiveFlash = p.getTiny(StoredStat.AGGRESSIVE_FLASH);
@@ -460,7 +482,7 @@ public final class GameAnalyser {
       playerperformance.setTurretplates(turretplates);
     }
 
-    final Byte csAdvantage = p.getTiny(StoredStat.CREEP_SCORE_ADVANTAGE);
+    final Short csAdvantage = p.getSmall(StoredStat.CREEP_SCORE_ADVANTAGE);
     if (csAdvantage != null) {
       playerperformance.setCreepScoreAdvantage(csAdvantage);
     }
@@ -550,6 +572,14 @@ public final class GameAnalyser {
     }
 
     return playerperformance;
+  }
+
+  private Byte handleLevelup(JSONPlayer player) throws ConstraintException {
+    final Byte levelUpAllin = player.getTiny(StoredStat.LEVELUP_TAKEDOWNS);
+    if (levelUpAllin > 17) {
+      throw new ConstraintException("Mehr als 17 Levelups");
+    }
+    return levelUpAllin;
   }
 
   private Byte handleDives(Byte divesDone, Byte divesProtected) {
@@ -666,7 +696,7 @@ public final class GameAnalyser {
       teamperformance.setEarlyAces(earlyAces);
     }
 
-    final Byte baronTime = jsonPlayer.getTiny(StoredStat.BARON_TIME);
+    final Short baronTime = jsonPlayer.getSmall(StoredStat.BARON_TIME);
     if (baronTime != null) {
       teamperformance.setBaronTime(baronTime);
     }
@@ -714,7 +744,7 @@ public final class GameAnalyser {
     return teamperformance;
   }
 
-  private Game handleGame(JSONObject info, String gameId, Gametype gametype) {
+  private Game handleGame(JSONObject info, String gameId, Gametype gametype) throws ConstraintException {
     final long startMillis = info.getLong("gameStartTimestamp");
     val start = new Date(startMillis);
     int end = info.getInt("gameDuration");
@@ -722,7 +752,10 @@ public final class GameAnalyser {
       end = end / 1000;
     }
     final short duration = (short) end;
-    return Game.get(new Game(gameId, start, duration), gametype);
+    if (duration > 100) {
+      return Game.get(new Game(gameId, start, duration), gametype);
+    }
+    throw new ConstraintException("Spieldauer zu kurz");
   }
 
   private HashMap<Integer, JSONObject> loadTimeline(JSONObject timeLineObject) {
@@ -876,7 +909,10 @@ public final class GameAnalyser {
       val role = handleEventOfPlayer(player, event);
       final PlayerperformanceKill kill = handleChampionKills(event, timestamp, role);
       playerperformance.addKill(kill);
-      killList.add(kill);
+      if (kill.getPlayerperformance() != null) {
+        killList.add(kill);
+      }
+
     }
 
     for (JSONObject event : player.getEvents(EventTypes.CHAMPION_SPECIAL_KILL)) {
@@ -898,7 +934,9 @@ public final class GameAnalyser {
       handleObjectives(playerperformance, event, timestamp, role);
     }
 
-    kills.addAll(killList);
+    if(!killList.isEmpty()) {
+      kills.addAll(killList);
+    }
   }
 
   @NonNull

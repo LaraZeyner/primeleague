@@ -140,7 +140,7 @@ public class PlayerperformanceStats implements Serializable {
   private short startItemSold;
 
   @Column(name = "time_alive_percentage", precision = 9, scale = 7)
-  private BigDecimal timeAlive;
+  private BigDecimal timeAlivePercent;
 
   @Column(name = "kills_solo_advantage")
   private byte soloKillAdvantage;
@@ -425,7 +425,7 @@ public class PlayerperformanceStats implements Serializable {
     this.invadingAndBuffs = BigDecimal.valueOf(playerperformance.getTeamInvading() + playerperformance.getBuffsStolen());
 
     final double turretParticipation = Util.div(playerperformance.getTurretTakedowns(), teamperformance.getTowers());
-    ;
+
     this.turretParticipation = BigDecimal.valueOf(turretParticipation);
 
     if (playerperformance.getDivesDone() != 0) {
@@ -505,7 +505,7 @@ public class PlayerperformanceStats implements Serializable {
     }
 
     final double timeAlive = playerperformance.getTimeDead() * 1d / (playerperformance.getTeamperformance().getGame().getDuration());
-    this.timeAlive = BigDecimal.valueOf(timeAlive);
+    this.timeAlivePercent = BigDecimal.valueOf(timeAlive);
 
     short amount = 0;
     Champion champion = playerperformance.getChampionOwn();
@@ -556,14 +556,9 @@ public class PlayerperformanceStats implements Serializable {
   }
 
   public void setBaronTakedownsAttempts(Playerperformance playerperformance, byte steals) {
-    final int divisor = playerperformance.getBaronKills() + steals + playerperformance.getBaronExecutes();
-
-    if (divisor == 0) {
-      this.baronTakedownsAttempts = BigDecimal.valueOf(1d * 0);
-    } else {
-      final double value = (playerperformance.getBaronKills() - steals) * 1d / divisor;
-      this.baronTakedownsAttempts = BigDecimal.valueOf(value);
-    }
+    final double value = Util.div(Math.max(playerperformance.getBaronKills() - steals, 0),
+        playerperformance.getBaronKills() + steals + playerperformance.getBaronExecutes());
+    this.baronTakedownsAttempts = BigDecimal.valueOf(value);
   }
 
   public void setTeamDamageMitigated(Playerperformance playerperformance, int totalTeamDamage) {
@@ -610,14 +605,18 @@ public class PlayerperformanceStats implements Serializable {
     this.enemyControlAdvantageEarly = BigDecimal.valueOf(controlled - underControl);
   }
 
-  public void setSpellDodge(Playerperformance playerperformance, short spellsHit, short spellsDodged, short quickDodged) {
-    final double hitBilance = playerperformance.getSpellsHit() * 1d / (playerperformance.getSpellsHit() + spellsDodged);
-    this.hitBilance = BigDecimal.valueOf(hitBilance);
-    final double dodgeBilance = playerperformance.getSpellsDodged() * 1d / (playerperformance.getSpellsDodged() + spellsHit);
-    this.hitBilance = BigDecimal.valueOf(dodgeBilance);
-    final double totalSpellBilance = (hitBilance + dodgeBilance) / 2;
-    this.totalSpellBilance = BigDecimal.valueOf(totalSpellBilance);
-    this.reactionBilance = (short) (playerperformance.getQuickDodged() - quickDodged);
+  public void setSpellDodge(Playerperformance playerperformance, Short spellsHit, Short spellsDodged, Short quickDodged) {
+    if (spellsHit != null && spellsDodged != null) {
+      final double hitBilance = Util.div(playerperformance.getSpellsHit(), playerperformance.getSpellsHit() + spellsDodged);
+      this.hitBilance = BigDecimal.valueOf(hitBilance);
+      final double dodgeBilance = Util.div(playerperformance.getSpellsDodged(), playerperformance.getSpellsDodged() + spellsHit);
+      this.dodgeBilance = BigDecimal.valueOf(dodgeBilance);
+      final double totalSpellBilance = (hitBilance + dodgeBilance) / 2;
+      this.totalSpellBilance = BigDecimal.valueOf(totalSpellBilance);
+    }
+    if (quickDodged != null) {
+      this.reactionBilance = (short) (playerperformance.getQuickDodged() - quickDodged);
+    }
   }
 
   public void setTrueKda(double kills, double deaths, double assists) {
@@ -656,235 +655,235 @@ public class PlayerperformanceStats implements Serializable {
 
   //<editor-fold desc="getter">
   public double getObjectivesStolenAndContested() {
-    return objectivesStolenAndContested.doubleValue();
+    return Util.getDouble(objectivesStolenAndContested);
   }
 
   public double getObjectivesKilledJunglerBefore() {
-    return objectivesKilledJunglerBefore.doubleValue();
+    return Util.getDouble(objectivesKilledJunglerBefore);
   }
 
   public double getBaronTakedownsAttempts() {
-    return baronTakedownsAttempts.doubleValue();
+    return Util.getDouble(baronTakedownsAttempts);
   }
 
   public double getTurretParticipation() {
-    return turretParticipation.doubleValue();
+    return Util.getDouble(turretParticipation);
   }
 
   public double getInvadingAndBuffs() {
-    return invadingAndBuffs.doubleValue();
+    return Util.getDouble(invadingAndBuffs);
   }
 
   public double getDivesOwn() {
-    return divesOwn.doubleValue();
+    return Util.getDouble(divesOwn);
   }
 
   public double getDivesEnemy() {
-    return divesEnemy.doubleValue();
+    return Util.getDouble(divesEnemy);
   }
 
   public double getTeamDamage() {
-    return teamDamage.doubleValue();
+    return Util.getDouble(teamDamage);
   }
 
   public double getTeamDamageTaken() {
-    return teamDamageTaken.doubleValue();
+    return Util.getDouble(teamDamageTaken);
   }
 
   public double getTeamDamageMitigated() {
-    return teamDamageMitigated.doubleValue();
+    return Util.getDouble(teamDamageMitigated);
   }
 
   public double getDuelWinrate() {
-    return duelWinrate.doubleValue();
+    return Util.getDouble(duelWinrate);
   }
 
   public double getEarlyFarmEfficiency() {
-    return earlyFarmEfficiency.doubleValue();
+    return Util.getDouble(earlyFarmEfficiency);
   }
 
   public double getCsPerMinute() {
-    return csPerMinute.doubleValue();
+    return Util.getDouble(csPerMinute);
   }
 
   public double getXpPerMinute() {
-    return xpPerMinute.doubleValue();
+    return Util.getDouble(xpPerMinute);
   }
 
   public double getGoldPerMinute() {
-    return goldPerMinute.doubleValue();
+    return Util.getDouble(goldPerMinute);
   }
 
   public short getSituationalTime() {
     return (short) Math.min(penetrationTime, antiHealTime);
   }
 
-  public double getTimeAlive() {
-    return timeAlive.doubleValue();
+  public double getTimeAlivePercent() {
+    return Util.getDouble(timeAlivePercent);
   }
 
   public double getEnemyControlAdvantage() {
-    return enemyControlAdvantage.doubleValue();
+    return Util.getDouble(enemyControlAdvantage);
   }
 
   public double getEnemyControlled() {
-    return enemyControlled.doubleValue();
+    return Util.getDouble(enemyControlled);
   }
 
   public double getHitBilance() {
-    return hitBilance.doubleValue();
+    return Util.getDouble(hitBilance);
   }
 
   public double getDodgeBilance() {
-    return dodgeBilance.doubleValue();
+    return Util.getDouble(dodgeBilance);
   }
 
   public double getTotalSpellBilance() {
-    return totalSpellBilance.doubleValue();
+    return Util.getDouble(totalSpellBilance);
   }
 
   public double getKillParticipation() {
-    return killParticipation.doubleValue();
+    return Util.getDouble(killParticipation);
   }
 
   public double getTrueKdaValue() {
-    return trueKdaValue.doubleValue();
+    return Util.getDouble(trueKdaValue);
   }
 
   public double getTrueKdaKills() {
-    return trueKdaKills.doubleValue();
+    return Util.getDouble(trueKdaKills);
   }
 
   public double getTrueKdaDeaths() {
-    return trueKdaDeaths.doubleValue();
+    return Util.getDouble(trueKdaDeaths);
   }
 
   public double getTrueKdaAssists() {
-    return trueKdaAssists.doubleValue();
+    return Util.getDouble(trueKdaAssists);
   }
 
   public double getEnemyControlAdvantageEarly() {
-    return enemyControlAdvantageEarly.doubleValue();
+    return Util.getDouble(enemyControlAdvantageEarly);
   }
 
   public double getEnemyControlledEarly() {
-    return enemyControlledEarly.doubleValue();
+    return Util.getDouble(enemyControlledEarly);
   }
 
   public double getTrinketEfficiency() {
-    return trinketEfficiency.doubleValue();
+    return Util.getDouble(trinketEfficiency);
   }
 
   public double getMidgameGoldEfficiency() {
-    return midgameGoldEfficiency.doubleValue();
+    return Util.getDouble(midgameGoldEfficiency);
   }
 
   public double getMidgameGoldXPEfficiency() {
-    return midgameGoldXPEfficiency.doubleValue();
+    return Util.getDouble(midgameGoldXPEfficiency);
   }
 
   public double getLevelupEarlier() {
-    return levelupEarlier.doubleValue();
+    return Util.getDouble(levelupEarlier);
   }
 
   public double getAverageDeathOrder() {
-    return averageDeathOrder.doubleValue();
+    return Util.getDouble(averageDeathOrder);
   }
 
   public double getTeamfightParticipation() {
-    return teamfightParticipation.doubleValue();
+    return Util.getDouble(teamfightParticipation);
   }
 
   public double getTeamfightWinrate() {
-    return teamfightWinrate.doubleValue();
+    return Util.getDouble(teamfightWinrate);
   }
 
   public double getTeamfightDamageRate() {
-    return teamfightDamageRate.doubleValue();
+    return Util.getDouble(teamfightDamageRate);
   }
 
   public double getSkirmishParticipation() {
-    return skirmishParticipation.doubleValue();
+    return Util.getDouble(skirmishParticipation);
   }
 
   public double getSkirmishKillsPerSkirmish() {
-    return skirmishKillsPerSkirmish.doubleValue();
+    return Util.getDouble(skirmishKillsPerSkirmish);
   }
 
   public double getSkirmishWinrate() {
-    return skirmishWinrate.doubleValue();
+    return Util.getDouble(skirmishWinrate);
   }
 
   public double getSkirmishDamageRate() {
-    return skirmishDamageRate.doubleValue();
+    return Util.getDouble(skirmishDamageRate);
   }
 
   public double getRelativeDeathPositioning() {
-    return relativeDeathPositioning.doubleValue();
+    return Util.getDouble(relativeDeathPositioning);
   }
 
   public double getLanePositioning() {
-    return lanePositioning.doubleValue();
+    return Util.getDouble(lanePositioning);
   }
 
   public double getMidgamePositioning() {
-    return midgamePositioning.doubleValue();
+    return Util.getDouble(midgamePositioning);
   }
 
   public double getLategamePositioning() {
-    return lategamePositioning.doubleValue();
+    return Util.getDouble(lategamePositioning);
   }
 
   public double getLaneKillDeathPositioning() {
-    return laneKillDeathPositioning.doubleValue();
+    return Util.getDouble(laneKillDeathPositioning);
   }
 
   public double getLaneKillPositioning() {
-    return laneKillPositioning.doubleValue();
+    return Util.getDouble(laneKillPositioning);
   }
 
   public double getResetsThroughRecall() {
-    return resetsThroughRecall.doubleValue();
+    return Util.getDouble(resetsThroughRecall);
   }
 
   public double getPlannedResets() {
-    return plannedResets.doubleValue();
+    return Util.getDouble(plannedResets);
   }
 
   public double getResetsTogether() {
-    return resetsTogether.doubleValue();
+    return Util.getDouble(resetsTogether);
   }
 
   public double getResourceConservation() {
-    return resourceConservation.doubleValue();
+    return Util.getDouble(resourceConservation);
   }
 
   public double getEarlyDamage() {
-    return earlyDamage.doubleValue();
+    return Util.getDouble(earlyDamage);
   }
 
   public double getEarlyXpEfficiency() {
-    return earlyXpEfficiency.doubleValue();
+    return Util.getDouble(earlyXpEfficiency);
   }
 
   public double getAverageLaneHealth() {
-    return averageLaneHealth.doubleValue();
+    return Util.getDouble(averageLaneHealth);
   }
 
   public double getAverageLaneResource() {
-    return averageLaneResource.doubleValue();
+    return Util.getDouble(averageLaneResource);
   }
 
   public double getUtilityScore() {
-    return utilityScore.doubleValue();
+    return Util.getDouble(utilityScore);
   }
 
   public double getProximity() {
-    return proximity.doubleValue();
+    return Util.getDouble(proximity);
   }
 
   public double getLaneProximityDifference() {
-    return laneProximityDifference.doubleValue();
+    return Util.getDouble(laneProximityDifference);
   }
   //</editor-fold>
 

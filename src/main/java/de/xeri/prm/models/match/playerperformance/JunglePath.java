@@ -64,7 +64,6 @@ public class JunglePath implements Serializable {
     return find(positionAt2, positionAt3, positionAt4, positionAt5, positionAt6, positionAt7);
   }
 
-
   public static boolean has(Position positionAt2, Position positionAt3, Position positionAt4, Position positionAt5,
                             Position positionAt6, Position positionAt7) {
     return find(positionAt2, positionAt3, positionAt4, positionAt5, positionAt6, positionAt7) != null;
@@ -80,11 +79,6 @@ public class JunglePath implements Serializable {
 
   public static JunglePath find(Position positionAt2, Position positionAt3, Position positionAt4, Position positionAt5,
                                 Position positionAt6, Position positionAt7) {
-    return perform(positionAt2, positionAt3, positionAt4, positionAt5, positionAt6, positionAt7);
-  }
-
-  private static JunglePath perform(Position positionAt2, Position positionAt3, Position positionAt4, Position positionAt5,
-                                    Position positionAt6, Position positionAt7) {
     return get().stream()
         .filter(junglePath -> Util.distance(new Position(junglePath.getXAt2(), junglePath.getYAt2()), positionAt2) < Const.PATH_SIMILARITY)
         .filter(junglePath -> Util.distance(new Position(junglePath.getXAt3(), junglePath.getYAt3()), positionAt3) < Const.PATH_SIMILARITY)
@@ -93,7 +87,6 @@ public class JunglePath implements Serializable {
         .filter(junglePath -> Util.distance(new Position(junglePath.getXAt6(), junglePath.getYAt6()), positionAt6) < Const.PATH_SIMILARITY)
         .filter(junglePath -> Util.distance(new Position(junglePath.getXAt7(), junglePath.getYAt7()), positionAt7) < Const.PATH_SIMILARITY)
         .findFirst().orElse(null);
-
   }
   //</editor-fold>
 
@@ -160,6 +153,11 @@ public class JunglePath implements Serializable {
     this.yAt6 = (short) positionAt6.getY();
     this.xAt7 = (short) positionAt7.getX();
     this.yAt7 = (short) positionAt7.getY();
+    this.name = determineName(positionAt2, positionAt3, positionAt4, positionAt5, positionAt6, positionAt7, blueSide);
+  }
+
+  private static String determineName(Position positionAt2, Position positionAt3, Position positionAt4, Position positionAt5,
+                               Position positionAt6, Position positionAt7, boolean blueSide) {
     val strings = new ArrayList<String>();
     if (!JungleCamp.getClosestCampName(positionAt2, blueSide).equals("")) {
       strings.add(JungleCamp.getClosestCampName(positionAt2, blueSide));
@@ -180,7 +178,7 @@ public class JunglePath implements Serializable {
       strings.add(JungleCamp.getClosestCampName(positionAt7, blueSide));
     }
 
-    this.name = strings.stream().collect(Collectors.joining(" - ", "", ""));
+    return strings.stream().collect(Collectors.joining(" - ", "", ""));
   }
 
   @Override

@@ -1,6 +1,7 @@
 package de.xeri.prm.util;
 
 import java.awt.geom.Point2D;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -13,7 +14,22 @@ import org.hibernate.Session;
  * Created by Lara on 06.04.2022 for web
  */
 public final class Util {
+  public static String uncapitalizeFirst(String str) {
+    return str.substring(0, 1).toLowerCase() + str.substring(1);
+  }
+
+  public static double getDouble(BigDecimal decimal) {
+    return decimal != null ? decimal.doubleValue() : 0;
+  }
+
   public static double div(double divident, double divisor) {
+    return div(divident, divisor, 0);
+  }
+
+  public static double div(double divident, double divisor, boolean re) {
+    if (re) {
+      return div(divident, divisor, divident);
+    }
     return div(divident, divisor, 0);
   }
 

@@ -17,7 +17,8 @@ import javax.faces.context.FacesContext;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.TurnamentMatch;
-import de.xeri.prm.models.match.neu.Ratings;
+import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
+import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import lombok.Getter;
 import lombok.Setter;
@@ -85,13 +86,13 @@ public class ChampionTable implements Serializable {
 
         final List<Playerperformance> collect2 = playerperformances.stream()
             .filter(playerperformance -> playerperformance.wasPresent(champion)).collect(Collectors.toList());
-        final Ratings ratings = new Ratings(collect2);
+        final Ratings ratings = new Ratings(DisplaystatSubtype.ALLGEMEIN, collect2);
         String games = String.valueOf(collect2.size());
-        final String wins = ratings.winrate.format();
-        final String lead = ratings.laneLead.format();
-        final String efficiency = ratings.goldXpEfficiency.format();
+        //final String wins = ratings.winrate.format();
+        //final String lead = ratings.laneLead.format();
+        //final String efficiency = ratings.goldXpEfficiency.format();
 
-        allPerformances.add(new PerformanceObject(champion.getName(), presence, competitive, games, wins, lead, efficiency));
+        //allPerformances.add(new PerformanceObject(champion.getName(), presence, competitive, games, wins, lead, efficiency));
 
         for (Champion champion1 : collect) {
           performances.add(allPerformances.stream()

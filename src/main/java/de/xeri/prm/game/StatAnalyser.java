@@ -623,10 +623,11 @@ public final class StatAnalyser {
       byte earlierLevelups = 0;
       determineLevelups(playerperformance, enemyPlayer, earlierLevelups, stats);
 
-      final Short spellsHit = enemyPlayer.getSmall(StoredStat.SPELL_LANDED);
-      if (spellsHit != null) {
-        stats.setSpellDodge(playerperformance, spellsHit, enemyPlayer.getSmall(StoredStat.SPELL_DODGE),
-            enemyPlayer.getSmall(StoredStat.SPELL_DODGE_QUICK));
+      final Short hit = enemyPlayer.getSmall(StoredStat.SPELL_LANDED);
+      if (hit != null) {
+        final Short dodged = enemyPlayer.getSmall(StoredStat.SPELL_DODGE);
+        final Short quickDodged = enemyPlayer.getSmall(StoredStat.SPELL_DODGE_QUICK);
+        stats.setSpellDodge(playerperformance, hit, dodged, quickDodged);
       }
     }
 
@@ -815,7 +816,7 @@ public final class StatAnalyser {
 
     } else if (player != null && player.getLastMinute() >= 7) {
       final int xpAt7 = player.getStatAt(7, TimelineStat.EXPERIENCE);
-      final int totalXP = player.getLane().getType().equals("BOT_LANE") ? 468 : 750;
+      final int totalXP = player.getLane().getType().equals("BOT_LANE") ? 2259 : 3620;
       final double proximity = xpAt7 * 1d / totalXP;
 
       final int averageDistance = (int) IntStream.range(2, 8)

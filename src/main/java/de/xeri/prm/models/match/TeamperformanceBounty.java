@@ -54,7 +54,7 @@ public class TeamperformanceBounty implements Serializable {
   }
 
   public static boolean has(Teamperformance performance, int start) {
-    return HibernateUtil.has(Teamperformance.class, new String[]{"performance", "start"}, new Object[]{performance, start});
+    return HibernateUtil.has(TeamperformanceBounty.class, new String[]{"performance", "start"}, new Object[]{performance, start});
   }
 
   public static TeamperformanceBounty find(Teamperformance performance, int start) {

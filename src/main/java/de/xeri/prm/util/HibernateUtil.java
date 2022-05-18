@@ -1,6 +1,8 @@
 package de.xeri.prm.util;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import de.xeri.prm.models.dynamic.Rune;
 import de.xeri.prm.models.dynamic.Runetree;
 import de.xeri.prm.models.dynamic.Summonerspell;
 import de.xeri.prm.models.dynamic.Wincondition;
+import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.io.Input;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.League;
@@ -43,7 +46,7 @@ import de.xeri.prm.models.match.Gametype;
 import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.TeamperformanceBounty;
-import de.xeri.prm.models.match.neu.Rating;
+import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.playerperformance.JunglePath;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceInfo;
@@ -162,27 +165,17 @@ public final class HibernateUtil {
   }
 
   public static <T> List<T> findList(Class<T> entityClass, String primaryKey) {
-    final List<T> list = performList(entityClass, primaryKey);
-    if (list.isEmpty()) {
-      Logger.getLogger("Entity-Query").attention("keine Einträge in der Collection");
-    }
-    return list;
+    final Query<T> query = perform(entityClass, primaryKey);
+    return query.list();
   }
 
   public static <T> List<T> findList(Class<T> entityClass, String[] params, Object[] values) {
-    final List<T> list = performList(entityClass, params, values, "findBy");
-    if (list.isEmpty()) {
-      Logger.getLogger("Entity-Query").attention("keine Einträge in der Collection");
-    }
-    return list;
+    return findList(entityClass, params, values, "findBy");
   }
 
   public static <T> List<T> findList(Class<T> entityClass, String[] params, Object[] values, String subQuery) {
-    final List<T> list = performList(entityClass, params, values, subQuery);
-    if (list.isEmpty()) {
-      Logger.getLogger("Entity-Query").attention("keine Einträge in der Collection");
-    }
-    return list;
+    final Query<T> query = performWithSubquery(entityClass, params, values, subQuery);
+    return query.list();
   }
 
   public static <T> T find(Class<T> entityClass, long primaryKey) {
@@ -244,11 +237,6 @@ public final class HibernateUtil {
     }
   }
 
-  private static <T> List<T> performList(Class<T> entityClass, String primaryKey) {
-    final Query<T> query = perform(entityClass, primaryKey);
-    return query.list();
-  }
-
   private static <T> T performSingle(Class<T> entityClass, String primaryKey) {
     final Query<T> query = perform(entityClass, primaryKey);
     return query.setMaxResults(1).getSingleResult();
@@ -287,11 +275,6 @@ public final class HibernateUtil {
     return null;
   }
 
-  private static <T> List<T> performList(Class<T> entityClass, String[] params, Object[] values, String subquery) {
-    final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
-    return query.list();
-  }
-
   private static <T> Query<T> performWithSubquery(Class<T> entityClass, String[] params, Object[] values, String subquery) {
     final Session session = Data.getInstance().getSession();
     final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
@@ -305,6 +288,16 @@ public final class HibernateUtil {
       query.setParameter(param, value);
     }
     return query;
+  }
+
+  public static Object[] stats(String queryName, Lane lane) {
+    List<Lane> lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
+        Collections.singletonList(lane);
+    final Session session = Data.getInstance().getSession();
+    final Query<Object[]> query = session.getNamedQuery(queryName);
+    query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
+    query.setParameter("lanes", lanes);
+    return query.getSingleResult();
   }
 
 

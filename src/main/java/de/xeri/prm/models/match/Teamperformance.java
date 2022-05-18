@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.ToIntFunction;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,13 +21,14 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.enums.DragonSoul;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.match.playerperformance.JunglePath;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -44,6 +44,8 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Teamperformance.findAll", query = "FROM Teamperformance t")
 @NamedQuery(name = "Teamperformance.findById", query = "FROM Teamperformance t WHERE id = :pk")
 @NamedQuery(name = "Teamperformance.findBy", query = "FROM Teamperformance t WHERE game = :game AND firstPick = :first")
+@NamedQuery(name = "x", query = "SELECT AVG(CASE WHEN ((ganksTop + ganksMid + ganksBot) <> 0) THEN ((CAST(ganksTop AS int) - CAST" +
+    "(ganksBot AS int)) / (ganksTop + ganksMid + ganksBot)) ELSE 0 END) FROM Playerperformance p")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -277,13 +279,9 @@ public class Teamperformance implements Serializable {
         playerperformances.stream().mapToInt(Playerperformance::getFirstturretAdvantage).min().orElse(-1));
   }
 
-  public double getTeamStat(ToIntFunction<? super Playerperformance> function) {
-    return playerperformances.stream().mapToInt(function).sum();
-  }
-
   //<editor-fold desc="getter and setter">
   public double getRiftTurrets() {
-    return riftTurrets.doubleValue();
+    return Util.getDouble(riftTurrets);
   }
 
   public void setRiftTurrets(double riftTurrets) {

@@ -35,6 +35,8 @@ public final class Const {
   public static final int MIDGAME_XP = 8896;
   public static final int MULTIKILL_TIME_BETWEEN_KILLS = 10;
   public static final int MULTIKILL_TIME_BETWEEN_KILLS_PENTAKILL = 30;
+  public static final double RATING_CAT_FACTOR = 6.66667;
+  public static final int RATING_FACTOR = 15;
   public static final int RESET_PLANNED_LIMIT = 250;
   public static final int SKIRMISH_PLAYERS_REQUIRED = 2;
   public static final int TEAMFIGHT_PLAYERS_REQUIRED = 3;

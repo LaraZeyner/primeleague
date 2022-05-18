@@ -5,6 +5,7 @@ import java.util.List;
 
 import de.xeri.prm.game.events.location.MapArea;
 import de.xeri.prm.game.events.location.Position;
+import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
 import de.xeri.prm.util.Util;
 
 /**
@@ -16,7 +17,16 @@ public enum Lane {
   MIDDLE("MID", "MID_LANE", MapArea.MIDLANE),
   BOTTOM("BOT", "BOT_LANE", MapArea.BOTLANE),
   UTILITY("SUP", "BOT_LANE", MapArea.BOTLANE),
-  UNKNOWN("MAP", "MAP", MapArea.MAP);
+  UNKNOWN("MAP", "MAP", MapArea.MAP),
+  UNKNOWN1("MAP", "MAP", MapArea.MAP),
+  UNKNOWN2("MAP", "MAP", MapArea.MAP), //TODO (Abgie) 17.05.2022: Not used
+  UNKNOWN3("MAP", "MAP", MapArea.MAP),
+  UNKNOWN4("MAP", "MAP", MapArea.MAP),
+  UNKNOWN5("MAP", "MAP", MapArea.MAP),
+  UNKNOWN6("MAP", "MAP", MapArea.MAP),
+  UNKNOWN7("MAP", "MAP", MapArea.MAP),
+  UNKNOWN8("MAP", "MAP", MapArea.MAP),
+  UNKNOWN9("MAP", "MAP", MapArea.MAP);
 
   private final String abbreviation;
   private final String type;
@@ -73,5 +83,14 @@ public enum Lane {
     }
 
     return areas[2].isInArea(position) || areas[3].isInArea(position);
+  }
+
+  public DisplaystatSubtype getSubtype() {
+    if (this.toString().startsWith("UNKN")) {
+      return DisplaystatSubtype.ALLGEMEIN;
+    } else if (this.equals(UTILITY)) {
+      return DisplaystatSubtype.SUPPORT;
+    }
+    return DisplaystatSubtype.valueOf(this.toString());
   }
 }

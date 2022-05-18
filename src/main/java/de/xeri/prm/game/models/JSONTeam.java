@@ -115,18 +115,24 @@ public class JSONTeam {
 
   public Integer getSum(StoredStat storedStat) {
     if (storedStat.isChallenge() && getAllPlayers().get(0).getJson().has("challenges")) {
-      return allPlayers.stream().filter(player -> player.getMedium(storedStat) != null).mapToInt(player -> player.getMedium(storedStat)).sum();
+      return allPlayers.stream().filter(player -> player.getMedium(storedStat) != null)
+          .mapToInt(player -> player.getMedium(storedStat)).sum();
+
     } else if (getAllPlayers().get(0).getJson().has(storedStat.getKey())) {
-      return allPlayers.stream().filter(player -> player.getMedium(storedStat) != null).mapToInt(player -> player.getMedium(storedStat)).sum();
+      return allPlayers.stream().filter(player -> player.getMedium(storedStat) != null)
+          .mapToInt(player -> player.getMedium(storedStat)).sum();
     }
     return null;
   }
 
   public Integer getMin(StoredStat storedStat) {
     if (storedStat.isChallenge() && getAllPlayers().get(0).getJson().has("challenges")) {
-      return allPlayers.stream().mapToInt(player -> player.getMedium(storedStat)).min().orElse(0);
+      return allPlayers.stream().filter(player -> player.has(storedStat))
+          .mapToInt(player -> player.getMedium(storedStat)).min().orElse(0);
+
     } else if (getAllPlayers().get(0).getJson().has(storedStat.getKey())) {
-      return allPlayers.stream().mapToInt(player -> player.getMedium(storedStat)).min().orElse(0);
+      return allPlayers.stream().filter(player -> player.has(storedStat))
+          .mapToInt(player -> player.getMedium(storedStat)).min().orElse(0);
     }
     return null;
   }
