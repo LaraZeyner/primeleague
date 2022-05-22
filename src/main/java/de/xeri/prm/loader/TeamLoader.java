@@ -179,7 +179,6 @@ public class TeamLoader {
     return team;
   }
 
-
   private static void handleSeason(Season season, Document doc, Team team) {
     for (Element stageElement : doc.select("section.league-team-stage")) {
       final String stageTypeString = stageElement.select("div.section-title").text();

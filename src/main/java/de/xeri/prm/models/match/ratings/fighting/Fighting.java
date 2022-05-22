@@ -1,11 +1,10 @@
 package de.xeri.prm.models.match.ratings.fighting;
 
-import java.util.List;
+import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
-import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
 import lombok.Getter;
 
@@ -21,7 +20,7 @@ public class Fighting {
   private final Snowball snowball;
   private final StrongPhase strongPhase;
 
-  public Fighting(List<Playerperformance> playerperformances, Lane lane) {
+  public Fighting(Map<String, Double> playerperformances, Lane lane) {
     this.lane = lane;
     this.damage = new Damage(playerperformances, lane);
     this.plays = new Plays(playerperformances, lane);
@@ -42,7 +41,7 @@ public class Fighting {
   }
 
   public String format() {
-    double value = get() * Const.RATING_FACTOR;
+    double value = get() * Const.RATING_CAT_FACTOR;
     return String.valueOf(Math.round(value));
   }
 

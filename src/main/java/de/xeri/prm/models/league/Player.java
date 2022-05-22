@@ -1,9 +1,16 @@
 package de.xeri.prm.models.league;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -19,15 +26,33 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.manager.Data;
+import de.xeri.prm.models.dynamic.Champion;
+import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.Teamrole;
+import de.xeri.prm.models.match.ratings.StatScope;
+import de.xeri.prm.servlet.datatables.scouting.ChampionView;
+import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.val;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NamedQuery;
+import org.jetbrains.annotations.NotNull;
 
 @Entity(name = "Player")
 @Table(name = "player", indexes = @Index(name = "team", columnList = "team"))
 @NamedQuery(name = "Player.findAll", query = "FROM Player p")
 @NamedQuery(name = "Player.findById", query = "FROM Player p WHERE id = :pk")
 @NamedQuery(name = "Player.findBy", query = "FROM Player p WHERE name = :name")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Player implements Serializable {
 
   @Transient
@@ -81,26 +106,30 @@ public class Player implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "team")
+  @ToString.Exclude
   private Team team;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "player_role", length = 7)
   private Teamrole role;
 
+  @Column(name = "displayslot")
+  @Check(constraints = "displayslot < 10")
+  private Byte displayslot;
+
   @OneToMany(mappedBy = "player")
+  @ToString.Exclude
   private final Set<Account> accounts = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "player")
+  @ToString.Exclude
   private final Set<Matchlog> logEntries = new LinkedHashSet<>();
-
-  // default constructor
-  public Player() {
-  }
 
   public Player(int id, String name, Teamrole role) {
     this.id = id;
     this.name = name;
     this.role = role;
+    this.displayslot = null;
   }
 
   public void addAccount(Account account) {
@@ -118,7 +147,8 @@ public class Player implements Serializable {
   }
 
   public Account getActiveAccount() {
-    return accounts.stream().filter(Account::isActive).findFirst().orElse(null);
+    return accounts.stream().filter(Account::isActive).findFirst()
+        .orElse(accounts.isEmpty() ? null : new ArrayList<>(accounts).get(0));
   }
 
   public SeasonElo getCurrentElo() {
@@ -138,75 +168,110 @@ public class Player implements Serializable {
       wins += mostRecentElo.getWins();
       losses += mostRecentElo.getLosses();
     }
-    return new SeasonElo((short) (points/(wins + losses)), (short) wins, (short) losses);
+    return new SeasonElo((short) (points / (wins + losses)), (short) wins, (short) losses);
   }
 
   public String getLogoUrl() {
-    return "https://cdn0.gamesports.net/user_pictures/" + id /10000  + "0000/" + id + ".jpg";
+    return "https://cdn0.gamesports.net/user_pictures/" + id / 10000 + "0000/" + id + ".jpg";
   }
 
-  //<editor-fold desc="getter and setter">
-  public Set<Account> getAccounts() {
-    return accounts;
+  /**
+   * Sortierung nach > 25% Presence
+   * dann 5 Games in 30 Tagen
+   * dann andere nach Presence mit 1 Game und 10 Gesamt
+   *
+   * @param lane Lane
+   * @return
+   */
+  public List<ChampionView> getChampionsPresence(Lane lane) {
+    final LinkedHashMap<Short, Integer> presentCompetitivelike = determineChampionsPresent(lane, StatScope.COMPETITIVELIKE, true);
+    final LinkedHashMap<Short, Integer> presentRecently = determineChampionsPresent(lane, StatScope.OTHER, true);
+    final LinkedHashMap<Short, Integer> presentVeryRecently = determineChampionsPresent(lane, StatScope.RECENT, true);
+    final LinkedHashMap<Short, Integer> pickCLike = determineChampionsPresent(lane, StatScope.COMPETITIVELIKE, false);
+    final LinkedHashMap<Short, Integer> pickRecent = determineChampionsPresent(lane, StatScope.OTHER, false);
+
+    final Set<ChampionView> champs = presentCompetitivelike.keySet().stream()
+        .filter(id -> presentCompetitivelike.get(id) >= presentCompetitivelike.size() * Const.PRESENCE_PERCENT_LIMIT)
+        .map(id -> getChampionView(lane, id, presentCompetitivelike, pickCLike, pickRecent))
+        .collect(Collectors.toSet());
+    determineChampionOrderByPresence(lane, presentCompetitivelike, champs, presentVeryRecently, pickCLike, pickRecent);
+    determineChampionOrderByPresence(lane, presentCompetitivelike, champs, presentRecently, pickCLike, pickRecent);
+
+    final LinkedHashMap<Short, Integer> pickComp = determineChampionsPresent(lane, StatScope.COMPETITIVE, false);
+    final List<String> champsToRemove = champs.stream()
+        .filter(champ -> pickComp.get(champ.getId()) < 1 && pickCLike.get(champ.getId()) < 5 && pickRecent.get(champ.getId()) < 5)
+        .map(ChampionView::getName).collect(Collectors.toList());
+
+    champs.removeIf(champ -> champsToRemove.contains(champ.getName()));
+    return new ArrayList<>(champs);
   }
 
-  public Set<Matchlog> getLogEntries() {
-    return logEntries;
+  private LinkedHashMap<Short, Integer> determineChampionsPresent(Lane lane, StatScope scope, boolean presence) {
+    final LinkedHashMap<Short, Integer> map = new LinkedHashMap<>();
+    accounts.forEach(account -> determineSource(account, lane, scope, presence).forEach((key, value) -> map.merge(key, value, Integer::sum)));
+    return map.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
   }
 
-  public String getName() {
-    return name;
+  private LinkedHashMap<Short, Integer> determineSource(Account account, Lane lane, StatScope scope, boolean presence) {
+    return presence ? HibernateUtil.getChampionIdsPresentOn(account, lane, scope) :
+        HibernateUtil.getChampionIdsPickedOn(account, lane, scope);
   }
 
-  public void setName(String name) {
-    this.name = name;
+  private void determineChampionOrderByPresence(Lane lane, Map<Short, Integer> presentCompetitivelike, Set<ChampionView> champs,
+                                                Map<Short, Integer> picked, Map<Short, Integer> pickCLike, Map<Short, Integer> pickRecent) {
+    picked.keySet().stream()
+        .filter(id -> picked.get(id) >= Const.PRESENCE_RECENTLY_LIMIT)
+        .map(id -> getChampionView(lane, id, presentCompetitivelike, pickCLike, pickRecent))
+        .forEach(champs::add);
   }
 
-  public Teamrole getRole() {
-    return role;
+  @NotNull
+  private ChampionView getChampionView(Lane lane, short id, Map<Short, Integer> presentCompetitivelike, Map<Short, Integer> pickCLike,
+                                       Map<Short, Integer> pickRecent) {
+    final int picked = pickCLike.get(id);
+
+    val presence = Math.round(100.0 * presentCompetitivelike.get(id) / presentCompetitivelike.size()) + "%";
+
+    final int pickedRecent = pickRecent.get(id);
+
+    final int games = accounts.stream()
+        .map(account -> HibernateUtil.getWins(account, lane, id))
+        .mapToInt(wins -> Integer.parseInt(String.valueOf(wins[0]))).sum();
+    final int win = accounts.stream()
+        .map(account -> HibernateUtil.getWins(account, lane, id))
+        .mapToInt(wins -> Integer.parseInt(String.valueOf(wins[1]))).sum();
+    final double winrate = Util.div(games, win);
+    val winrateString = Math.round(100.0 * winrate) + "%";
+
+    return new ChampionView(id, Champion.find(id).getName(), presence, picked, pickedRecent, winrateString);
   }
 
-  public void setRole(Teamrole role) {
-    this.role = role;
-  }
-
-  public Team getTeam() {
-    return team;
-  }
-
-  void setTeam(Team team) {
-    this.team = team;
-  }
-
-  public int getId() {
-    return id;
-  }
-
-  public void setId(int competitiveId) {
-    this.id = competitiveId;
+  public List<Integer> getGamesOn() {
+    List<Integer> games = Arrays.asList(0, 0, 0, 0, 0);
+    for (Account account : accounts) {
+      final Object[] objects = HibernateUtil.gamesOnAllLanes(account);
+      for (int i = 0; i < objects.length; i++) {
+        if (objects[i] instanceof Long) {
+          games.set(i, games.get(i) + (int) ((Long) objects[i]).longValue());
+        } else {
+          games.set(i, games.get(i));
+        }
+      }
+    }
+    return games;
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Player)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final Player player = (Player) o;
-    return getId() == player.getId() && Objects.equals(getTeam(), player.getTeam()) && getRole() == player.getRole() && getAccounts().equals(player.getAccounts());
+    return Objects.equals(id, player.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getTeam(), getRole());
+    return Objects.hash(getId(), getName(), getRole(), getDisplayslot());
   }
-
-  @Override
-  public String toString() {
-    return "Player{" +
-        ", competitiveId=" + id +
-        ", team=" + team +
-        ", role=" + role +
-        ", accounts=" + accounts.size() +
-        '}';
-  }
-  //</editor-fold>
 }

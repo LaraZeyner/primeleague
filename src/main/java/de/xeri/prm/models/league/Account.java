@@ -29,13 +29,12 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.models.enums.Elo;
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.util.Const;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
@@ -256,13 +255,6 @@ public class Account implements Serializable {
   public String getDisplayName(Lane lane) {
     final int amount = getGamesOn(lane, true).size();
     return name + " - " + amount + " Spiel" + (amount != 1 ? "e" : "");
-  }
-
-  public String getPositionalIcon(Lane lane) {
-    if (getMostRecentElo() == null || getMostRecentElo().getElo().equals(Elo.UNRANKED)) {
-      return "images/ranked/Ranked_Unranked.png";
-    }
-    return "images/ranked/position/Position_" + getMostRecentElo().getElo().getTier() + "-" + lane.getDisplayName() + ".png";
   }
 
   public boolean isPlaying() {

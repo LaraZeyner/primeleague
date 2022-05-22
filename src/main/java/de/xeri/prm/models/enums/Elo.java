@@ -1,6 +1,8 @@
 package de.xeri.prm.models.enums;
 
 import de.xeri.prm.util.Util;
+import lombok.val;
+import lombok.var;
 
 /**
  * Created by Lara on 29.03.2022 for TRUES
@@ -46,7 +48,7 @@ public enum Elo {
   }
 
   public static Elo getDivision(int mmr) {
-    Elo selected = Elo.UNRANKED;
+    var selected = Elo.UNRANKED;
     for (Elo elo : Elo.values()) {
       if (elo.getMmr() > mmr) {
         return selected;
@@ -57,7 +59,35 @@ public enum Elo {
   }
 
   public String getTier() {
-    final String tierUnformatted = name().contains("_") ? name().split("_")[0] : name();
-    return Util.capitalizeFirst(tierUnformatted);
+    val tierUnformatted = name().contains("_") ? name().split("_")[0] : name();
+    return Util.capitalizeFirst(tierUnformatted.toLowerCase());
+  }
+
+  public String getSuffix() {
+    if (name().contains("_")) {
+      switch (name().split("_")[1]) {
+        case "I":
+          return "_1";
+        case "II":
+          return "_2";
+        case "III":
+          return "_3";
+        case "IV":
+          return "_4";
+      }
+    }
+    return "";
+  }
+
+
+  public String getPositionalIconUrl(Lane lane) {
+    if (this.equals(Elo.UNRANKED)) {
+      return "images/ranked/Ranked_Unranked.png";
+    }
+    return "images/ranked/position/Position_" + getTier() + "-" + lane.getDisplayName() + ".png";
+  }
+
+  public String getRankedIconUrl() {
+    return "images/ranked/Ranked_" + getTier() + getSuffix() + ".png";
   }
 }

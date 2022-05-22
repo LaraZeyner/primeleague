@@ -29,6 +29,7 @@ import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.league.TurnamentMatch;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.LazyCollection;
@@ -135,6 +136,14 @@ public class Game implements Serializable {
 
   public boolean isCompetitive() {
     return gametype.getId() == 0 || gametype.getId() == -1 || gametype.getId() == 700;
+  }
+
+  public boolean isRecently() {
+    return System.currentTimeMillis() - gameStart.getTime() < Const.DAYS_UNTIL_INACTIVE * Const.MILLIS_PER_DAY;
+  }
+
+  public boolean isVeryRecently() {
+    return System.currentTimeMillis() - gameStart.getTime() < 30 * Const.MILLIS_PER_DAY;
   }
 
   public Teamperformance getPerformanceOf(Team team) {

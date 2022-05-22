@@ -714,10 +714,6 @@ public class PlayerperformanceStats implements Serializable {
     return Util.getDouble(goldPerMinute);
   }
 
-  public short getSituationalTime() {
-    return (short) Math.min(penetrationTime, antiHealTime);
-  }
-
   public double getTimeAlivePercent() {
     return Util.getDouble(timeAlivePercent);
   }

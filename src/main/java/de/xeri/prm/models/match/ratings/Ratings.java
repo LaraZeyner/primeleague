@@ -1,10 +1,11 @@
 package de.xeri.prm.models.match.ratings;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.league.Account;
+import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.ratings.adaption.Adaption;
 import de.xeri.prm.models.match.ratings.adaption.Versatility;
 import de.xeri.prm.models.match.ratings.fighting.Fighting;
@@ -13,10 +14,10 @@ import de.xeri.prm.models.match.ratings.laning.Laning;
 import de.xeri.prm.models.match.ratings.objectives.Objectives;
 import de.xeri.prm.models.match.ratings.roaming.Roaming;
 import de.xeri.prm.models.match.ratings.survival.Survival;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.util.Const;
 import lombok.Getter;
 import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <b>Ratings</b> berechnen die Wertung fuer einen Spieler und bestehen aus Kategorien, Unterkategorien und Stats.
@@ -63,12 +64,14 @@ public class Ratings {
         .findFirst().orElse(null);
   }
 
-  public Ratings(@NonNull DisplaystatSubtype subtype, @NonNull List<Playerperformance> playerperformances) {
+  @Nullable
+  public static Ratings getRatings(Account account, @NonNull DisplaystatSubtype subtype) {
+    return account != null ? new Ratings(account, subtype) : null;
+  }
+
+  private Ratings(@NonNull Account account, @NonNull DisplaystatSubtype subtype) {
     this.lane = subtype.getLane();
-    List<Playerperformance> pp = subtype.equals(DisplaystatSubtype.ALLGEMEIN) ? playerperformances :
-        playerperformances.stream()
-            .filter(playerperformance -> playerperformance.getLane().equals(subtype.getLane()))
-            .collect(Collectors.toList());
+    Map<String, Double> pp = Playerperformance.loadPlayerRatings(account, subtype.getLane());
 
     this.objectives = new Objectives(pp, subtype.getLane());
     this.roaming = new Roaming(pp, subtype.getLane());
@@ -90,6 +93,10 @@ public class Ratings {
 
   public Versatility getVersatility() {
     return new Versatility(objectives.sum(), roaming.sum(), fighting.sum(), income.sum(), survival.sum());
+  }
+
+  public Map<String, Double> getPlayerRatings() {
+    return objectives.getBotsideObjectives().getDragonTakedowns().playerperformances;
   }
 
 }

@@ -150,15 +150,13 @@ public final class GameAnalyser {
         if (teams.size() == 2 && game.getGametype().getId() < 1) {
           List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
           turnamentMatches.addAll(teams.get(0).getMatchesGuest());
-          final List<TurnamentMatch> collect = turnamentMatches.stream()
-              .filter(TurnamentMatch::isOpen)
-              .filter(match -> match.getMatchday().getStage().isInSeason(game.getGameStart()))
-              .filter(match -> match.hasTeam(teams.get(1)))
-              .collect(Collectors.toList());
 
-          for (TurnamentMatch turnamentMatch : collect) {
-            turnamentMatch.addGame(game);
+          for (TurnamentMatch match : turnamentMatches) {
+            if (match.isOpen() && match.getMatchday().getStage().isInSeason(game.getGameStart()) && match.hasTeam(teams.get(1))) {
+              match.addGame(game);
+            }
           }
+
         }
         logger.info("Match " + gameId  + " vom " + new SimpleDateFormat("dd.MM.yyyy HH:mm")
             .format(game.getGameStart()) + " geladen in " + (System.currentTimeMillis() - millis) / 1000 + "s");

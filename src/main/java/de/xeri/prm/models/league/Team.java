@@ -170,15 +170,23 @@ public class Team implements Serializable {
   private final Set<Teamperformance> teamperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "enemyTeam")
+  @LazyCollection(LazyCollectionOption.EXTRA)
+  @OrderColumn
   private final Set<Schedule> schedules = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "homeTeam")
+  @LazyCollection(LazyCollectionOption.EXTRA)
+  @OrderColumn
   private final Set<TurnamentMatch> matchesHome = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "guestTeam")
+  @LazyCollection(LazyCollectionOption.EXTRA)
+  @OrderColumn
   private final Set<TurnamentMatch> matchesGuest = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "team")
+  @LazyCollection(LazyCollectionOption.EXTRA)
+  @OrderColumn
   private final Set<Player> players = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "team")

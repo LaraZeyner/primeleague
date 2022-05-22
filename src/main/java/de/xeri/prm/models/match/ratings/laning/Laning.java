@@ -2,6 +2,8 @@ package de.xeri.prm.models.match.ratings.laning;
 
 import java.util.List;
 
+import java.util.Map;
+
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
@@ -21,7 +23,7 @@ public class Laning {
   private final LaneBilance laneBilance;
   private final Playstyle playstyle;
 
-  public Laning(List<Playerperformance> playerperformances, Lane lane) {
+  public Laning(Map<String, Double> playerperformances, Lane lane) {
     this.lane = lane;
     this.resets = new Resets(playerperformances, lane);
     this.preReset = new PreReset(playerperformances, lane);
@@ -42,7 +44,7 @@ public class Laning {
   }
 
   public String format() {
-    double value = get() * Const.RATING_FACTOR;
+    double value = get() * Const.RATING_CAT_FACTOR;
     return String.valueOf(Math.round(value));
   }
 

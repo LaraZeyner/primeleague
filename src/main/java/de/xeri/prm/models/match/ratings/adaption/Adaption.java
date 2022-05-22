@@ -1,11 +1,10 @@
 package de.xeri.prm.models.match.ratings.adaption;
 
-import java.util.List;
+import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
-import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
 import lombok.Getter;
 
@@ -20,7 +19,7 @@ public class Adaption {
   private final Adapt adaption;
   private final GameStats stats;
 
-  public Adaption(List<Playerperformance> playerperformances, Lane lane) {
+  public Adaption(Map<String, Double> playerperformances, Lane lane) {
     this.lane = lane;
     this.mentality = new Mentality(playerperformances, lane);
     this.consistency = new Consistency(playerperformances, lane);
@@ -39,7 +38,7 @@ public class Adaption {
   }
 
   public String format() {
-    double value = get() * Const.RATING_FACTOR;
+    double value = get() * Const.RATING_CAT_FACTOR;
     return String.valueOf(Math.round(value));
   }
 

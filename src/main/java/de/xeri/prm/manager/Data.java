@@ -1,9 +1,5 @@
 package de.xeri.prm.manager;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
 import de.xeri.prm.models.league.League;
 import de.xeri.prm.models.league.Season;
 import de.xeri.prm.models.league.Team;
@@ -28,8 +24,8 @@ public class Data {
 
   private final RequestManager requester;
   private final Session session;
-  private final EntityManagerFactory factory;
-  private final EntityManager manager;
+  /*private final EntityManagerFactory factory;
+  private final EntityManager manager;*/
   private final Transaction transaction;
   private final int statLimit = 180;
   private League currentGroup;
@@ -39,8 +35,8 @@ public class Data {
     this.requester = new RequestManager();
     this.session = HibernateUtil.getSessionFactory().openSession();
     this.transaction = session.beginTransaction();
-    this.factory = Persistence.createEntityManagerFactory("Persistence");
-    this.manager = factory.createEntityManager();
+    /*this.factory = Persistence.createEntityManagerFactory("Persistence");
+    this.manager = factory.createEntityManager();*/
   }
 
   public void init() {
@@ -92,13 +88,13 @@ public class Data {
     return session;
   }
 
-  public EntityManagerFactory getFactory() {
+  /*public EntityManagerFactory getFactory() {
     return factory;
   }
 
   public EntityManager getManager() {
     return manager;
-  }
+  }*/
 
   public Transaction getTransaction() {
     return transaction;

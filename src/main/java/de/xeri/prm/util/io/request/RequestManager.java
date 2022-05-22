@@ -1,6 +1,5 @@
 package de.xeri.prm.util.io.request;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,20 +34,32 @@ public class RequestManager {
       }
 
       final Logger logger = Logger.getLogger(logName);
-      try {
-        return handleJSONString(urlString.replace(" ", "%20"));
-      } catch (FileNotFoundException ex) {
-        // TODO Look for Name change
-        logger.config(logName.equals("Account-Request") ? "Name wurde geändert" : logName.split("-")[0] + " nicht gefunden");
-      } catch (IOException ex) {
-        if (ex.getMessage().contains("Server returned HTTP response code: 429 for URL")) {
-          logger.severe("Rate limit exceeded");
-        } else {
-          logger.severe("ERROR!: " + ex.getMessage());
-        }
-      }
+      return tryRiotJSON(urlString, 0, logger);
     } else {
       Logger.getLogger("JSON").severe("No URL requested");
+    }
+    return null;
+  }
+
+  private JSON tryRiotJSON(String urlString, int attempt, Logger logger) {
+    try {
+      return handleJSONString(urlString.replace(" ", "%20"));
+    } catch (IOException exception) {
+      if (exception.getMessage().contains("HTTP response code: 429")) {
+        logger.warning("Rate limit exceeded");
+      } else if (exception.getMessage().contains("HTTP response code: 503 for URL")) {
+        logger.fine("Service unavailable - Retrying");
+        try {
+          Thread.sleep(5_000);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+        if (attempt < 5) {
+          return tryRiotJSON(urlString, attempt + 1, logger);
+        }
+      } else {
+        logger.severe("ERROR!: " + exception.getMessage());
+      }
     }
     return null;
   }

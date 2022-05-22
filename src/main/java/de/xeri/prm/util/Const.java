@@ -35,6 +35,9 @@ public final class Const {
   public static final int MIDGAME_XP = 8896;
   public static final int MULTIKILL_TIME_BETWEEN_KILLS = 10;
   public static final int MULTIKILL_TIME_BETWEEN_KILLS_PENTAKILL = 30;
+  public static final double PRESENCE_PERCENT_LIMIT = 0.25;
+  public static final int PRESENCE_RECENTLY_LIMIT = 5;
+  public static final double PRESENCE_DISPLAY_LIMIT = 5;
   public static final double RATING_CAT_FACTOR = 6.66667;
   public static final int RATING_FACTOR = 15;
   public static final int RESET_PLANNED_LIMIT = 250;

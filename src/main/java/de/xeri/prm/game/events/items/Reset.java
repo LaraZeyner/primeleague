@@ -110,7 +110,11 @@ public class Reset {
    * @return Dauer des Resets in Millisekunden
    */
   public int getDuration() {
-    return getEnd() - getStart();
+    int duration = getEnd() - getStart();
+    if (duration < 0) {
+      duration += 30_000;
+    }
+    return duration;
   }
 
 }

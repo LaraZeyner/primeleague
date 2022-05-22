@@ -8,10 +8,9 @@
         <!-- JDBC connection settings -->
         <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
         <property name="connection.url">jdbc:mysql://45.85.219.163:3306/trues?serverTimezone=UTC</property>
-        <!-- <property name="connection.url">jdbc:mysql://localhost:3306/trues?serverTimezone=UTC</property> -->
         <property name="connection.username">trues</property>
         <property name="connection.password">Trueszugriff1!</property>
-        <property name="connection.pool_size">1</property>
+        <property name="connection.pool_size">100</property>
         <property name="current_session_context_class">thread</property>
 
         <property name="dialect">org.hibernate.dialect.MySQL5Dialect</property>

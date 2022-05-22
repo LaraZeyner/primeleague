@@ -27,17 +27,6 @@ public final class RiotGameRequester {
   private static void loadGame(ScheduledGame scheduledGame, QueueType queueType) {
     val matchGenerator = RiotURLGenerator.getMatch();
     var game = matchGenerator.getMatch(scheduledGame.getId());
-    for (int i = 0; i < 5; i++) {
-      if (game != null) {
-        break;
-      }
-      try {
-        Thread.sleep(5_000);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      game = matchGenerator.getMatch(scheduledGame.getId());
-    }
 
     if (game != null) {
       val timeline = matchGenerator.getTimeline(scheduledGame.getId());

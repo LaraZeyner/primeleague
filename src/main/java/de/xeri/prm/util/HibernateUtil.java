@@ -2,8 +2,10 @@ package de.xeri.prm.util;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -55,14 +57,17 @@ import de.xeri.prm.models.match.playerperformance.PlayerperformanceKill;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceLevel;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceObjective;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceSummonerspell;
+import de.xeri.prm.models.match.ratings.StatScope;
 import de.xeri.prm.models.others.ChampionRelationship;
 import de.xeri.prm.models.others.Playstyle;
 import de.xeri.prm.util.logger.Logger;
+import lombok.val;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by Lara on 24.03.2022 for TRUES
@@ -290,6 +295,60 @@ public final class HibernateUtil {
     return query;
   }
 
+  public static Object[] gamesOnAllLanes(Account account) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Object[]> query = session.getNamedQuery("Playerperformance.gamesOnLane");
+    query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
+    query.setParameter("account", account);
+    return query.getSingleResult();
+  }
+
+  public static int gamesOnLaneRecently(Account account, Lane lane) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Object> query = session.getNamedQuery("Playerperformance.gamesOnLaneRecently");
+    query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
+    query.setParameter("account", account);
+    query.setParameter("lane", lane);
+    return (int) (((Long) query.getSingleResult()).longValue());
+  }
+
+  public static LinkedHashMap<Short, Integer> getChampionIdsPickedOn(Account account, Lane lane, StatScope scope) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Short> query = session.getNamedQuery(scope.equals(StatScope.COMPETITIVELIKE) ? "Playerperformance.championsPickedCompetitive" :
+        (scope.equals(StatScope.COMPETITIVE) ? "Playerperformance.championsPickedCompet" : "Playerperformance.championsPickedOther"));
+    return determineChampionIdsSorted(account, lane, scope, query);
+  }
+
+  public static LinkedHashMap<Short, Integer> getChampionIdsPresentOn(Account account, Lane lane, StatScope scope) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Short> query = session.getNamedQuery(scope.equals(StatScope.COMPETITIVELIKE) ?
+        "ChampionSelection.championsPresenceCompetitive" : "ChampionSelection.championsPresenceOther");
+    return determineChampionIdsSorted(account, lane, scope, query);
+  }
+
+  public static Integer[] getWins(Account account, Lane lane, short championId) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Integer[]> query = session.getNamedQuery("Playerperformance.championWins");
+    query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
+    query.setParameter("account", account);
+    query.setParameter("lane", lane);
+    query.setParameter("championId", championId);
+    return query.getSingleResult();
+  }
+
+  @NotNull
+  private static LinkedHashMap<Short, Integer> determineChampionIdsSorted(Account account, Lane lane, StatScope scope, Query<Short> query) {
+    query.setParameter("since", new Date(System.currentTimeMillis() - (scope.equals(StatScope.RECENT) ? 30 : 180) * Const.MILLIS_PER_DAY));
+    query.setParameter("account", account);
+    query.setParameter("lane", lane);
+    final List<Short> list = query.list();
+
+    val map = new HashMap<Short, Integer>();
+    list.forEach(id -> map.put(id, map.getOrDefault(id, 0)));
+    return map.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+  }
+
   public static Object[] stats(String queryName, Lane lane) {
     List<Lane> lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
         Collections.singletonList(lane);
@@ -297,6 +356,17 @@ public final class HibernateUtil {
     final Query<Object[]> query = session.getNamedQuery(queryName);
     query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
     query.setParameter("lanes", lanes);
+    return query.getSingleResult();
+  }
+
+  public static Object[] stats(Lane lane, Account account) {
+    List<Lane> lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
+        Collections.singletonList(lane);
+    final Session session = Data.getInstance().getSession();
+    final Query<Object[]> query = session.getNamedQuery("Playerperformance.findStatAvg");
+    query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
+    query.setParameter("lanes", lanes);
+    query.setParameter("account", account);
     return query.getSingleResult();
   }
 
@@ -308,5 +378,6 @@ public final class HibernateUtil {
   public static void shutdown() {
     getSessionFactory().close();
   }
+
 
 }

@@ -16,10 +16,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.enums.Elo;
 import de.xeri.prm.models.ids.SeasonEloId;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.HibernateUtil;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "SeasonElo")
@@ -27,6 +32,10 @@ import org.hibernate.annotations.NamedQuery;
 @IdClass(SeasonEloId.class)
 @NamedQuery(name = "SeasonElo.findAll", query = "FROM SeasonElo s")
 @NamedQuery(name = "SeasonElo.findBy", query = "FROM SeasonElo s WHERE account = :account AND season = :season")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class SeasonElo implements Serializable {
 
   @Transient
@@ -61,11 +70,13 @@ public class SeasonElo implements Serializable {
   @Id
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "account")
+  @ToString.Exclude
   private Account account;
 
   @Id
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "season")
+  @ToString.Exclude
   private Season season;
 
   @Column(name = "mmr", nullable = false)
@@ -76,10 +87,6 @@ public class SeasonElo implements Serializable {
 
   @Column(name = "losses", nullable = false)
   private short losses;
-
-  // default constructor
-  public SeasonElo() {
-  }
 
   public SeasonElo(short mmr, short wins, short losses) {
     this.mmr = mmr;
@@ -98,77 +105,29 @@ public class SeasonElo implements Serializable {
     return getElo() + " " + lp + " LP";
   }
 
+  public String getDisplay() {
+    return getRank() + " ->  " + getGames() + " (" + getRatio() + "%)";
+  }
+
   public short getGames() {
     return (short) (wins + losses);
   }
 
-  public float getRatio() {
-    return wins * 1f / getGames();
-  }
-
-  //<editor-fold desc="getter and setter">
-  public short getLosses() {
-    return losses;
-  }
-
-  public void setLosses(short losses) {
-    this.losses = losses;
-  }
-
-  public short getWins() {
-    return wins;
-  }
-
-  public void setWins(short wins) {
-    this.wins = wins;
-  }
-
-  public short getMmr() {
-    return mmr;
-  }
-
-  public void setMmr(short mmr) {
-    this.mmr = mmr;
-  }
-
-  public Season getSeason() {
-    return season;
-  }
-
-  void setSeason(Season season) {
-    this.season = season;
-  }
-
-  public Account getAccount() {
-    return account;
-  }
-
-  void setAccount(Account account) {
-    this.account = account;
+  private int getRatio() {
+    return wins * 100 / getGames();
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof SeasonElo)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final SeasonElo seasonElo = (SeasonElo) o;
-    return getMmr() == seasonElo.getMmr() && getWins() == seasonElo.getWins() && getLosses() == seasonElo.getLosses() && getAccount().equals(seasonElo.getAccount()) && getSeason().equals(seasonElo.getSeason());
+    return account != null && Objects.equals(account, seasonElo.account)
+        && season != null && Objects.equals(season, seasonElo.season);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getAccount(), getSeason(), getMmr(), getWins(), getLosses());
+    return Objects.hash(account, season);
   }
-
-  @Override
-  public String toString() {
-    return "SeasonElo{" +
-        "account=" + account +
-        ", season=" + season +
-        ", mmr=" + mmr +
-        ", wins=" + wins +
-        ", losses=" + losses +
-        '}';
-  }
-  //</editor-fold>
 }

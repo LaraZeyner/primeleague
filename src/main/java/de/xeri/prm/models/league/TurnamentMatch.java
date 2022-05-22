@@ -142,6 +142,8 @@ public class TurnamentMatch implements Serializable {
   public void addGame(Game game) {
     games.add(game);
     game.setTurnamentmatch(this);
+    Data.getInstance().save(game);
+    Data.getInstance().save(this);
   }
 
   public Matchlog addEntry(Matchlog entry) {

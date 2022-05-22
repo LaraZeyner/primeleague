@@ -1,11 +1,10 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
-import java.util.List;
+import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
-import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
 import lombok.Getter;
 
@@ -21,7 +20,7 @@ public class Roaming {
   private final Ganks ganks;
   private final Dives dives;
 
-  public Roaming(List<Playerperformance> playerperformances, Lane lane) {
+  public Roaming(Map<String, Double> playerperformances, Lane lane) {
     this.lane = lane;
     this.turretPressure = new TurretPressure(playerperformances, lane);
     this.macro = new Macro(playerperformances, lane);
@@ -42,7 +41,7 @@ public class Roaming {
   }
 
   public String format() {
-    double value = get() * Const.RATING_FACTOR;
+    double value = get() * Const.RATING_CAT_FACTOR;
     return String.valueOf(Math.round(value));
   }
 

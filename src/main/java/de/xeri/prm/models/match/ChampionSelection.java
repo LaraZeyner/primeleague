@@ -29,7 +29,28 @@ import org.hibernate.annotations.NamedQuery;
 @IdClass(ChampionSelectionId.class)
 @NamedQuery(name = "ChampionSelection.findAll", query = "FROM ChampionSelection c")
 @NamedQuery(name = "ChampionSelection.findBy",
-    query = "FROM ChampionSelection c WHERE game = :game AND selectionType = :type AND selectionOrder = :sOrder")
+    query = "FROM ChampionSelection c " +
+        "WHERE game = :game AND selectionType = :type AND selectionOrder = :sOrder")
+
+@NamedQuery(name = "ChampionSelection.championsPresenceCompetitive",
+    query = "SELECT c.champion.id " +
+        "FROM ChampionSelection c " +
+        "WHERE game IN " +
+        "(SELECT teamperformance.game " +
+        "FROM Playerperformance p " +
+        "WHERE teamperformance.game.gameStart >= :since " +
+        "AND account = :account " +
+        "AND lane = :lane " +
+        "AND (teamperformance.team IS NOT NULL OR teamperformance.game.gametype.id NOT BETWEEN 2 AND 699))")
+@NamedQuery(name = "ChampionSelection.championsPresenceOther",
+    query = "SELECT c.champion.id " +
+        "FROM ChampionSelection c " +
+        "WHERE game IN " +
+        "(SELECT teamperformance.game " +
+        "FROM Playerperformance p " +
+        "WHERE teamperformance.game.gameStart >= :since " +
+        "AND account = :account " +
+        "AND lane = :lane)")
 public class ChampionSelection implements Serializable {
 
   @Transient

@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.table;
+package de.xeri.prm.servlet.datatables.standings;
 
 import java.io.Serializable;
 import java.util.ArrayList;

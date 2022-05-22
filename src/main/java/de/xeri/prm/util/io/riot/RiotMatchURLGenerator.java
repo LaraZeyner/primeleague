@@ -1,8 +1,8 @@
 package de.xeri.prm.util.io.riot;
 
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.util.Const;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.io.json.JSON;
 
 /**

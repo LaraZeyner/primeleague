@@ -1,21 +1,20 @@
 package de.xeri.prm.models.match.ratings.laning;
 
-import java.util.List;
+import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.match.ratings.OutputType;
-import de.xeri.prm.models.match.ratings.Stat;
 import de.xeri.prm.models.match.ratings.RatingSubcategory;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.Stat;
 
 /**
  * Created by Lara on 12.05.2022 for web
  */
 public class PreReset extends RatingSubcategory {
-  private final List<Playerperformance> playerperformances;
+  private final Map<String, Double> playerperformances;
   private final Lane lane;
 
-  public PreReset(List<Playerperformance> playerperformances, Lane lane) {
+  public PreReset(Map<String, Double> playerperformances, Lane lane) {
     this.playerperformances = playerperformances;
     this.lane = lane;
   }
@@ -26,33 +25,28 @@ public class PreReset extends RatingSubcategory {
 
   public Stat getResetTime() {
     return new Stat(playerperformances, OutputType.TIME, 2, lane, "firstBase")
-        .map(p -> p.getStats().getFirstBase())
         .reverse();
   }
 
   public Stat getGold() {
     return new Stat(playerperformances, OutputType.NUMBER, 3, lane, "firstBaseResetGold")
-        .map(p -> p.getStats().getFirstBaseResetGold())
         .ignore()
-        .sub("verbleibend", p -> p.getStats().getFirstBaseGoldUnspent());
+        .sub("verbleibend", "firstBaseGoldUnspent");
   }
 
   public Stat getEnemyControlled() {
     return new Stat(playerperformances, OutputType.TIME, 2, lane, "firstBaseEnemyControlled")
-        .map(p -> p.getStats().getFirstBaseEnemyControlled())
         .nullable();
   }
 
   public Stat getInitialBuffsAndScuttles() {
     return new Stat(playerperformances, OutputType.NUMBER, 2, lane, "initialScuttles")
-        .map(Playerperformance::getInitialScuttles)
         .nullable()
-        .sub("Buffs", Playerperformance::getInitialBuffs);
+        .sub("Buffs", "initialBuffs");
   }
 
   public Stat getLead() {
-    return new Stat(playerperformances, OutputType.NUMBER, 4, lane, "firstBaseLead")
-        .map(p -> p.getStats().getFirstBaseLead());
+    return new Stat(playerperformances, OutputType.NUMBER, 4, lane, "firstBaseLead");
   }
 
 }

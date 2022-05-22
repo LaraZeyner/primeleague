@@ -1,5 +1,7 @@
 package de.xeri.prm.models.match.ratings;
 
+import java.util.Map;
+
 import de.xeri.prm.models.enums.Lane;
 
 /**
