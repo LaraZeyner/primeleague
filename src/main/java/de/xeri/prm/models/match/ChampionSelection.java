@@ -35,7 +35,7 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "ChampionSelection.championsPresenceCompetitive",
     query = "SELECT c.champion.id " +
         "FROM ChampionSelection c " +
-        "WHERE game IN " +
+        "WHERE c.game IN " +
         "(SELECT teamperformance.game " +
         "FROM Playerperformance p " +
         "WHERE teamperformance.game.gameStart >= :since " +

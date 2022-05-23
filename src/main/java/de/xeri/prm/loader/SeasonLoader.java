@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.enums.Matchstate;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.league.Account;
@@ -22,7 +23,6 @@ import de.xeri.prm.models.league.Stage;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.league.TurnamentMatch;
 import de.xeri.prm.util.Const;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.Util;
 import de.xeri.prm.util.io.json.HTML;
 import de.xeri.prm.util.io.request.RequestManager;
@@ -86,20 +86,22 @@ public final class SeasonLoader {
     Data.getInstance().commit();
   }
 
+  /**
+   * Update Accounts, die zuvor nicht <b>valueable</b> waren
+   */
   public static void load() {
-
-    Team.get().stream().filter(Team::isValueable).forEach(team -> {
-          if (!team.isScrims()) {
-            for (Player player : team.getPlayers()) {
-              for (Account account : player.getAccounts()) {
-                account.setLastUpdate(new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
-              }
-
+    for (Team team : Team.get()) {
+      if (team.isValueable()) {
+        if (!team.isScrims()) {
+          for (Player player : team.getPlayers()) {
+            for (Account account : player.getAccounts()) {
+              account.setLastUpdate(new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
             }
-            team.setScrims(true);
           }
+          team.setScrims(true);
         }
-    );
+      }
+    }
 
     Data.getInstance().commit();
   }

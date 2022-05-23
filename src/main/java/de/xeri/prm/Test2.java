@@ -21,8 +21,8 @@ public class Test2 {
     long time = System.currentTimeMillis();
     final LoadPlayers loadPlayers = new LoadPlayers();
     loadPlayers.init();
-    System.out.println("hi | " + (System.currentTimeMillis() -time) / 1000);
-    System.out.println("hi | " + (System.currentTimeMillis() -time) / 1000);
+    System.out.println("hi | " + (System.currentTimeMillis() - time) / 1000);
+    System.out.println("hi");
   }
 
   public static void init() {

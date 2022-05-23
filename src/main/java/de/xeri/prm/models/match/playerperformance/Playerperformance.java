@@ -123,7 +123,7 @@ import org.hibernate.annotations.NamedQuery;
         "AND lane = :lane")
 @NamedQuery(name = "Playerperformance.championWins",
     query = "SELECT COUNT(id), SUM(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) " +
-        "FROM Playerperformance " +
+        "FROM Playerperformance p " +
         "WHERE teamperformance.game.gameStart >= :since " +
         "AND account = :account " +
         "AND lane = :lane " +

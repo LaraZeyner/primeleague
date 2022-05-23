@@ -3,12 +3,46 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Technical Really Unique Esports</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+    <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
+    <style type="text/css">
+        table tr td {
+            height: 10px;
+            max-height: 10px;
+        }
+    </style>
+</h:head>
 <h:body>
     <ui:composition>
         <ui:fragment>
             <div class="card">
-                Sidebar
+                <h3>Aktuelle Draftsituation</h3>
+                <p:dataTable id="pickBans" lazy="true" value="#{drafting.picks}" var="pick" style="font-size: 14px;" size="small">
+                    <p:column headerText="Picks">#{pick.pickWe}</p:column>
+                    <p:column headerText="Banns">#{pick.ban}</p:column>
+                    <p:column headerText="Picks">#{pick.pickEnemy}</p:column>
+                </p:dataTable>
+
+                <div class="p-grid">
+                    <h3>Komposition TRUEs</h3>
+                </div>
+
+                <div class="p-grid">
+                    <h3>Komposition Gegner</h3>
+                </div>
+
+                <p:dataTable id="smaller" value="#{drafting.timings}" var="timings"
+                             style="font-size: 12px;" size="small">
+                    <p:column width="24%" style="height: 15px;" headerText="">#{timings.name}</p:column>
+                    <p:column width="19%" style="height: 15px;" headerText="TOP">#{timings.top}</p:column>
+                    <p:column width="19%" style="height: 15px;" headerText="JGL">#{timings.jgl}</p:column>
+                    <p:column width="19%" style="height: 15px;" headerText="MID">#{timings.mid}</p:column>
+                    <p:column width="19%" style="height: 15px;" headerText="BOT">#{timings.bot}</p:column>
+                </p:dataTable>
             </div>
         </ui:fragment>
     </ui:composition>

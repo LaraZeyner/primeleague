@@ -48,7 +48,6 @@ import de.xeri.prm.models.match.Gametype;
 import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.TeamperformanceBounty;
-import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.playerperformance.JunglePath;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceInfo;
@@ -57,6 +56,7 @@ import de.xeri.prm.models.match.playerperformance.PlayerperformanceKill;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceLevel;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceObjective;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceSummonerspell;
+import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.ratings.StatScope;
 import de.xeri.prm.models.others.ChampionRelationship;
 import de.xeri.prm.models.others.Playstyle;
@@ -326,14 +326,15 @@ public final class HibernateUtil {
     return determineChampionIdsSorted(account, lane, scope, query);
   }
 
-  public static Integer[] getWins(Account account, Lane lane, short championId) {
+  public static List<Integer> getWins(Account account, Lane lane, short championId) {
     final Session session = Data.getInstance().getSession();
-    final Query<Integer[]> query = session.getNamedQuery("Playerperformance.championWins");
+    final Query<Object[]> query = session.getNamedQuery("Playerperformance.championWins");
     query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
     query.setParameter("account", account);
     query.setParameter("lane", lane);
     query.setParameter("championId", championId);
-    return query.getSingleResult();
+    final Object[] singleResult = query.getSingleResult();
+    return Arrays.asList((int) (((Long) singleResult[0]).longValue()), (int) (((Long) singleResult[1]).longValue()));
   }
 
   @NotNull
@@ -344,7 +345,7 @@ public final class HibernateUtil {
     final List<Short> list = query.list();
 
     val map = new HashMap<Short, Integer>();
-    list.forEach(id -> map.put(id, map.getOrDefault(id, 0)));
+    list.forEach(id -> map.put(id, map.containsKey(id) ? map.get(id) + 1 : 1));
     return map.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
   }

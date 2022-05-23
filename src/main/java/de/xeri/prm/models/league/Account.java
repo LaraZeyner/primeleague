@@ -38,8 +38,10 @@ import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
@@ -57,7 +59,7 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Account.findByName", query = "FROM Account a WHERE name = :name")
 @Getter
 @Setter
-@NoArgsConstructor
+@RequiredArgsConstructor
 public class Account implements Serializable {
 
   @Transient
@@ -122,6 +124,7 @@ public class Account implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "player")
+  @ToString.Exclude
   private Player player;
 
   @Column(name = "icon")
@@ -140,9 +143,11 @@ public class Account implements Serializable {
   @OneToMany(mappedBy = "account")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Playerperformance> playerperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "account")
+  @ToString.Exclude
   private final Set<SeasonElo> seasonElos = new LinkedHashSet<>();
 
   public Account(String name) {
@@ -262,20 +267,6 @@ public class Account implements Serializable {
         !getLastCompetitiveGame().after(new Date(System.currentTimeMillis() - Const.DAYS_UNTIL_INACTIVE * 86_400_000L));
   }
 
-  //<editor-fold desc="getter and setter">
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Account)) return false;
-    final Account account = (Account) o;
-    return getIcon() == account.getIcon() && getLevel() == account.getLevel() && isActive() == account.isActive() && getPuuid().equals(account.getPuuid()) && getSummonerId().equals(account.getSummonerId()) && Objects.equals(getName(), account.getName()) && Objects.equals(getPlayer(), account.getPlayer()) && getLastUpdate().equals(account.getLastUpdate()) && getPlayerperformances().equals(account.getPlayerperformances()) && getSeasonElos().equals(account.getSeasonElos());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getPuuid(), getSummonerId(), getName(), getPlayer(), getIcon(), getLevel(), getLastUpdate(), isActive());
-  }
-
   @Override
   public String toString() {
     return "Account{" +
@@ -292,4 +283,17 @@ public class Account implements Serializable {
         '}';
   }
   //</editor-fold>
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final Account account = (Account) o;
+    return Objects.equals(id, account.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
 }

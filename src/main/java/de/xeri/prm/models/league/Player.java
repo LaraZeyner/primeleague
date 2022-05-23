@@ -58,10 +58,6 @@ public class Player implements Serializable {
   @Transient
   private static final long serialVersionUID = -2823713148714882156L;
 
-  public static Set<Player> get() {
-    return new LinkedHashSet<>(HibernateUtil.findList(Player.class));
-  }
-
   public static Player get(Player neu, Team team) {
     if (has(neu.getId())) {
       final Player player = find(neu.getId());
@@ -142,6 +138,12 @@ public class Player implements Serializable {
     entry.setPlayer(this);
   }
 
+  public void removeTeam() {
+    team.getPlayers().remove(this);
+    team = null;
+    Data.getInstance().save(this);
+  }
+
   public String getDisplayName() {
     return accounts.stream().filter(Account::isActive).map(Account::getName).findFirst().orElse(name);
   }
@@ -190,16 +192,20 @@ public class Player implements Serializable {
     final LinkedHashMap<Short, Integer> pickCLike = determineChampionsPresent(lane, StatScope.COMPETITIVELIKE, false);
     final LinkedHashMap<Short, Integer> pickRecent = determineChampionsPresent(lane, StatScope.OTHER, false);
 
-    final Set<ChampionView> champs = presentCompetitivelike.keySet().stream()
-        .filter(id -> presentCompetitivelike.get(id) >= presentCompetitivelike.size() * Const.PRESENCE_PERCENT_LIMIT)
+    int cLikeMatches = pickCLike.keySet().stream().mapToInt(pickCLike::get).sum();
+    final List<ChampionView> champs = presentCompetitivelike.keySet().stream()
+        .filter(id -> presentCompetitivelike.get(id) >= cLikeMatches * Const.PRESENCE_PERCENT_LIMIT)
         .map(id -> getChampionView(lane, id, presentCompetitivelike, pickCLike, pickRecent))
-        .collect(Collectors.toSet());
+        .sorted((o1, o2) -> o2.getPresenceNum() - o1.getPresenceNum())
+        .distinct().collect(Collectors.toList());
     determineChampionOrderByPresence(lane, presentCompetitivelike, champs, presentVeryRecently, pickCLike, pickRecent);
     determineChampionOrderByPresence(lane, presentCompetitivelike, champs, presentRecently, pickCLike, pickRecent);
 
     final LinkedHashMap<Short, Integer> pickComp = determineChampionsPresent(lane, StatScope.COMPETITIVE, false);
     final List<String> champsToRemove = champs.stream()
-        .filter(champ -> pickComp.get(champ.getId()) < 1 && pickCLike.get(champ.getId()) < 5 && pickRecent.get(champ.getId()) < 5)
+        .filter(champ -> pickComp.getOrDefault(champ.getId(), 0) < 1
+            && pickCLike.getOrDefault(champ.getId(), 0) < 5
+            && pickRecent.getOrDefault(champ.getId(), 0) < 5)
         .map(ChampionView::getName).collect(Collectors.toList());
 
     champs.removeIf(champ -> champsToRemove.contains(champ.getName()));
@@ -218,33 +224,40 @@ public class Player implements Serializable {
         HibernateUtil.getChampionIdsPickedOn(account, lane, scope);
   }
 
-  private void determineChampionOrderByPresence(Lane lane, Map<Short, Integer> presentCompetitivelike, Set<ChampionView> champs,
+  private void determineChampionOrderByPresence(Lane lane, Map<Short, Integer> presentCompetitivelike, List<ChampionView> champs,
                                                 Map<Short, Integer> picked, Map<Short, Integer> pickCLike, Map<Short, Integer> pickRecent) {
     picked.keySet().stream()
-        .filter(id -> picked.get(id) >= Const.PRESENCE_RECENTLY_LIMIT)
+        .filter(id -> picked.getOrDefault(id, 0) >= Const.PRESENCE_RECENTLY_LIMIT)
         .map(id -> getChampionView(lane, id, presentCompetitivelike, pickCLike, pickRecent))
+        .sorted((o1, o2) -> o2.getPresenceNum() - o1.getPresenceNum())
+        .distinct()
+        .filter(championView -> champs.stream().noneMatch(championView1 -> championView1.getId() == championView.getId()))
         .forEach(champs::add);
   }
 
   @NotNull
   private ChampionView getChampionView(Lane lane, short id, Map<Short, Integer> presentCompetitivelike, Map<Short, Integer> pickCLike,
                                        Map<Short, Integer> pickRecent) {
-    final int picked = pickCLike.get(id);
+    final int picked = pickCLike.getOrDefault(id, 0);
 
-    val presence = Math.round(100.0 * presentCompetitivelike.get(id) / presentCompetitivelike.size()) + "%";
+    final int presence = (int) Math.round(Util.div(100 * presentCompetitivelike.getOrDefault(id, 0),
+        pickCLike.keySet().stream().mapToInt(pickCLike::get).sum()));
 
-    final int pickedRecent = pickRecent.get(id);
+    final int pickedRecent = pickRecent.getOrDefault(id, 0);
 
-    final int games = accounts.stream()
-        .map(account -> HibernateUtil.getWins(account, lane, id))
-        .mapToInt(wins -> Integer.parseInt(String.valueOf(wins[0]))).sum();
-    final int win = accounts.stream()
-        .map(account -> HibernateUtil.getWins(account, lane, id))
-        .mapToInt(wins -> Integer.parseInt(String.valueOf(wins[1]))).sum();
-    final double winrate = Util.div(games, win);
-    val winrateString = Math.round(100.0 * winrate) + "%";
+    double winrate = -1;
+    if (pickedRecent > 0) {
+      final int games = accounts.stream().map(account -> HibernateUtil.getWins(account, lane, id)).mapToInt(wins -> wins.get(0)).sum();
+      final int win = accounts.stream().map(account -> HibernateUtil.getWins(account, lane, id)).mapToInt(wins -> wins.get(1)).sum();
+      if (games >= 5) {
+        winrate = Util.div(1d * win, games);
+      }
+    }
 
-    return new ChampionView(id, Champion.find(id).getName(), presence, picked, pickedRecent, winrateString);
+
+    val winrateString = winrate != -1 ? Math.round(100 * winrate) + "%" : "-";
+
+    return new ChampionView(id, Champion.find(id).getName(), presence + "%", presence , picked, pickedRecent, winrateString);
   }
 
   public List<Integer> getGamesOn() {

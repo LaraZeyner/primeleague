@@ -3,9 +3,6 @@ package de.xeri.prm.servlet.datatables.scouting;
 import java.io.Serializable;
 import java.util.List;
 
-import javax.faces.bean.ApplicationScoped;
-import javax.faces.bean.ManagedBean;
-
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.SeasonElo;
@@ -17,12 +14,11 @@ import lombok.NoArgsConstructor;
 /**
  * Created by Lara on 18.05.2022 for web
  */
-@ManagedBean
-@ApplicationScoped
 @NoArgsConstructor
 @Getter
 public class PlayerView implements Serializable {
-  private static final long serialVersionUID = -601866244250922121L;
+  private static final long serialVersionUID = -8701843635861320113L;
+
   private int games;
   private String name;
   private String positionalIconUrl;
@@ -49,7 +45,7 @@ public class PlayerView implements Serializable {
     this.ratings = ratings;
     this.games = (int) (double) this.ratings.getPlayerRatings().get("count");
 
-    this.totalGames = "Sum: " + player.getAccounts().stream().mapToInt(account -> HibernateUtil.gamesOnLaneRecently(account, lane)).sum();
+    this.totalGames = "" + player.getAccounts().stream().mapToInt(account -> HibernateUtil.gamesOnLaneRecently(account, lane)).sum();
     this.champions = player.getChampionsPresence(lane);
     this.kda = ratings.getAdaption().getStats().getKDA().display();
     this.objectives = ratings.getObjectives().format();

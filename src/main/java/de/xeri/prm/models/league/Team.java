@@ -38,6 +38,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.val;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
@@ -53,6 +54,7 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Team.findBy", query = "FROM Team t WHERE teamName = :name")
 @NamedQuery(name = "Team.findByScrim", query = "FROM Team t WHERE scrims = :scrims")
 @NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE turneyId = :tid")
+@NamedQuery(name = "Team.valueableTeams", query = "FROM Team t WHERE scrims = true OR id IN :teamIds")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -60,6 +62,8 @@ import org.hibernate.annotations.NamedQuery;
 public class Team implements Serializable {
   @Transient
   private static final long serialVersionUID = 2656015802095877363L;
+
+  private static List<Team> valueableTeams;
 
   public static Set<Team> get() {
     return new LinkedHashSet<>(HibernateUtil.findList(Team.class));
@@ -91,6 +95,14 @@ public class Team implements Serializable {
 
   public static boolean has(String name, League league) {
     return findAll(name).stream().anyMatch(team -> team.getLeagues().contains(league));
+  }
+
+  public static List<Team> getValueableTeams() {
+    if (valueableTeams == null) {
+      valueableTeams = HibernateUtil.findList(Team.class, new String[]{"teamIds"},
+          new Object[]{Data.getInstance().getCurrentGroup().getTeams().stream().map(Team::getId).collect(Collectors.toList())}, "valueableTeams");
+    }
+    return valueableTeams;
   }
 
   public static Team find(String name, League league) {
@@ -224,7 +236,16 @@ public class Team implements Serializable {
   }
 
   public Player addPlayer(Player player) {
+    val oldTeam = player.getTeam();
+    if (!this.equals(oldTeam)) {
+      oldTeam.removePlayer(player);
+    }
     return Player.get(player, this);
+  }
+
+  private void removePlayer(Player player) {
+    players.remove(player);
+    Data.getInstance().save(this);
   }
 
   public void addLogEntry(Matchlog entry) {
@@ -302,7 +323,7 @@ public class Team implements Serializable {
   }
 
   public boolean isValueable() {
-    return Data.getInstance().getCurrentGroup().getTeams().contains(this) || scrims;
+    return valueableTeams.contains(this);
   }
 
   public String getLogoUrl() {

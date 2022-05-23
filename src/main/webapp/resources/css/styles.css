@@ -197,3 +197,18 @@ body .ui-card-footer {
     cursor: not-allowed;
     opacity: 0.3
 }
+
+.smaller .ui-datatable .ui-datatable-data tr{
+    height : 15px;
+    max-height: 15px;
+}
+
+.homeChampStats .ui-datatable .ui-datatable-data tr{
+    height : 15px;
+    max-height: 15px;
+}
+
+.pickBans .ui-datatable .ui-datatable-data tr{
+    height : 15px;
+    max-height: 15px;
+}

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.enums.Teamrole;
 import de.xeri.prm.models.league.Account;
@@ -19,7 +20,6 @@ import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Season;
 import de.xeri.prm.models.league.Stage;
 import de.xeri.prm.models.league.Team;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.Util;
 import de.xeri.prm.util.io.json.HTML;
 import de.xeri.prm.util.io.riot.RiotAccountURLGenerator;
@@ -103,17 +103,20 @@ public class TeamLoader {
     return null;
   }
 
+  // TODO: 16.04.2022 Look for account updates
   static void handleMembers(Document doc, Team team) {
+    final List<Player> member = new ArrayList<>(team.getPlayers());
     final Elements members = doc.select("section.league-team-members").select("div.section-content").select("li");
     for (Element playerElement : members) {
       val elements = playerElement.select("a");
       val idString = elements.attr("href").split("/users/")[1].split("-")[0];
+      final int id = Integer.parseInt(idString);
       val name = elements.text().equals("") ? null : elements.text();
       val roleString = playerElement.select("div.txt-subtitle").text();
       val summonerName = playerElement.select("div.txt-info").select("span").get(0).text();
 
-      if (Player.has(Integer.parseInt(idString))) {
-        val player = Player.get(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())), team);
+      if (Player.has(id)) {
+        val player = Player.get(new Player(id, name, Teamrole.valueOf(roleString.toUpperCase())), team);
         if (!player.getTeam().equals(team)) {
           // Spieler hat gewechselt
           team.addPlayer(player);
@@ -147,8 +150,9 @@ public class TeamLoader {
             }
           }
         }
+        member.remove(player);
       } else {
-        final Player player = team.addPlayer(new Player(Integer.parseInt(idString), name, Teamrole.valueOf(roleString.toUpperCase())));
+        final Player player = team.addPlayer(new Player(id, name, Teamrole.valueOf(roleString.toUpperCase())));
         final Set<Account> accounts = player.getAccounts();
         if (accounts.stream().noneMatch(account -> account.getName().equals(summonerName))) {
           final Account account = Account.get(new Account(summonerName));
@@ -156,6 +160,8 @@ public class TeamLoader {
         }
       }
     }
+
+    member.forEach(Player::removeTeam);
   }
 
   public static Team handleSeason(Team team) {

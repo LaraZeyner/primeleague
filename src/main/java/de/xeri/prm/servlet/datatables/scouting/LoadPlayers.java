@@ -76,7 +76,7 @@ public class LoadPlayers implements Serializable {
               i == 0 ? Lane.TOP : i == 1 ? Lane.JUNGLE : i == 2 ? Lane.MIDDLE : i == 3 ? Lane.BOTTOM : Lane.UTILITY))
           .collect(Collectors.toList());
       FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Geladen", "");
-      FacesContext.getCurrentInstance().addMessage(null, message);
+      //FacesContext.getCurrentInstance().addMessage(null, message);
       System.out.println("GELADEN!!!!!");
 
     } catch (Exception exception) {
