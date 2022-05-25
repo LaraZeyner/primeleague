@@ -2,6 +2,7 @@ package de.xeri.prm.servlet.datatables.scouting;
 
 import java.io.Serializable;
 
+import de.xeri.prm.models.dynamic.Champion;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +17,7 @@ public class ChampionView implements Serializable {
   private static final long serialVersionUID = -9003855396420546142L;
 
   private short id;
+  private Champion champion;
   private String name;
   private String presence;
   private int presenceNum;

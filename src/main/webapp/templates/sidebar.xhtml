@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:c="http://java.sun.com/jsp/jstl/core">
 <h:head>
     <title>Technical Really Unique Esports</title>
     <h:outputStylesheet library="css" name="styles.css"/>
@@ -21,21 +21,23 @@
         <ui:fragment>
             <div class="card">
                 <h3>Aktuelle Draftsituation</h3>
-                <p:dataTable id="pickBans" lazy="true" value="#{drafting.picks}" var="pick" style="font-size: 14px;" size="small">
+                <p:dataTable id="pickBans" lazy="true" value="#{loadPlayers.picks}" var="pick" style="font-size: 14px;" size="small">
                     <p:column headerText="Picks">#{pick.pickWe}</p:column>
                     <p:column headerText="Banns">#{pick.ban}</p:column>
                     <p:column headerText="Picks">#{pick.pickEnemy}</p:column>
                 </p:dataTable>
 
+                <h3>Komposition TRUEs</h3>
                 <div class="p-grid">
-                    <h3>Komposition TRUEs</h3>
+
                 </div>
 
+                <h3>Komposition Gegner</h3>
                 <div class="p-grid">
-                    <h3>Komposition Gegner</h3>
+
                 </div>
 
-                <p:dataTable id="smaller" value="#{drafting.timings}" var="timings"
+                <p:dataTable id="smaller" value="#{loadPlayers.timings}" var="timings"
                              style="font-size: 12px;" size="small">
                     <p:column width="24%" style="height: 15px;" headerText="">#{timings.name}</p:column>
                     <p:column width="19%" style="height: 15px;" headerText="TOP">#{timings.top}</p:column>

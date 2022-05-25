@@ -31,6 +31,11 @@ import de.xeri.prm.models.league.TurnamentMatch;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -41,6 +46,10 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Game.findAll", query = "FROM Game g")
 @NamedQuery(name = "Game.findById", query = "FROM Game g WHERE id = :pk")
 @NamedQuery(name = "Game.findByTourney", query = "FROM Game g WHERE gametype < :type")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Game implements Serializable {
 
   @Transient
@@ -83,6 +92,7 @@ public class Game implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "turnamentmatch")
+  @ToString.Exclude
   private TurnamentMatch turnamentmatch;
 
   @Temporal(TemporalType.TIMESTAMP)
@@ -94,23 +104,22 @@ public class Game implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "gametype")
+  @ToString.Exclude
   private Gametype gametype;
 
   @OneToMany(mappedBy = "game")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Teamperformance> teamperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "game")
+  @ToString.Exclude
   private final Set<ChampionSelection> championSelections = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "game")
+  @ToString.Exclude
   private final Set<GamePause> pauses = new LinkedHashSet<>();
-
-
-  // default constructor
-  public Game() {
-  }
 
   public Game(String id, Date gameStart, short duration) {
     this.id = id;
@@ -158,81 +167,16 @@ public class Game implements Serializable {
     return teamperformances.stream().map(Teamperformance::getTeam).collect(Collectors.toList());
   }
 
-  //<editor-fold desc="getter and setter">
-  public Set<ChampionSelection> getChampionSelections() {
-    return championSelections;
-  }
-
-  public Set<Teamperformance> getTeamperformances() {
-    return teamperformances;
-  }
-
-  public Gametype getGametype() {
-    return gametype;
-  }
-
-  public void setGametype(Gametype gametype) {
-    this.gametype = gametype;
-  }
-
-  public short getDuration() {
-    return duration;
-  }
-
-  public void setDuration(short duration) {
-    this.duration = duration;
-  }
-
-  public Date getGameStart() {
-    return gameStart;
-  }
-
-  public void setGameStart(Date gameStart) {
-    this.gameStart = gameStart;
-  }
-
-  public TurnamentMatch getTurnamentmatch() {
-    return turnamentmatch;
-  }
-
-  public void setTurnamentmatch(TurnamentMatch turnamentmatch) {
-    this.turnamentmatch = turnamentmatch;
-  }
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public Set<GamePause> getPauses() {
-    return pauses;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Game)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final Game game = (Game) o;
-    return getDuration() == game.getDuration() && getId().equals(game.getId()) && Objects.equals(getTurnamentmatch(), game.getTurnamentmatch()) && getGameStart().equals(game.getGameStart()) && getGametype() == game.getGametype() && getTeamperformances().equals(game.getTeamperformances()) && getChampionSelections().equals(game.getChampionSelections());
+    return id != null && Objects.equals(id, game.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getTurnamentmatch(), getGameStart(), getDuration(), getGametype());
+    return getClass().hashCode();
   }
-
-  @Override
-  public String toString() {
-    return "Game{" +
-        "id='" + id + '\'' +
-        ", turnamentmatch=" + turnamentmatch +
-        ", gameStart=" + gameStart +
-        ", duration=" + duration +
-        ", gametype=" + gametype +
-        '}';
-  }
-  //</editor-fold>
 }

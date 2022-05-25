@@ -34,10 +34,10 @@ public final class ChampionLoader {
       final JSONObject championObject = championsData.getJSONObject(id);
       final short cId = Short.parseShort(championObject.getString("key"));
       final String name = championObject.getString("name");
-      final Champion ch = new Champion(cId, name);
+      final Champion champion = Champion.get(new Champion(cId, name));
 
       final String title = championObject.getString("title");
-      ch.setTitle(title);
+      champion.setTitle(title);
 
       final JSONObject info = championObject.getJSONObject("info");
       final byte attack = (byte) info.getInt("attack");
@@ -52,16 +52,14 @@ public final class ChampionLoader {
       final double resist = calculateSubStat(stats.getDouble("armor"), stats.getDouble("armorperlevel"));
       final short range = (short) stats.getInt("attackrange");
       final short damage = (short) calculateSubStat(stats.getDouble("attackdamage"), stats.getDouble("attackdamageperlevel"));
-      final byte attackSpeed = (byte) calculateSubStat(stats.getDouble("attackspeed"), stats.getDouble("attackspeedperlevel") / 100);
-      ch.setStats(attack, defense, magic, health, secondary, moveSpeed, resist, range, healthRegeneration, secondaryRegeneration, damage,
+      final double attackSpeed = calculateSubStat(stats.getDouble("attackspeed"), stats.getDouble("attackspeedperlevel") / 100);
+      champion.setStats(attack, defense, magic, health, secondary, moveSpeed, resist, range, healthRegeneration, secondaryRegeneration, damage,
           attackSpeed);
 
       final String resourceString = String.valueOf(parser.getSubParameter(DataType.STRING, id + ".partype"));
       final Resource resource = Resource.get(new Resource(resourceString));
-      ch.setResource(resource);
-      resource.addChampion(ch);
-
-      final Champion champion = Champion.get(ch);
+      champion.setResource(resource);
+      resource.addChampion(champion);
 
       // Class
       championObject.getJSONArray("tags").forEach(clazz -> Arrays.stream(Championclass.values())
@@ -78,6 +76,8 @@ public final class ChampionLoader {
       if (spells.length() > 1) manageAbility(champion, spells.getJSONObject(1), Abilitytype.W_SPELL);
       if (spells.length() > 2) manageAbility(champion, spells.getJSONObject(2), Abilitytype.E_SPELL);
       if (spells.length() > 3) manageAbility(champion, spells.getJSONObject(3), Abilitytype.ULTIMATE);
+
+      Data.getInstance().save(champion);
     }
   }
 

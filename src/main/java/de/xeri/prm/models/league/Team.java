@@ -3,6 +3,7 @@ package de.xeri.prm.models.league;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -272,7 +273,6 @@ public class Team implements Serializable {
       final Teamperformance teamperformance = game.getPerformanceOf(this);
       clash.addGame(teamperformance);
 
-
       millis = gameMillis;
     }
     return clashes;
@@ -392,6 +392,22 @@ public class Team implements Serializable {
       }
     }
     return score1 + ":" + score2;
+  }
+
+  public TurnamentMatch getClosestTurnamentMatch(Date date) {
+    long min = Long.MAX_VALUE;
+    TurnamentMatch match = null;
+    for (final TurnamentMatch turnamentMatch : getTurnamentMatches()) {
+      if (turnamentMatch.isOpen() && turnamentMatch.getStart().before(date)) {
+        final long diff = Math.abs(turnamentMatch.getStart().getTime() + turnamentMatch.getGames().size() * 2_700_000L - date.getTime());
+        if (diff < min) {
+          min = diff;
+          match = turnamentMatch;
+        }
+      }
+    }
+
+    return match;
   }
   //<editor-fold desc="getter and setter">
 

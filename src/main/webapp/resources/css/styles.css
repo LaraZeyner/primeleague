@@ -203,7 +203,12 @@ body .ui-card-footer {
     max-height: 15px;
 }
 
-.homeChampStats .ui-datatable .ui-datatable-data tr{
+#homeChampStats .ui-datatable .ui-datatable-data tr{
+    height : 15px;
+    max-height: 15px;
+}
+
+#enemyChampStats .ui-datatable .ui-datatable-data tr{
     height : 15px;
     max-height: 15px;
 }

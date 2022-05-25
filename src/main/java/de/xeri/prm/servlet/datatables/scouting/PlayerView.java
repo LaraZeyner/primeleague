@@ -34,6 +34,7 @@ public class PlayerView implements Serializable {
   private String income;
   private String survival;
   private String laning;
+  private List<String> playerTags; //TODO (Abgie) 24.05.2022:
 
   public PlayerView(Player player, Lane lane) {
     this.name = player.getDisplayName();

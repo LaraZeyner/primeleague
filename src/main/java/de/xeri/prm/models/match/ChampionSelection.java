@@ -31,7 +31,6 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "ChampionSelection.findBy",
     query = "FROM ChampionSelection c " +
         "WHERE game = :game AND selectionType = :type AND selectionOrder = :sOrder")
-
 @NamedQuery(name = "ChampionSelection.championsPresenceCompetitive",
     query = "SELECT c.champion.id " +
         "FROM ChampionSelection c " +
@@ -51,6 +50,15 @@ import org.hibernate.annotations.NamedQuery;
         "WHERE teamperformance.game.gameStart >= :since " +
         "AND account = :account " +
         "AND lane = :lane)")
+@NamedQuery(name = "ChampionSelection.championStrongPhase",
+    query = "SELECT s.champion, " +
+        "AVG(CASE WHEN s.game.duration < 1500 THEN t.win ELSE NULL END), AVG(CASE WHEN s.game.duration > 2000 THEN t.win ELSE NULL END), " +
+        "AVG(CASE WHEN s.game.duration BETWEEN 1500 AND 2000 THEN t.win ELSE NULL END) " +
+        "FROM ChampionSelection s " +
+        "JOIN s.game.teamperformances t " +
+        "WHERE s.selectionType = 'PICK' " +
+        "AND (t.firstPick IS true AND s.selectionOrder IN(1, 4, 5, 8, 9) OR t.firstPick IS false AND s.selectionOrder IN(2, 3, 6, 7, 10)) " +
+        "GROUP BY s.champion")
 public class ChampionSelection implements Serializable {
 
   @Transient

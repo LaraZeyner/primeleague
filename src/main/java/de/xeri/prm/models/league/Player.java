@@ -256,8 +256,9 @@ public class Player implements Serializable {
 
 
     val winrateString = winrate != -1 ? Math.round(100 * winrate) + "%" : "-";
+    final Champion champion = Champion.find(id);
 
-    return new ChampionView(id, Champion.find(id).getName(), presence + "%", presence , picked, pickedRecent, winrateString);
+    return new ChampionView(id, champion, champion.getName(), presence + "%", presence , picked, pickedRecent, winrateString);
   }
 
   public List<Integer> getGamesOn() {

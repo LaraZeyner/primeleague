@@ -27,7 +27,7 @@ import de.xeri.prm.models.dynamic.Resource;
 import de.xeri.prm.models.dynamic.Rune;
 import de.xeri.prm.models.dynamic.Runetree;
 import de.xeri.prm.models.dynamic.Summonerspell;
-import de.xeri.prm.models.dynamic.Wincondition;
+import de.xeri.prm.models.enums.ChampionPlaystyle;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.io.Input;
 import de.xeri.prm.models.league.Account;
@@ -59,7 +59,7 @@ import de.xeri.prm.models.match.playerperformance.PlayerperformanceSummonerspell
 import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.ratings.StatScope;
 import de.xeri.prm.models.others.ChampionRelationship;
-import de.xeri.prm.models.others.Playstyle;
+import de.xeri.prm.servlet.datatables.scouting.draft.CompositionAttribute;
 import de.xeri.prm.util.logger.Logger;
 import lombok.val;
 import org.hibernate.Session;
@@ -76,61 +76,56 @@ public final class HibernateUtil {
 
   private static final SessionFactory sessionFactory = buildSessionFactory();
 
+  private static Map<Champion, Map<CompositionAttribute, Double>> championData;
+  private static Map<CompositionAttribute, Double> averageChampionData;
+
   private static SessionFactory buildSessionFactory() {
-    try {
-      // Create the SessionFactory from hibernate.cfg.xml
-      final Configuration configuration = addClasses(Arrays.asList(
-          Ability.class,
-          Abilitystyle.class,
-          Account.class,
-          Champion.class,
-          ChampionRelationship.class,
-          ChampionSelection.class,
-          Rating.class,
-          Game.class,
-          GamePause.class,
-          Gametype.class,
-          Input.class,
-          Item.class,
-          Item_Stat.class,
-          ItemStat.class,
-          Itemstyle.class,
-          JunglePath.class,
-          League.class,
-          LeagueMap.class,
-          Matchday.class,
-          Matchlog.class,
-          Player.class,
-          Playerperformance.class,
-          PlayerperformanceInfo.class,
-          PlayerperformanceItem.class,
-          PlayerperformanceKill.class,
-          PlayerperformanceLevel.class,
-          PlayerperformanceObjective.class,
-          PlayerperformanceSummonerspell.class,
-          Playstyle.class,
-          Resource.class,
-          Rune.class,
-          Runetree.class,
-          Schedule.class,
-          ScheduledGame.class,
-          Season.class,
-          SeasonElo.class,
-          Stage.class,
-          Summonerspell.class,
-          Team.class,
-          Teamperformance.class,
-          TeamperformanceBounty.class,
-          TurnamentMatch.class,
-          Wincondition.class));
-      final Properties properties = configuration.getProperties();
-      final StandardServiceRegistryBuilder registry = new StandardServiceRegistryBuilder().applySettings(properties);
-      return configuration.buildSessionFactory(registry.build());
-    } catch (Throwable ex) {
-      Logger.getLogger("Hibernate").severe("Initial SessionFactory creation failed." + ex);
-      System.err.println();
-      throw new ExceptionInInitializerError(ex);
-    }
+    // Create the SessionFactory from hibernate.cfg.xml
+    final Configuration configuration = addClasses(Arrays.asList(
+        Ability.class,
+        Abilitystyle.class,
+        Account.class,
+        Champion.class,
+        ChampionRelationship.class,
+        ChampionSelection.class,
+        Rating.class,
+        Game.class,
+        GamePause.class,
+        Gametype.class,
+        Input.class,
+        Item.class,
+        Item_Stat.class,
+        ItemStat.class,
+        Itemstyle.class,
+        JunglePath.class,
+        League.class,
+        LeagueMap.class,
+        Matchday.class,
+        Matchlog.class,
+        Player.class,
+        Playerperformance.class,
+        PlayerperformanceInfo.class,
+        PlayerperformanceItem.class,
+        PlayerperformanceKill.class,
+        PlayerperformanceLevel.class,
+        PlayerperformanceObjective.class,
+        PlayerperformanceSummonerspell.class,
+        Resource.class,
+        Rune.class,
+        Runetree.class,
+        Schedule.class,
+        ScheduledGame.class,
+        Season.class,
+        SeasonElo.class,
+        Stage.class,
+        Summonerspell.class,
+        Team.class,
+        Teamperformance.class,
+        TeamperformanceBounty.class,
+        TurnamentMatch.class));
+    final Properties properties = configuration.getProperties();
+    final StandardServiceRegistryBuilder registry = new StandardServiceRegistryBuilder().applySettings(properties);
+    return configuration.buildSessionFactory(registry.build());
   }
 
   private static Configuration addClasses(List<Class> classes) {
@@ -326,6 +321,117 @@ public final class HibernateUtil {
     return determineChampionIdsSorted(account, lane, scope, query);
   }
 
+  public static Map<CompositionAttribute, Double> getAverageChampionStats() {
+    if (averageChampionData == null) {
+      final Session session = Data.getInstance().getSession();
+      final Query<Object[]> query = session.getNamedQuery("Playerperformance.averageChampionValues");
+
+      Object[] objects = query.getSingleResult();
+      final Map<CompositionAttribute, Double> championMap = new HashMap<>();
+      championMap.put(CompositionAttribute.WINCONDITION_TRADE, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.WINCONDITION_TRADE)).average().orElse(0));
+      championMap.put(CompositionAttribute.WINCONDITION_ALLIN, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.WINCONDITION_ALLIN)).average().orElse(0));
+      championMap.put(CompositionAttribute.WINCONDITION_SUSTAIN, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.WINCONDITION_SUSTAIN)).average().orElse(0));
+
+      championMap.put(CompositionAttribute.STATISTIC_CROWDCONTROL, objects[3] == null ? 0 : Double.parseDouble(objects[3].toString()));
+      championMap.put(CompositionAttribute.STATISTIC_DAMAGE_PHYSICAL, objects[0] == null ? 0 : Double.parseDouble(objects[0].toString()));
+      championMap.put(CompositionAttribute.STATISTIC_DAMAGE_MAGICAL, objects[1] == null ? 0 : Double.parseDouble(objects[1].toString()));
+      championMap.put(CompositionAttribute.STATISTIC_DAMAGE_TOTAL, objects[2] == null ? 0 : Double.parseDouble(objects[2].toString()));
+      championMap.put(CompositionAttribute.STATISTIC_DAMAGE_TRUE, championMap.get(CompositionAttribute.STATISTIC_DAMAGE_TOTAL) -
+          championMap.get(CompositionAttribute.STATISTIC_DAMAGE_PHYSICAL) - championMap.get(CompositionAttribute.STATISTIC_DAMAGE_MAGICAL));
+
+      championMap.put(CompositionAttribute.PLAYSTYLE_SIEGE, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.PLAYSTYLE_SIEGE)).average().orElse(0));
+      championMap.put(CompositionAttribute.PLAYSTYLE_SPLITPUSH, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.PLAYSTYLE_SPLITPUSH)).average().orElse(0));
+      championMap.put(CompositionAttribute.PLAYSTYLE_TEAMFIGHT, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.PLAYSTYLE_TEAMFIGHT)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_DIVING, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_DIVING)).average().orElse(0));
+
+      championMap.put(CompositionAttribute.TYPE_AGGRESSION_ENGAGE, 10 - championMap.getOrDefault(CompositionAttribute.WINCONDITION_SUSTAIN, (double) 0));
+      championMap.put(CompositionAttribute.TYPE_AGGRESSION_DISENGAGE, championMap.getOrDefault(CompositionAttribute.WINCONDITION_SUSTAIN, (double) 0));
+
+      championMap.put(CompositionAttribute.TYPE_DAMAGE_BURST, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_DAMAGE_BURST)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_DAMAGE_DPS, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_DAMAGE_DPS)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_DURABILITY_FRONTLINE, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_DURABILITY_FRONTLINE)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_DURABILITY_PEEL, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_DURABILITY_PEEL)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_DURABILITY_RANGE, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_DURABILITY_RANGE)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_GAMEPHASE_EARLYGAME, .5);
+      championMap.put(CompositionAttribute.TYPE_GAMEPHASE_MIDGAME, .5);
+      championMap.put(CompositionAttribute.TYPE_GAMEPHASE_LATEGAME, .5);
+      championMap.put(CompositionAttribute.TYPE_GANKSETUPS, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_GANKSETUPS)).average().orElse(0));
+      championMap.put(CompositionAttribute.TYPE_WAVECLEAR, getChampionStats().keySet().stream()
+          .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.TYPE_WAVECLEAR)).average().orElse(0));
+      averageChampionData = championMap;
+    }
+    return averageChampionData;
+  }
+
+  public static Map<Champion, Map<CompositionAttribute, Double>> getChampionStats() {
+    if (championData == null) {
+      Map<Champion, Map<CompositionAttribute, Double>> map = new HashMap<>();
+      final Session session = Data.getInstance().getSession();
+      final Query<Object[]> query = session.getNamedQuery("Playerperformance.championValues");
+      final List<Object[]> list = query.list();
+
+      final Map<Champion, List<Double>> wins = getWins();
+
+      for (Object[] objects : list) {
+        final Champion champion = (Champion) objects[0];
+        final Map<CompositionAttribute, Double> championMap = new HashMap<>();
+        championMap.put(CompositionAttribute.WINCONDITION_TRADE, (double) champion.getTrade());
+        championMap.put(CompositionAttribute.WINCONDITION_ALLIN, (double) champion.getAllin());
+        championMap.put(CompositionAttribute.WINCONDITION_SUSTAIN, (double) champion.getSustain());
+
+        championMap.put(CompositionAttribute.STATISTIC_CROWDCONTROL, objects[4] == null ? 0 : Double.parseDouble(objects[4].toString()));
+        championMap.put(CompositionAttribute.STATISTIC_DAMAGE_PHYSICAL, objects[1] == null ? 0 : Double.parseDouble(objects[1].toString()));
+        championMap.put(CompositionAttribute.STATISTIC_DAMAGE_MAGICAL, objects[2] == null ? 0 : Double.parseDouble(objects[2].toString()));
+        championMap.put(CompositionAttribute.STATISTIC_DAMAGE_TOTAL, objects[3] == null ? 0 : Double.parseDouble(objects[3].toString()));
+        championMap.put(CompositionAttribute.STATISTIC_DAMAGE_TRUE, championMap.get(CompositionAttribute.STATISTIC_DAMAGE_TOTAL) -
+            championMap.get(CompositionAttribute.STATISTIC_DAMAGE_PHYSICAL) - championMap.get(CompositionAttribute.STATISTIC_DAMAGE_MAGICAL));
+
+        championMap.put(CompositionAttribute.PLAYSTYLE_SIEGE,
+            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.POKE)).count());
+        championMap.put(CompositionAttribute.PLAYSTYLE_SPLITPUSH,
+            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.SPLITPUSH)).count());
+        championMap.put(CompositionAttribute.PLAYSTYLE_TEAMFIGHT,
+            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.TEAMFIGHT)).count());
+        championMap.put(CompositionAttribute.TYPE_DIVING,
+            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.DIVING)).count());
+
+
+        championMap.put(CompositionAttribute.TYPE_AGGRESSION_ENGAGE, championMap.getOrDefault(CompositionAttribute.WINCONDITION_ALLIN, (double) 0));
+        championMap.put(CompositionAttribute.TYPE_AGGRESSION_DISENGAGE, 10 - championMap.getOrDefault(CompositionAttribute.WINCONDITION_ALLIN, (double) 0));
+
+        championMap.put(CompositionAttribute.TYPE_DAMAGE_BURST, champion.getBurstValue());
+        championMap.put(CompositionAttribute.TYPE_DAMAGE_DPS, 1 - champion.getBurstValue());
+
+        championMap.put(CompositionAttribute.TYPE_DURABILITY_FRONTLINE, champion.getDurability());
+        championMap.put(CompositionAttribute.TYPE_DURABILITY_PEEL, 6000 - champion.getRange() - champion.getDurability());
+        championMap.put(CompositionAttribute.TYPE_DURABILITY_RANGE, champion.getRange());
+
+        championMap.put(CompositionAttribute.TYPE_GAMEPHASE_EARLYGAME, wins.get(champion).get(0));
+        championMap.put(CompositionAttribute.TYPE_GAMEPHASE_MIDGAME, wins.get(champion).get(1));
+        championMap.put(CompositionAttribute.TYPE_GAMEPHASE_LATEGAME, wins.get(champion).get(2));
+
+        championMap.put(CompositionAttribute.TYPE_GANKSETUPS, objects[5] == null ? 0 : Double.parseDouble(objects[5].toString()));
+        championMap.put(CompositionAttribute.TYPE_WAVECLEAR, (double) (champion.getWaveClear() != null ? champion.getWaveClear() : 0));
+        map.put(champion, championMap);
+        championData = map;
+      }
+    }
+    return championData;
+  }
+
   public static List<Integer> getWins(Account account, Lane lane, short championId) {
     final Session session = Data.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("Playerperformance.championWins");
@@ -337,8 +443,25 @@ public final class HibernateUtil {
     return Arrays.asList((int) (((Long) singleResult[0]).longValue()), (int) (((Long) singleResult[1]).longValue()));
   }
 
+  private static Map<Champion, List<Double>> getWins() {
+    final Session session = Data.getInstance().getSession();
+    final Query<Object[]> query = session.getNamedQuery("ChampionSelection.championStrongPhase");
+    final List<Object[]> list = query.list();
+    Map<Champion, List<Double>> map = new HashMap<>();
+    for (Object[] objects : list) {
+      Champion champion = (Champion) objects[0];
+      Double early = (Double) objects[1];
+      Double mid = (Double) objects[2];
+      Double late = (Double) objects[3];
+      map.put(champion, Arrays.asList(early, mid, late));
+    }
+
+    return map;
+  }
+
   @NotNull
-  private static LinkedHashMap<Short, Integer> determineChampionIdsSorted(Account account, Lane lane, StatScope scope, Query<Short> query) {
+  private static LinkedHashMap<Short, Integer> determineChampionIdsSorted(Account account, Lane lane, StatScope
+      scope, Query<Short> query) {
     query.setParameter("since", new Date(System.currentTimeMillis() - (scope.equals(StatScope.RECENT) ? 30 : 180) * Const.MILLIS_PER_DAY));
     query.setParameter("account", account);
     query.setParameter("lane", lane);

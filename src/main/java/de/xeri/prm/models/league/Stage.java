@@ -24,9 +24,15 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.manager.Data;
+import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Stage")
@@ -38,6 +44,10 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Stage.findAll", query = "FROM Stage s")
 @NamedQuery(name = "Stage.findById", query = "FROM Stage s WHERE id = :pk")
 @NamedQuery(name = "Stage.findBy", query = "FROM Stage s WHERE season = :season AND stageType = :type")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Stage implements Serializable {
   @Transient
   private static final long serialVersionUID = 3935879920437275466L;
@@ -82,6 +92,7 @@ public class Stage implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "season")
+  @ToString.Exclude
   private Season season;
 
   @Enumerated(EnumType.STRING)
@@ -97,14 +108,12 @@ public class Stage implements Serializable {
   private Calendar stageEnd;
 
   @OneToMany(mappedBy = "stage")
+  @ToString.Exclude
   private final Set<Matchday> matchdays = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "stage")
+  @ToString.Exclude
   private final Set<League> leagues = new LinkedHashSet<>();
-
-  // default constructor
-  public Stage() {
-  }
 
   public Stage(StageType stageType, Calendar stageStart, Calendar stageEnd) {
     this.stageType = stageType;
@@ -113,7 +122,7 @@ public class Stage implements Serializable {
   }
 
   public boolean isInSeason(Date date) {
-    return season.getSeasonStart().before(date) && season.getSeasonEnd().after(date);
+    return season.getSeasonStart().before(Util.getCalendar(date)) && season.getSeasonEnd().after(Util.getCalendar(date));
   }
 
   public Matchday addMatchday(Matchday matchday) {
@@ -124,74 +133,16 @@ public class Stage implements Serializable {
     return League.get(league, this);
   }
 
-  //<editor-fold desc="getter and setter">
-  public Set<League> getLeagues() {
-    return leagues;
-  }
-
-  public Set<Matchday> getMatchdays() {
-    return matchdays;
-  }
-
-  public Calendar getStageEnd() {
-    return stageEnd;
-  }
-
-  public void setStageEnd(Calendar stageEnd) {
-    this.stageEnd = stageEnd;
-  }
-
-  public Calendar getStageStart() {
-    return stageStart;
-  }
-
-  public void setStageStart(Calendar stageStart) {
-    this.stageStart = stageStart;
-  }
-
-  public StageType getStageType() {
-    return stageType;
-  }
-
-  public void setStageType(StageType stageType) {
-    this.stageType = stageType;
-  }
-
-  public Season getSeason() {
-    return season;
-  }
-
-  public void setSeason(Season season) {
-    this.season = season;
-  }
-
-  public short getId() {
-    return id;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Stage)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final Stage stage = (Stage) o;
-    return getId() == stage.getId() && getSeason().equals(stage.getSeason()) && getStageType() == stage.getStageType() && getStageStart().equals(stage.getStageStart()) && getStageEnd().equals(stage.getStageEnd());
+    return Objects.equals(id, stage.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getSeason(), getStageType(), getStageStart(), getStageEnd());
+    return getClass().hashCode();
   }
-
-  @Override
-  public String toString() {
-    return "Stage{" +
-        "id=" + id +
-        ", season=" + season +
-        ", stageType=" + stageType +
-        ", stageStart=" + stageStart +
-        ", stageEnd=" + stageEnd +
-        ", leagues=" + leagues.size() +
-        '}';
-  }
-  //</editor-fold>
 }

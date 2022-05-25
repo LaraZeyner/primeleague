@@ -1,8 +1,9 @@
-package de.xeri.prm.servlet.datatables.side;
+package de.xeri.prm.servlet.datatables.scouting;
 
 import java.io.Serializable;
 
 import lombok.Data;
+import lombok.NonNull;
 
 /**
  * Created by Lara on 22.05.2022 for web
@@ -11,7 +12,7 @@ import lombok.Data;
 public class PickRow implements Serializable {
   private static final long serialVersionUID = -4244063970089148306L;
 
-  private final String pickWe;
-  private final String ban;
-  private final String pickEnemy;
+  @NonNull private String pickWe;
+  @NonNull private String ban;
+  @NonNull private String pickEnemy;
 }

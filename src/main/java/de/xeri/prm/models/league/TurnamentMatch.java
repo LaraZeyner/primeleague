@@ -8,7 +8,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.faces.bean.ManagedBean;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -54,7 +53,6 @@ import org.jetbrains.annotations.Nullable;
 @NamedQuery(name = "TurnamentMatch.findAll", query = "FROM TurnamentMatch t")
 @NamedQuery(name = "TurnamentMatch.findById", query = "FROM TurnamentMatch t WHERE id = :pk")
 @NamedQuery(name = "TurnamentMatch.findByTeams", query = "FROM TurnamentMatch t WHERE homeTeam = :home AND guestTeam = :guest")
-@ManagedBean
 @Getter
 @Setter
 @NoArgsConstructor
@@ -191,7 +189,7 @@ public class TurnamentMatch implements Serializable {
   }
 
   public boolean isOpen() {
-    return getGameAmount() < games.size() || matchday.getStage().getStageType().equals(StageType.PLAYOFFS) && !score.contains("2");
+    return getGameAmount() > games.size() || matchday.getStage().getStageType().equals(StageType.PLAYOFFS) && !score.contains("2");
   }
 
   public boolean isRecently() {

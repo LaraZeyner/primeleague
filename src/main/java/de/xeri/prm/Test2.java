@@ -3,13 +3,15 @@ package de.xeri.prm;
 import java.util.Map;
 
 import de.xeri.prm.manager.LoadupManager;
+import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.playerperformance.Value;
 import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.servlet.datatables.scouting.LoadPlayers;
+import de.xeri.prm.servlet.datatables.scouting.draft.CompositionAttribute;
+import de.xeri.prm.util.HibernateUtil;
 
 /**
  * Created by Lara on 09.05.2022 for web
@@ -17,11 +19,13 @@ import de.xeri.prm.servlet.datatables.scouting.LoadPlayers;
 public class Test2 {
   public static void main(String[] args) {
     LoadupManager.init();
-    init();
+    //final Map<Champion, Map<String, Double>> championStats = HibernateUtil.getChampionStats();
+    final Map<Champion, Map<CompositionAttribute, Double>> wins = HibernateUtil.getChampionStats();
+    /*init();
     long time = System.currentTimeMillis();
     final LoadPlayers loadPlayers = new LoadPlayers();
     loadPlayers.init();
-    System.out.println("hi | " + (System.currentTimeMillis() - time) / 1000);
+    System.out.println("hi | " + (System.currentTimeMillis() - time) / 1000);*/
     System.out.println("hi");
   }
 

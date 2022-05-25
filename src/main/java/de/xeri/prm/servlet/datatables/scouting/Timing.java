@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.side;
+package de.xeri.prm.servlet.datatables.scouting;
 
 import lombok.Data;
 

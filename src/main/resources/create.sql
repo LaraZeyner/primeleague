@@ -73,25 +73,35 @@ CREATE TABLE `resource`
 
 CREATE TABLE `champion`
 (
-    champion_id    SMALLINT(4) PRIMARY KEY,
-    champion_name  VARCHAR(16)            NOT NULL UNIQUE,
-    champion_title VARCHAR(30)            NOT NULL UNIQUE,
-    subclass       VARCHAR(14)            NULL,
-    resource       VARCHAR(16)            NOT NULL,
-    attack         TINYINT(2) UNSIGNED    NOT NULL,
-    defense        TINYINT(2) UNSIGNED    NOT NULL,
-    spell          TINYINT(2) UNSIGNED    NOT NULL,
-    health         SMALLINT(4) UNSIGNED   NOT NULL,
-    secondary      SMALLINT(5) UNSIGNED   NOT NULL,
-    move_speed     SMALLINT(3) UNSIGNED   NOT NULL,
-    resist         DECIMAL(9, 6) UNSIGNED NOT NULL,
-    attack_range   SMALLINT(4) UNSIGNED   NOT NULL,
-    health_regen   DECIMAL(9, 6) UNSIGNED NOT NULL,
-    spell_regen    DECIMAL(9, 6) UNSIGNED NOT NULL,
-    damage         TINYINT(3) UNSIGNED    NOT NULL,
-    attack_speed   DECIMAL(9, 8) UNSIGNED NOT NULL,
-    fight_type     VARCHAR(9)             NULL,
-    fight_style    VARCHAR(4)             NULL,
+    champion_id       SMALLINT(4) PRIMARY KEY,
+    champion_name     VARCHAR(16)            NOT NULL UNIQUE,
+    champion_title    VARCHAR(30)            NOT NULL UNIQUE,
+    subclass          VARCHAR(14)            NULL,
+    resource          VARCHAR(16)            NOT NULL,
+    attack            TINYINT(2) UNSIGNED    NOT NULL,
+    defense           TINYINT(2) UNSIGNED    NOT NULL,
+    spell             TINYINT(2) UNSIGNED    NOT NULL,
+    health            SMALLINT(4) UNSIGNED   NOT NULL,
+    secondary         SMALLINT(5) UNSIGNED   NOT NULL,
+    move_speed        SMALLINT(3) UNSIGNED   NOT NULL,
+    resist            DECIMAL(9, 6) UNSIGNED NOT NULL,
+    attack_range      SMALLINT(4) UNSIGNED   NOT NULL,
+    health_regen      DECIMAL(9, 6) UNSIGNED NOT NULL,
+    spell_regen       DECIMAL(9, 6) UNSIGNED NOT NULL,
+    damage            TINYINT(3) UNSIGNED    NOT NULL,
+    attack_speed      DECIMAL(9, 8) UNSIGNED NOT NULL,
+    fight_type        VARCHAR(9)             NULL,
+    fight_style       VARCHAR(4)             NULL,
+    waveclear         TINYINT(2) UNSIGNED    NULL,
+    allin             TINYINT(2) UNSIGNED    NOT NULL CHECK ( allin <= 10 )   DEFAULT 5,
+    sustain           TINYINT(2) UNSIGNED    NOT NULL CHECK ( sustain <= 10 ) DEFAULT 5,
+    trade             TINYINT(2) UNSIGNED    NOT NULL CHECK ( trade <= 10 )   DEFAULT 5,
+    playstyle_overall VARCHAR(9)             NULL,
+    playstyle_early   VARCHAR(9)             NULL,
+    playstyle_pre_6   VARCHAR(9)             NULL,
+    playstyle_post_6  VARCHAR(9)             NULL,
+    playstyle_mid     VARCHAR(9)             NULL,
+    playstyle_late    VARCHAR(9)             NULL,
     FOREIGN KEY (resource) REFERENCES `resource` (resource_name)
         ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -181,16 +191,6 @@ CREATE TABLE `ability_style`
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE TABLE `playstyle`
-(
-    champion   SMALLINT(4) NOT NULL,
-    game_phase VARCHAR(12) NOT NULL,
-    playstyle  VARCHAR(18) NOT NULL,
-    PRIMARY KEY (champion, game_phase),
-    FOREIGN KEY (champion) REFERENCES `champion` (champion_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
-
 CREATE TABLE `champion_relationship`
 (
     relationship_type VARCHAR(9)  NOT NULL,
@@ -200,16 +200,6 @@ CREATE TABLE `champion_relationship`
     FOREIGN KEY (from_champion) REFERENCES `champion` (champion_id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (to_champion) REFERENCES `champion` (champion_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
-
-CREATE TABLE `wincondition`
-(
-    champion            SMALLINT(4)      NOT NULL,
-    wincondition_type   VARCHAR(18)      NOT NULL,
-    wincondition_amount TINYINT UNSIGNED NOT NULL CHECK ( wincondition_amount < 31 ),
-    PRIMARY KEY (champion, wincondition_type),
-    FOREIGN KEY (champion) REFERENCES `champion` (champion_id)
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 

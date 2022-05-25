@@ -37,7 +37,6 @@ import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Teamperformance")
 @Table(name = "teamperformance", indexes = {
-    @Index(name = "idx_teamperformance_win", columnList = "game, win", unique = true),
     @Index(name = "idx_teamperformance_side", columnList = "game, first_pick", unique = true),
     @Index(name = "team", columnList = "team")
 })

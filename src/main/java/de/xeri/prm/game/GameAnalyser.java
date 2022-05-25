@@ -143,22 +143,45 @@ public final class GameAnalyser {
             players.forEach(player -> handlePlayer(player, teamperformance, fights));
           }
         }
+        final long winCount = game.getTeamperformances().stream().filter(Teamperformance::isWin).count();
+        if (game.getTeamperformances().size() == 2) {
+          if (winCount == 2) {
+            throw new ConstraintException("Es kann nur 1 Team gewinnen.");
+          } else if (winCount == 0) {
+            throw new ConstraintException("Es muss ein Team gewinnen");
+          }
+        }
+
+        boolean matchFound = false;
         final List<Team> teams = game.getTeamperformances().stream()
             .map(Teamperformance::getTeam)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-        if (teams.size() == 2 && game.getGametype().getId() < 1) {
+        if (!teams.isEmpty() && game.getGametype().getId() < 1) {
           List<TurnamentMatch> turnamentMatches = new ArrayList<>(teams.get(0).getMatchesHome());
           turnamentMatches.addAll(teams.get(0).getMatchesGuest());
+          turnamentMatches = turnamentMatches.stream().filter(TurnamentMatch::isOpen).collect(Collectors.toList());
 
           for (TurnamentMatch match : turnamentMatches) {
-            if (match.isOpen() && match.getMatchday().getStage().isInSeason(game.getGameStart()) && match.hasTeam(teams.get(1))) {
+            if (match.getMatchday().getStage().isInSeason(game.getGameStart()) && teams.size() == 2 && match.hasTeam(teams.get(1))) {
               match.addGame(game);
+              matchFound = true;
+              break;
             }
           }
 
+          if (!matchFound) {
+            for (Team team : teams) {
+              final TurnamentMatch closestTurnamentMatch = team.getClosestTurnamentMatch(game.getGameStart());
+              if (closestTurnamentMatch != null) {
+                closestTurnamentMatch.addGame(game);
+                break;
+              }
+            }
+          }
         }
-        logger.info("Match " + gameId  + " vom " + new SimpleDateFormat("dd.MM.yyyy HH:mm")
+
+        logger.info("Match " + gameId + " vom " + new SimpleDateFormat("dd.MM.yyyy HH:mm")
             .format(game.getGameStart()) + " geladen in " + (System.currentTimeMillis() - millis) / 1000 + "s");
         return true;
 
@@ -932,7 +955,7 @@ public final class GameAnalyser {
       handleObjectives(playerperformance, event, timestamp, role);
     }
 
-    if(!killList.isEmpty()) {
+    if (!killList.isEmpty()) {
       kills.addAll(killList);
     }
   }

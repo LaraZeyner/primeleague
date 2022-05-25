@@ -41,9 +41,11 @@ import de.xeri.prm.models.match.Gametype;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.val;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.NamedQuery;
@@ -128,9 +130,17 @@ import org.hibernate.annotations.NamedQuery;
         "AND account = :account " +
         "AND lane = :lane " +
         "AND championOwn.id = :championId")
+@NamedQuery(name = "Playerperformance.championValues",
+    query = "SELECT MIN(championOwn), AVG(damagePhysical), AVG(damageMagical), AVG(damageTotal), AVG(immobilizations), AVG(gankSetups) " +
+        "FROM Playerperformance p " +
+        "GROUP BY championOwn")
+@NamedQuery(name = "Playerperformance.averageChampionValues",
+    query = "SELECT AVG(damagePhysical), AVG(damageMagical), AVG(damageTotal), AVG(immobilizations), AVG(gankSetups) " +
+        "FROM Playerperformance p")
 @Getter
 @Setter
-@NoArgsConstructor
+@ToString
+@RequiredArgsConstructor
 public class Playerperformance implements Serializable {
 
   @Transient
@@ -273,10 +283,12 @@ public class Playerperformance implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "teamperformance")
+  @ToString.Exclude
   private Teamperformance teamperformance;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "account")
+  @ToString.Exclude
   private Account account;
 
   @Enumerated(EnumType.STRING)
@@ -285,10 +297,12 @@ public class Playerperformance implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "champion_own")
+  @ToString.Exclude
   private Champion championOwn;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "champion_enemy")
+  @ToString.Exclude
   private Champion championEnemy;
 
   @Column(name = "q_usages", nullable = false)
@@ -548,24 +562,31 @@ public class Playerperformance implements Serializable {
       joinColumns = @JoinColumn(name = "playerperformance"),
       inverseJoinColumns = @JoinColumn(name = "rune"),
       indexes = @Index(name = "idx_performancerune", columnList = "playerperformance, rune", unique = true))
+  @ToString.Exclude
   private final Set<Rune> runes = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "playerperformance")
+  @ToString.Exclude
   private final Set<PlayerperformanceSummonerspell> summonerspells = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "playerperformance")
+  @ToString.Exclude
   private final Set<PlayerperformanceItem> items = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "playerperformance")
+  @ToString.Exclude
   private final Set<PlayerperformanceInfo> infos = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "playerperformance")
+  @ToString.Exclude
   private final Set<PlayerperformanceKill> killEvents = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "playerperformance")
+  @ToString.Exclude
   private final Set<PlayerperformanceObjective> objectives = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "playerperformance")
+  @ToString.Exclude
   private final Set<PlayerperformanceLevel> levelups = new LinkedHashSet<>();
 
   /**
@@ -753,121 +774,13 @@ public class Playerperformance implements Serializable {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Playerperformance)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final Playerperformance that = (Playerperformance) o;
-    return getId() == that.getId() && getTeamperformance().equals(that.getTeamperformance()) && getAccount().equals(that.getAccount()) && getLane() == that.getLane() && getChampionOwn().equals(that.getChampionOwn()) && Objects.equals(getChampionEnemy(), that.getChampionEnemy());
+    return Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getTeamperformance(), getAccount(), getLane(), getChampionOwn(), getChampionEnemy(), getQUsages(),
-        getWUsages(), getEUsages(), getRUsages(), getSpellsHit(), getSpellsDodged(), getQuickDodged(), getDamageMagical(),
-        getDamagePhysical(), getDamageTotal(), getDamageTaken(), getDamageMitigated(), getDamageHealed(), getDamageShielded(), getKills()
-        , getDeaths(), getAssists(), getSoloKills(), getLevelUpAllin(), getDoubleKills(), getTripleKills(), getQuadraKills(),
-        getPentaKills(), getAggressiveFlash(), getTimeAlive(), getTimeDead(), getTeleportKills(), getImmobilizations(), getControlWards()
-        , getControlWardUptime(), getWardsPlaced(), getWardsCleared(), getGuardedWards(), getVisionScore(), getVisionscoreAdvantage(),
-        getObjectivesStolen(), getFirstturretAdvantage(), getObjectivesDamage(), getBaronExecutes(), getBaronKills(), getBuffsStolen(),
-        getInitialScuttles(), getTotalScuttles(), getSplitpushedTurrets(), getTeamInvading(), getGanksEarly(), getGanksTotal(),
-        getGanksTop(), getGanksMid(), getGanksBot(), getDivesDone(), getDivesSuccessful(), getDivesGotten(), getDivesProtected(),
-        getGoldTotal(), getBountyGold(), getExperience(), getTotalCreeps(), getEarlyCreeps(), getInvadedCreeps(), getEarlyLaneLead(),
-        getLaneLead(), getTurretplates(), getCreepScoreAdvantage(), getItemsAmount(), getMejaisCompleted(), isFirstBlood(),
-        getOutplayed(), getTurretTakedowns(), getDragonTakedowns(), getFastestLegendary(), getGankSetups(), getInitialBuffs(),
-        getEarlyKills(), getJunglerKillsAtObjective(), getAmbush(), getEarlyTurrets(), getLevelLead(), getPicksMade(), getAssassinated(),
-        getSavedAlly(), getSurvivedClose(), getStats());
-  }
-
-  @Override
-  public String toString() {
-    return "Playerperformance{" +
-        "id=" + id +
-        ", teamperformance=" + teamperformance +
-        ", account=" + account +
-        ", lane=" + lane +
-        ", championOwn=" + championOwn +
-        ", championEnemy=" + championEnemy +
-        ", qUsages=" + qUsages +
-        ", wUsages=" + wUsages +
-        ", eUsages=" + eUsages +
-        ", rUsages=" + rUsages +
-        ", spellsHit=" + spellsHit +
-        ", spellsDodged=" + spellsDodged +
-        ", quickDodged=" + quickDodged +
-        ", damageMagical=" + damageMagical +
-        ", damagePhysical=" + damagePhysical +
-        ", damageTotal=" + damageTotal +
-        ", damageTaken=" + damageTaken +
-        ", damageMitigated=" + damageMitigated +
-        ", damageHealed=" + damageHealed +
-        ", damageShielded=" + damageShielded +
-        ", kills=" + kills +
-        ", deaths=" + deaths +
-        ", assists=" + assists +
-        ", killsSolo=" + soloKills +
-        ", allinLevelup=" + levelUpAllin +
-        ", doubleKills=" + doubleKills +
-        ", tripleKills=" + tripleKills +
-        ", quadraKills=" + quadraKills +
-        ", pentaKills=" + pentaKills +
-        ", flashAggressive=" + aggressiveFlash +
-        ", timeAlive=" + timeAlive +
-        ", timeDead=" + timeDead +
-        ", teleportKills=" + teleportKills +
-        ", immobilizations=" + immobilizations +
-        ", controlWards=" + controlWards +
-        ", controlWardUptime=" + controlWardUptime +
-        ", wardsPlaced=" + wardsPlaced +
-        ", wardsCleared=" + wardsCleared +
-        ", wardsGuarded=" + guardedWards +
-        ", visionScore=" + visionScore +
-        ", visionscoreAdvantage=" + visionscoreAdvantage +
-        ", objectivesStolen=" + objectivesStolen +
-        ", firstturretAdvantage=" + firstturretAdvantage +
-        ", objectivesDamage=" + objectivesDamage +
-        ", baronExecutes=" + baronExecutes +
-        ", baronKills=" + baronKills +
-        ", buffsStolen=" + buffsStolen +
-        ", scuttlesInitial=" + initialScuttles +
-        ", scuttlesTotal=" + totalScuttles +
-        ", splitpushedTurrets=" + splitpushedTurrets +
-        ", teamInvading=" + teamInvading +
-        ", ganksEarly=" + ganksEarly +
-        ", ganksTotal=" + ganksTotal +
-        ", ganksTop=" + ganksTop +
-        ", ganksMid=" + ganksMid +
-        ", ganksBot=" + ganksBot +
-        ", divesDone=" + divesDone +
-        ", divesSuccessful=" + divesSuccessful +
-        ", divesGotten=" + divesGotten +
-        ", divesProtected=" + divesProtected +
-        ", goldTotal=" + goldTotal +
-        ", bountyGold=" + bountyGold +
-        ", experience=" + experience +
-        ", creepsTotal=" + totalCreeps +
-        ", creepsEarly=" + earlyCreeps +
-        ", creepsInvade=" + invadedCreeps +
-        ", earlyLaneLead=" + earlyLaneLead +
-        ", laneLead=" + laneLead +
-        ", turretplates=" + turretplates +
-        ", flamehorizonAdvantage=" + creepScoreAdvantage +
-        ", itemsAmount=" + itemsAmount +
-        ", mejaisCompleted=" + mejaisCompleted +
-        ", firstBlood=" + firstBlood +
-        ", outplayed=" + outplayed +
-        ", turretTakedowns=" + turretTakedowns +
-        ", dragonTakedowns=" + dragonTakedowns +
-        ", fastestLegendary=" + fastestLegendary +
-        ", gankSetups=" + gankSetups +
-        ", initialBuffs=" + initialBuffs +
-        ", earlyKills=" + earlyKills +
-        ", junglerKillsAtObjective=" + junglerKillsAtObjective +
-        ", ambush=" + ambush +
-        ", earlyTurrets=" + earlyTurrets +
-        ", levelLead=" + levelLead +
-        ", picksMade=" + picksMade +
-        ", assassinated=" + assassinated +
-        ", savedAlly=" + savedAlly +
-        ", survivedClose=" + survivedClose +
-        ", stats=" + stats +
-        '}';
+    return getClass().hashCode();
   }
 }

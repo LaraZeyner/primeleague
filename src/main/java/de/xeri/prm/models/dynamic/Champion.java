@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,6 +28,7 @@ import javax.persistence.Transient;
 
 import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.enums.Abilitytype;
+import de.xeri.prm.models.enums.ChampionPlaystyle;
 import de.xeri.prm.models.enums.Championclass;
 import de.xeri.prm.models.enums.FightStyle;
 import de.xeri.prm.models.enums.FightType;
@@ -36,10 +36,13 @@ import de.xeri.prm.models.enums.Subclass;
 import de.xeri.prm.models.match.ChampionSelection;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.others.ChampionRelationship;
-import de.xeri.prm.models.others.Playstyle;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
@@ -55,7 +58,9 @@ import org.hibernate.annotations.Type;
 @NamedQuery(name = "Champion.findById", query = "FROM Champion c WHERE id = :pk")
 @NamedQuery(name = "Champion.findBy", query = "FROM Champion c WHERE name = :name")
 @Getter
-@NoArgsConstructor
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Champion implements Serializable {
 
   @Transient
@@ -66,8 +71,9 @@ public class Champion implements Serializable {
   }
 
   public static Champion get(Champion neu) {
-    if (has(neu.getId())) {
-      return find(neu.getId());
+    final Champion champion = find(neu.getId());
+    if (champion != null) {
+      return champion;
     }
     Data.getInstance().save(neu);
     return neu;
@@ -105,6 +111,7 @@ public class Champion implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "resource")
+  @ToString.Exclude
   private Resource resource;
 
   @Column(name = "attack", nullable = false)
@@ -154,34 +161,73 @@ public class Champion implements Serializable {
   @Column(name = "fight_style", length = 4)
   private FightStyle fightStyle;
 
+  @Column(name = "waveclear")
+  private Byte waveClear;
+
+  @Column(name = "allin", nullable = false)
+  @Check(constraints = "allin <= 10")
+  private byte allin;
+
+  @Column(name = "sustain", nullable = false)
+  @Check(constraints = "sustain <= 10")
+  private byte sustain;
+
+  @Column(name = "trade", nullable = false)
+  @Check(constraints = "trade <= 10")
+  private byte trade;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "playstyle_overall")
+  private ChampionPlaystyle overall;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "playstyle_early")
+  private ChampionPlaystyle earlygame;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "playstyle_pre_6")
+  private ChampionPlaystyle pre6;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "playstyle_post_6")
+  private ChampionPlaystyle post6;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "playstyle_mid")
+  private ChampionPlaystyle midgame;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "playstyle_late")
+  private ChampionPlaystyle lategame;
+
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "fromChampion")
+  @ToString.Exclude
   private final Set<ChampionRelationship> championRelationshipsFrom = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "toChampion")
+  @ToString.Exclude
   private final Set<ChampionRelationship> championRelationshipsTo = new LinkedHashSet<>();
-
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "champion")
-  private final Set<Wincondition> winconditions = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "championOwn")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Playerperformance> playerperformancesOwn = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "championEnemy")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Playerperformance> playerperformancesEnemy = new LinkedHashSet<>();
-
-  @OneToMany(fetch = FetchType.LAZY, mappedBy = "champion")
-  private final Set<Playstyle> playstyles = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "champion")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<ChampionSelection> championSelections = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "champion", orphanRemoval = true)
+  @ToString.Exclude
   private final Set<Ability> abilities = new LinkedHashSet<>();
 
   @ElementCollection(targetClass = Championclass.class)
@@ -219,11 +265,6 @@ public class Champion implements Serializable {
     return ability;
   }
 
-  public void addPlaystyle(Playstyle playstyle) {
-    this.playstyles.add(playstyle);
-    playstyle.setChampion(this);
-  }
-
   public void addPlayerperformance(Playerperformance performance, boolean own) {
     if (own) {
       this.playerperformancesOwn.add(performance);
@@ -232,11 +273,6 @@ public class Champion implements Serializable {
       this.playerperformancesEnemy.add(performance);
       performance.setChampionEnemy(this);
     }
-  }
-
-  public void addWincondition(Wincondition wincondition) {
-    this.winconditions.add(wincondition);
-    wincondition.setChampion(this);
   }
 
   public void addRelationship(ChampionRelationship relationship, boolean from) {
@@ -271,13 +307,37 @@ public class Champion implements Serializable {
         .subList(0, 2);
   }
 
-  //<editor-fold desc="getter and setter">
-  public double getAttackSpeed() {
-    return this.attackSpeed.doubleValue();
+  public double getBurstValue() {
+    return (fightStyle != null && fightStyle.equals(FightStyle.DIVE) ? 0.5 : 0) +
+        (fightType != null && fightType.equals(FightType.FAST) ? 0.5 : 0);
   }
 
-  public void setDamage(short damage) {
-    this.damage = damage;
+  public double getRange() {
+    double range = attackRange;
+    for (Ability ability : abilities) {
+      final String abilityRangeString = ability.getAbilityRange();
+      if (abilityRangeString != null) {
+        final double abilityRange = abilityRangeString.contains("/") ?
+            Arrays.stream(abilityRangeString.split("/"))
+                .mapToDouble(Double::parseDouble).max().orElse(0) : Double.parseDouble(abilityRangeString);
+        if (abilityRange < 2000 && range < abilityRange) {
+          range = abilityRange;
+        }
+      }
+    }
+    return range;
+  }
+
+  public List<ChampionPlaystyle> getPlaystyles() {
+    return Arrays.asList(overall, earlygame, pre6, post6, midgame, lategame);
+  }
+
+  public double getDurability() {
+    return health * (1 + .01 * resist.doubleValue()) / 2;
+  }
+
+  public double getAttackSpeed() {
+    return this.attackSpeed.doubleValue();
   }
 
   public double getSpellRegen() {
@@ -292,62 +352,16 @@ public class Champion implements Serializable {
     return resist.doubleValue();
   }
 
-  public void setResource(Resource resource) {
-    this.resource = resource;
-  }
-
-  public void setSubclass(Subclass subclass) {
-    this.subclass = subclass;
-  }
-
-  public void setTitle(String championTitle) {
-    title = championTitle;
-  }
-
-  public void setName(String championName) {
-    name = championName;
-  }
-
-  public void setId(short id) {
-    this.id = id;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Champion)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final Champion champion = (Champion) o;
-    return this.getId() == champion.getId() && this.getName().equals(champion.getName());
+    return id == champion.getId();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.getId(), this.getName(), this.getTitle(), this.getSubclass(), this.getResource(), this.getAttack(), this.getDefense(), this.getSpell(), this.getHealth(), this.getSecondary(), this.getMoveSpeed(), this.getResist(), this.getAttackRange(), this.getHealthRegen(), this.getSpellRegen(), this.getDamage(), this.getAttackSpeed(), this.getFightType(), this.getFightStyle());
+    return getClass().hashCode();
   }
-
-  @Override
-  public String toString() {
-    return "Champion{" +
-        "id=" + this.id +
-        ", name='" + this.name + '\'' +
-        ", title='" + this.title + '\'' +
-        ", subclass=" + this.subclass +
-        ", resource=" + this.resource +
-        ", attack=" + this.attack +
-        ", defense=" + this.defense +
-        ", spell=" + this.spell +
-        ", health=" + this.health +
-        ", secondary=" + this.secondary +
-        ", moveSpeed=" + this.moveSpeed +
-        ", resist=" + this.resist +
-        ", attackRange=" + this.attackRange +
-        ", healthRegen=" + this.healthRegen +
-        ", spellRegen=" + this.spellRegen +
-        ", damage=" + this.damage +
-        ", attackSpeed=" + this.attackSpeed +
-        ", fightType=" + this.fightType +
-        ", fightStyle=" + this.fightStyle +
-        '}';
-  }
-  //</editor-fold>
 }
