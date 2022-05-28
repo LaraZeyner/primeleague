@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,6 +28,7 @@ import javax.persistence.Transient;
 
 import de.xeri.prm.manager.Data;
 import de.xeri.prm.models.dynamic.Champion;
+import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.Teamrole;
 import de.xeri.prm.models.match.ratings.StatScope;
@@ -57,6 +59,9 @@ public class Player implements Serializable {
 
   @Transient
   private static final long serialVersionUID = -2823713148714882156L;
+
+  @Transient
+  private Map<Champion, List<Matchup>> matchups;
 
   public static Player get(Player neu, Team team) {
     if (has(neu.getId())) {
@@ -274,6 +279,20 @@ public class Player implements Serializable {
       }
     }
     return games;
+  }
+
+  public List<Matchup> getMatchups(Champion champion) {
+    if (matchups == null) {
+      matchups = new HashMap<>();
+    }
+
+    matchups.computeIfAbsent(champion, k -> HibernateUtil.determineMatchups(this, champion));
+
+    return matchups.get(champion);
+  }
+
+  public Matchup getMatchup(Champion champion, Champion enemy) {
+    return getMatchups(champion).stream().filter(matchup -> matchup.getChampion().equals(champion)).findFirst().orElse(HibernateUtil.determineMatchup(this, champion, enemy));
   }
 
   @Override

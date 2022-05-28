@@ -91,52 +91,63 @@ import org.hibernate.annotations.NamedQuery;
     "WHERE teamperformance.game.gameStart >= :since " +
     "AND lane IN :lanes")
 
-@NamedQuery(name = "Playerperformance.gamesOnLane",
-    query = "SELECT SUM(CASE WHEN lane='TOP' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='JUNGLE' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='MIDDLE' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='BOTTOM' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='UTILITY' THEN 1 ELSE 0 END) " +
-        "FROM Playerperformance p " +
-        "WHERE teamperformance.game.gameStart >= :since " +
-        "AND (teamperformance.team IS NOT NULL OR teamperformance.game.gametype.id NOT BETWEEN 2 AND 699) " +
-        "AND account = :account")
-@NamedQuery(name = "Playerperformance.gamesOnLaneRecently",
-    query = "SELECT COUNT(id) " +
-        "FROM Playerperformance p " +
-        "WHERE teamperformance.game.gameStart >= :since " +
-        "AND account = :account " +
-        "AND lane = :lane")
+@NamedQuery(name = "Playerperformance.gamesOnLane", query = "SELECT SUM(CASE WHEN lane='TOP' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='JUNGLE' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='MIDDLE' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='BOTTOM' THEN 1 ELSE 0 END), SUM(CASE WHEN lane='UTILITY' THEN 1 ELSE 0 END) " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND (teamperformance.team IS NOT NULL OR teamperformance.game.gametype.id NOT BETWEEN 2 AND 699) " +
+    "AND account = :account")
+@NamedQuery(name = "Playerperformance.gamesOnLaneRecently", query = "SELECT COUNT(id) " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND account = :account " +
+    "AND lane = :lane")
 
-@NamedQuery(name = "Playerperformance.championsPickedCompet",
-    query = "SELECT championOwn.id " +
-        "FROM Playerperformance p " +
-        "WHERE teamperformance.game.gameStart >= :since " +
-        "AND account = :account " +
-        "AND lane = :lane " +
-        "AND teamperformance.game.gametype.id NOT BETWEEN 2 AND 699")
-@NamedQuery(name = "Playerperformance.championsPickedCompetitive",
-    query = "SELECT championOwn.id " +
-        "FROM Playerperformance p " +
-        "WHERE teamperformance.game.gameStart >= :since " +
-        "AND account = :account " +
-        "AND lane = :lane " +
-        "AND (teamperformance.team IS NOT NULL OR teamperformance.game.gametype.id NOT BETWEEN 2 AND 699)")
-@NamedQuery(name = "Playerperformance.championsPickedOther",
-    query = "SELECT championOwn.id FROM Playerperformance p " +
-        "WHERE teamperformance.game.gameStart >= :since " +
-        "AND account = :account " +
-        "AND lane = :lane")
-@NamedQuery(name = "Playerperformance.championWins",
-    query = "SELECT COUNT(id), SUM(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) " +
-        "FROM Playerperformance p " +
-        "WHERE teamperformance.game.gameStart >= :since " +
-        "AND account = :account " +
-        "AND lane = :lane " +
-        "AND championOwn.id = :championId")
-@NamedQuery(name = "Playerperformance.championValues",
-    query = "SELECT MIN(championOwn), AVG(damagePhysical), AVG(damageMagical), AVG(damageTotal), AVG(immobilizations), AVG(gankSetups) " +
-        "FROM Playerperformance p " +
-        "GROUP BY championOwn")
-@NamedQuery(name = "Playerperformance.averageChampionValues",
-    query = "SELECT AVG(damagePhysical), AVG(damageMagical), AVG(damageTotal), AVG(immobilizations), AVG(gankSetups) " +
-        "FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.championsPickedCompet", query = "SELECT championOwn.id " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND account = :account " +
+    "AND lane = :lane " +
+    "AND teamperformance.game.gametype.id NOT BETWEEN 2 AND 699")
+@NamedQuery(name = "Playerperformance.championsPickedCompetitive", query = "SELECT championOwn.id " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND account = :account " +
+    "AND lane = :lane " +
+    "AND (teamperformance.team IS NOT NULL OR teamperformance.game.gametype.id NOT BETWEEN 2 AND 699)")
+@NamedQuery(name = "Playerperformance.championsPickedOther", query = "SELECT championOwn.id FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND account = :account " +
+    "AND lane = :lane")
+@NamedQuery(name = "Playerperformance.championWins", query = "SELECT COUNT(id), SUM(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND account = :account " +
+    "AND lane = :lane " +
+    "AND championOwn.id = :championId")
+@NamedQuery(name = "Playerperformance.championValues", query = "SELECT MIN(championOwn), AVG(damagePhysical), AVG(damageMagical), AVG(damageTotal), AVG(immobilizations), AVG(gankSetups) " +
+    "FROM Playerperformance p " +
+    "GROUP BY championOwn")
+@NamedQuery(name = "Playerperformance.averageChampionValues", query = "SELECT AVG(damagePhysical), AVG(damageMagical), AVG(damageTotal), AVG(immobilizations), AVG(gankSetups) " +
+    "FROM Playerperformance p")
+@NamedQuery(name = "Playerperformance.matchupPlayer", query = "SELECT MIN(championEnemy), COUNT(championOwn), " +
+    "SUM(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND championOwn = :picked " +
+    "AND account IN :accounts " +
+    "GROUP BY championEnemy")
+@NamedQuery(name = "Playerperformance.matchupOwn", query = "SELECT MIN(championEnemy), COUNT(championOwn), " +
+    "SUM(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND championOwn = :picked " +
+    "GROUP BY championEnemy")
+@NamedQuery(name = "Playerperformance.matchupEnemy", query = "SELECT MIN(championOwn), COUNT(championEnemy), " +
+    "SUM(CASE WHEN teamperformance.win IS true THEN 0 ELSE 1 END) " +
+    "FROM Playerperformance p " +
+    "WHERE teamperformance.game.gameStart >= :since " +
+    "AND championEnemy = :picked " +
+    "GROUP BY championOwn")
 @Getter
 @Setter
 @ToString

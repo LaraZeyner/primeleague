@@ -21,9 +21,9 @@
         <ui:fragment>
             <div class="card">
                 <h3>Aktuelle Draftsituation</h3>
-                <p:dataTable id="pickBans" lazy="true" value="#{loadPlayers.picks}" var="pick" style="font-size: 14px;" size="small">
+                <p:dataTable id="pickBans" lazy="true" value="#{loadPlayers.draft.picks}" var="pick" style="font-size: 14px;" size="small">
                     <p:column headerText="Picks">#{pick.pickWe}</p:column>
-                    <p:column headerText="Banns">#{pick.ban}</p:column>
+                    <p:column headerText="Banns">#{pick.banWe}</p:column>
                     <p:column headerText="Picks">#{pick.pickEnemy}</p:column>
                 </p:dataTable>
 

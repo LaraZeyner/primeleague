@@ -1,8 +1,15 @@
 package de.xeri.prm.models.enums;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
 /**
- * Created by Lara on 09.04.2022 for web
+ * @since 09.04.2022
  */
+@Getter
+@RequiredArgsConstructor
+@ToString
 public enum StoredStat {
   ACE_EARLY("acesBefore15Minutes", true),
   ACE_FLAWLESS("flawlessAces", true),
@@ -128,16 +135,4 @@ public enum StoredStat {
   private final String key;
   private final boolean challenge;
 
-  StoredStat(String key, boolean challenge) {
-    this.key = key;
-    this.challenge = challenge;
-  }
-
-  public String getKey() {
-    return key;
-  }
-
-  public boolean isChallenge() {
-    return challenge;
-  }
 }

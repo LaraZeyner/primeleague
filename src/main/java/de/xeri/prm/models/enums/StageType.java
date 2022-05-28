@@ -1,8 +1,15 @@
 package de.xeri.prm.models.enums;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
 /**
- * Created by Lara on 25.03.2022 for TRUES
+ * @since 25.03.2022
  */
+@Getter
+@RequiredArgsConstructor
+@ToString
 public enum StageType {
   PRESEASON(482, "group"),
   KALIBRIERUNGSPHASE(506, "group"),
@@ -12,16 +19,4 @@ public enum StageType {
   private final int value;
   private final String typeName;
 
-  StageType(int value, String typeName) {
-    this.value = value;
-    this.typeName = typeName;
-  }
-
-  public int getValue() {
-    return value;
-  }
-
-  public String getTypeName() {
-    return typeName;
-  }
 }

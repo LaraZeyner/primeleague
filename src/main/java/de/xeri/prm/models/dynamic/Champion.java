@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,14 @@ import de.xeri.prm.models.enums.ChampionPlaystyle;
 import de.xeri.prm.models.enums.Championclass;
 import de.xeri.prm.models.enums.FightStyle;
 import de.xeri.prm.models.enums.FightType;
+import de.xeri.prm.models.enums.RelationshipType;
 import de.xeri.prm.models.enums.Subclass;
 import de.xeri.prm.models.match.ChampionSelection;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.others.ChampionRelationship;
+import de.xeri.prm.servlet.datatables.scouting.draft.CompositionAttribute;
 import de.xeri.prm.util.HibernateUtil;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -62,12 +66,18 @@ import org.hibernate.annotations.Type;
 @ToString
 @RequiredArgsConstructor
 public class Champion implements Serializable {
-
   @Transient
   private static final long serialVersionUID = 1840290655581732760L;
 
+  private static Set<Champion> champions;
+
+  private static Map<Champion, List<Matchup>> matchups;
+
   public static Set<Champion> get() {
-    return new LinkedHashSet<>(HibernateUtil.findList(Champion.class));
+    if (champions == null) {
+      champions = new LinkedHashSet<>(HibernateUtil.findList(Champion.class));
+    }
+    return champions;
   }
 
   public static Champion get(Champion neu) {
@@ -202,15 +212,15 @@ public class Champion implements Serializable {
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "fromChampion")
   @ToString.Exclude
+  @Getter(AccessLevel.NONE)
   private final Set<ChampionRelationship> championRelationshipsFrom = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "toChampion")
   @ToString.Exclude
+  @Getter(AccessLevel.NONE)
   private final Set<ChampionRelationship> championRelationshipsTo = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "championOwn")
-  @LazyCollection(LazyCollectionOption.EXTRA)
-  @OrderColumn
   @ToString.Exclude
   private final Set<Playerperformance> playerperformancesOwn = new LinkedHashSet<>();
 
@@ -350,6 +360,52 @@ public class Champion implements Serializable {
 
   public double getResist() {
     return resist.doubleValue();
+  }
+
+
+  public List<Matchup> getMatchups() {
+    if (matchups == null) {
+      matchups = new HashMap<>();
+    }
+
+    matchups.computeIfAbsent(this, k -> HibernateUtil.determineMatchups(this));
+
+    return matchups.get(this);
+  }
+
+  public Matchup getMatchup(Champion champion) {
+    return getMatchups().stream().filter(matchup -> matchup.getChampion().equals(champion)).findFirst().orElse(HibernateUtil.determineMatchup(this, champion));
+  }
+
+  public List<Champion> getSynergies() {
+    final List<Champion> collect = championRelationshipsFrom.stream()
+        .filter(championRelationship -> championRelationship.getRelationshipType().equals(RelationshipType.SYNERGY))
+        .map(ChampionRelationship::getToChampion)
+        .collect(Collectors.toList());
+
+    championRelationshipsTo.stream()
+        .filter(championRelationship -> championRelationship.getRelationshipType().equals(RelationshipType.SYNERGY))
+        .map(ChampionRelationship::getFromChampion).forEach(collect::add);
+
+    return collect.stream().distinct().collect(Collectors.toList());
+  }
+
+  public List<Champion> getCounters() {
+    return championRelationshipsFrom.stream()
+        .filter(championRelationship -> championRelationship.getRelationshipType().equals(RelationshipType.COUNTER))
+        .map(ChampionRelationship::getToChampion)
+        .collect(Collectors.toList());
+  }
+
+  public List<Champion> getCountered() {
+    return championRelationshipsTo.stream()
+        .filter(championRelationship -> championRelationship.getRelationshipType().equals(RelationshipType.COUNTER))
+        .map(ChampionRelationship::getFromChampion)
+        .collect(Collectors.toList());
+  }
+
+  public Map<CompositionAttribute, Double> getStats() {
+    return HibernateUtil.getChampionStats().get(this);
   }
 
   @Override

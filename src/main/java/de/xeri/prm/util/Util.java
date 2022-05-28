@@ -63,4 +63,8 @@ public final class Util {
   public static double distance(Position a, Position b) {
     return Point2D.distance(a.getX(), a.getX(), b.getX(), b.getY());
   }
+
+  public static int getInt(Object object) {
+    return (int) (((Long) object).longValue());
+  }
 }

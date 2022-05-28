@@ -38,8 +38,10 @@ import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 import org.jetbrains.annotations.Nullable;
 
@@ -55,9 +57,9 @@ import org.jetbrains.annotations.Nullable;
 @NamedQuery(name = "TurnamentMatch.findByTeams", query = "FROM TurnamentMatch t WHERE homeTeam = :home AND guestTeam = :guest")
 @Getter
 @Setter
-@NoArgsConstructor
+@ToString
+@RequiredArgsConstructor
 public class TurnamentMatch implements Serializable {
-
   @Transient
   private static final long serialVersionUID = -5623549707585401516L;
 
@@ -95,10 +97,12 @@ public class TurnamentMatch implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "league")
+  @ToString.Exclude
   private League league;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "matchday")
+  @ToString.Exclude
   private Matchday matchday;
 
   @Temporal(TemporalType.TIMESTAMP)
@@ -107,10 +111,12 @@ public class TurnamentMatch implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "home_team")
+  @ToString.Exclude
   private Team homeTeam;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "guest_team")
+  @ToString.Exclude
   private Team guestTeam;
 
   @Column(name = "score", nullable = false, length = 3)
@@ -121,9 +127,11 @@ public class TurnamentMatch implements Serializable {
   private Matchstate state;
 
   @OneToMany(mappedBy = "turnamentmatch")
+  @ToString.Exclude
   private final Set<Game> games = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "match")
+  @ToString.Exclude
   private final Set<Matchlog> logEntries = new LinkedHashSet<>();
 
   /**
@@ -278,33 +286,18 @@ public class TurnamentMatch implements Serializable {
   public boolean hasChanged(Date start) {
     return start.equals(this.start);
   }
+  //</editor-fold>
 
-  //<editor-fold desc="getter and setter">
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof TurnamentMatch)) return false;
-    final TurnamentMatch turnamentMatch = (TurnamentMatch) o;
-    return getId() == turnamentMatch.getId() && getLeague().equals(turnamentMatch.getLeague()) && getMatchday().equals(turnamentMatch.getMatchday()) && getStart().equals(turnamentMatch.getStart()) && Objects.equals(getHomeTeam(), turnamentMatch.getHomeTeam()) && Objects.equals(getGuestTeam(), turnamentMatch.getGuestTeam());
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final TurnamentMatch that = (TurnamentMatch) o;
+    return Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getLeague(), getMatchday(), getStart(), getHomeTeam(), getGuestTeam(), getScore(), getState());
+    return getClass().hashCode();
   }
-
-  @Override
-  public String toString() {
-    return "TurnamentMatch{" +
-        "id=" + id +
-        ", league=" + league +
-        ", matchday=" + matchday +
-        ", start=" + start +
-        ", homeTeam=" + homeTeam +
-        ", guestTeam=" + guestTeam +
-        ", score='" + score + '\'' +
-        ", state=" + state +
-        '}';
-  }
-  //</editor-fold>
 }

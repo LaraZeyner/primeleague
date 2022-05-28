@@ -1,5 +1,7 @@
 package de.xeri.prm.servlet.datatables.scouting.draft;
 
+import java.util.Arrays;
+
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,10 @@ public enum CompositionAttribute {
   WINCONDITION_ALLIN("Allin", false, 5, 15, false),
   WINCONDITION_SUSTAIN("Sustain", false, 5, 15, false),
   WINCONDITION_TRADE("Trade", false, 5, 15, false);
+
+  public static CompositionAttribute fromName(String name) {
+    return Arrays.stream(values()).filter(attribute -> attribute.getName().equals(name)).findFirst().orElse(null);
+  }
 
   @Getter
   private final String name;
@@ -87,5 +93,19 @@ public enum CompositionAttribute {
     }
 
     return relative ? value > average * higher : value > higher;
+  }
+
+  public double getRelativeValue(double valueAbsolute, int count) {
+    Double averageAbsolute = HibernateUtil.getAverageChampionStats().get(this);
+    if (!absolute) {
+      valueAbsolute /= count;
+      averageAbsolute /= count;
+    }
+
+    final double valueRelative = valueAbsolute / averageAbsolute;
+    final double averageRelative = (higher + lower) / 2;
+    final double value = relative ? valueRelative : valueAbsolute;
+    return valueRelative > higher ? (value - higher) * 400 + 100 : valueRelative < lower ? (value - lower) * 400 - 100 :
+        (value - averageRelative) * 100 / (valueAbsolute > averageAbsolute ? (higher - averageRelative) : (averageRelative - lower));
   }
 }

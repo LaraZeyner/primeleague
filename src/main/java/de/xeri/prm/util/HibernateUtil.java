@@ -1,5 +1,6 @@
 package de.xeri.prm.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,7 @@ import de.xeri.prm.models.dynamic.ItemStat;
 import de.xeri.prm.models.dynamic.Item_Stat;
 import de.xeri.prm.models.dynamic.Itemstyle;
 import de.xeri.prm.models.dynamic.LeagueMap;
+import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.dynamic.Resource;
 import de.xeri.prm.models.dynamic.Rune;
 import de.xeri.prm.models.dynamic.Runetree;
@@ -400,13 +403,13 @@ public final class HibernateUtil {
             championMap.get(CompositionAttribute.STATISTIC_DAMAGE_PHYSICAL) - championMap.get(CompositionAttribute.STATISTIC_DAMAGE_MAGICAL));
 
         championMap.put(CompositionAttribute.PLAYSTYLE_SIEGE,
-            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.POKE)).count());
+            (double) champion.getPlaystyles().stream().filter(Objects::nonNull).filter(playstyle -> playstyle.equals(ChampionPlaystyle.POKE)).count());
         championMap.put(CompositionAttribute.PLAYSTYLE_SPLITPUSH,
-            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.SPLITPUSH)).count());
+            (double) champion.getPlaystyles().stream().filter(Objects::nonNull).filter(playstyle -> playstyle.equals(ChampionPlaystyle.SPLITPUSH)).count());
         championMap.put(CompositionAttribute.PLAYSTYLE_TEAMFIGHT,
-            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.TEAMFIGHT)).count());
+            (double) champion.getPlaystyles().stream().filter(Objects::nonNull).filter(playstyle -> playstyle.equals(ChampionPlaystyle.TEAMFIGHT)).count());
         championMap.put(CompositionAttribute.TYPE_DIVING,
-            (double) champion.getPlaystyles().stream().filter(playstyle -> playstyle.equals(ChampionPlaystyle.DIVING)).count());
+            (double) champion.getPlaystyles().stream().filter(Objects::nonNull).filter(playstyle -> playstyle.equals(ChampionPlaystyle.DIVING)).count());
 
 
         championMap.put(CompositionAttribute.TYPE_AGGRESSION_ENGAGE, championMap.getOrDefault(CompositionAttribute.WINCONDITION_ALLIN, (double) 0));
@@ -492,6 +495,42 @@ public final class HibernateUtil {
     query.setParameter("lanes", lanes);
     query.setParameter("account", account);
     return query.getSingleResult();
+  }
+
+  public static List<Matchup> determineMatchups(Champion champion) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Object[]> query = session.getNamedQuery("Playerperformance.matchupOwn");
+    query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
+    query.setParameter("picked", champion);
+    final List<Matchup> collect = query.list().stream().map(Matchup::fromObjects).collect(Collectors.toList());
+
+    final Query<Object[]> query2 = session.getNamedQuery("Playerperformance.matchupEnemy");
+    query2.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
+    query2.setParameter("picked", champion);
+    final List<Matchup> collect2 = query2.list().stream().map(Matchup::fromObjects).collect(Collectors.toList());
+    collect.forEach(matchup -> matchup.merge(collect2));
+    return collect2;
+  }
+
+  public static Matchup determineMatchup(Champion champion, Champion versus) {
+    return determineMatchups(champion).stream()
+        .filter(matchup -> matchup.getChampion().equals(versus))
+        .findFirst().orElse(new Matchup(versus, 0, 0));
+  }
+
+  public static List<Matchup> determineMatchups(Player player, Champion champion) {
+    final Session session = Data.getInstance().getSession();
+    final Query<Object[]> query = session.getNamedQuery("Playerperformance.matchupPlayer");
+    query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
+    query.setParameter("picked", champion);
+    query.setParameter("accounts", new ArrayList<>(player.getAccounts()));
+    return query.list().stream().map(Matchup::fromObjects).collect(Collectors.toList());
+  }
+
+  public static Matchup determineMatchup(Player player, Champion champion, Champion versus) {
+    return determineMatchups(player, champion).stream()
+        .filter(matchup -> matchup.getChampion().equals(versus))
+        .findFirst().orElse(new Matchup(versus, 0, 0));
   }
 
 

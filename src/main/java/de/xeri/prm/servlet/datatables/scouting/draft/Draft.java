@@ -1,8 +1,9 @@
 package de.xeri.prm.servlet.datatables.scouting.draft;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.servlet.datatables.scouting.PickRow;
@@ -14,7 +15,6 @@ import lombok.Data;
  */
 @Data
 public class Draft {
-  private List<Champion> banns;
   private Composition our;
   private Composition enemy;
 
@@ -22,49 +22,62 @@ public class Draft {
   private List<Champion> allChampions;
 
   public Draft(TeamView ourTeam, TeamView enemyTeam) {
-    this.banns = Arrays.asList(null, null, null, null, null);
-    this.our = new Composition(ourTeam);
-    this.enemy = new Composition(enemyTeam);
-    this.picks = Arrays.asList(
-        new PickRow("", "", ""),
-        new PickRow("", "", ""),
-        new PickRow("", "", ""),
-        new PickRow("", "", ""),
-        new PickRow("", "", ""));
+    final Composition our = new Composition(ourTeam);
+    final Composition enemy = new Composition(enemyTeam);
+    our.updateChampions(enemy);
+    enemy.updateChampions(our);
+
+    this.picks = IntStream.range(0, 5)
+        .mapToObj(i -> new PickRow(our.getPicks().get(i) != null ? our.getPicks().get(i).getName() : "",
+            our.getBanns().get(i) != null ? our.getBanns().get(i).getName() : "",
+            enemy.getBanns().get(i) != null ? enemy.getBanns().get(i).getName() : "",
+            enemy.getPicks().get(i) != null ? enemy.getPicks().get(i).getName() : ""))
+        .collect(Collectors.toList());
     this.allChampions = new ArrayList<>(Champion.get());
+    this.our = our;
+    this.enemy = enemy;
   }
 
-  public void addBan(String championName, int id) {
-    banns.set(id, Champion.find(championName));
-    picks.get(id).setBan(championName);
+  public void addBan(boolean we, String championName, int id) {
+    final Champion champion = Champion.find(championName);
+    if (we) {
+      picks.get(id).setBanWe(championName);
+      our.addBan(id, champion, enemy);
+    } else {
+      picks.get(id).setBanEnemy(championName);
+      enemy.addBan(id, champion, our);
+    }
   }
 
-  public void addOurPick(String championName, int id) {
-    our.getChampions().set(id, Champion.find(championName));
-    picks.get(id).setPickWe(championName);
-    our.updateComposition();
+  public void addPick(boolean we, String championName, int id) {
+    final Champion champion = Champion.find(championName);
+    if (we) {
+      picks.get(id).setPickWe(championName);
+      our.addPick(id, champion, enemy);
+    } else {
+      picks.get(id).setPickEnemy(championName);
+      enemy.addPick(id, champion, our);
+    }
   }
 
-  public void addEnemyPick(String championName, int id) {
-    enemy.getChampions().set(id, Champion.find(championName));
-    picks.get(id).setPickEnemy(championName);
-    enemy.updateComposition();
+  public void removeBan(boolean we, int id) {
+    if (we) {
+      picks.get(id).setBanWe("");
+      our.removeBan(id, enemy);
+    } else {
+      picks.get(id).setBanEnemy("");
+      enemy.removeBan(id, our);
+    }
   }
 
-  public void removeBan(int id) {
-    banns.set(id, null);
-    picks.get(id).setBan("");
+  public void removePick(boolean we, int id) {
+    if (we) {
+      picks.get(id).setPickWe("");
+      our.removePick(id, enemy);
+    } else {
+      picks.get(id).setPickEnemy("");
+      enemy.removePick(id, our);
+    }
   }
 
-  public void removeOurPick(int id) {
-    our.getChampions().set(id, null);
-    picks.get(id).setPickWe("");
-    our.updateComposition();
-  }
-
-  public void removeEnemyPick(int id) {
-    enemy.getChampions().set(id, null);
-    picks.get(id).setPickEnemy("");
-    enemy.updateComposition();
-  }
 }

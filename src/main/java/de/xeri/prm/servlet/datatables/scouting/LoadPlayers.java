@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.annotation.PostConstruct;
 import javax.faces.application.FacesMessage;
@@ -12,8 +14,10 @@ import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.context.FacesContext;
 
+import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.servlet.datatables.scouting.draft.Draft;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 //TODO (Abgie) 18.05.2022: Wenn Spieler ausgewählt wird - Spiele suchen
 
@@ -35,36 +39,29 @@ public class LoadPlayers implements Serializable {
   public void init() {
     try {
       Team we = Team.find("Technical Really Unique Esports");
-      this.ourTeam = new TeamView(we);
+      final TeamView ourTeam = new TeamView(we);
+      this.ourTeam = ourTeam;
 
       Team enemy = Team.find("Mieser Billiger Spielmodus");
-      this.enemyTeam = new TeamView(enemy);
+      final TeamView enemyTeam = new TeamView(enemy);
+      this.enemyTeam = enemyTeam;
 
-      this.draft = new Draft(ourTeam, enemyTeam);
+      this.draft = new Draft(this.ourTeam, this.enemyTeam);
 
       this.timings = Arrays.asList(
-          new Timing("Matchup", "3 33%", "8 75%", "19 34%", "20 65%"),
-          new Timing("LaneLead", "-1024", "-493", "-119", "1380"),
-          new Timing("1. Ward", "2:44", "1:12", "3:54", "2:59"),
-          new Timing("1. Objec.", "10:31", "6:34", "7:44", "7:01"),
-          new Timing("1. Kill", "8:41", "7:43", "8:01", "7:56"),
-          new Timing("1. Recall", "6:54", "3:59", "5:43", "4:21"),
-          new Timing("1. Item", "13:02", "15:22", "12:55", "14:03"),
+          determineTiming("Matchup", determineMatchups(ourTeam, draft)),
+          determineTiming("LaneLead", determineLeads(enemyTeam)),
+          determineTiming("1. Ward", determineFirstWard(enemyTeam)),
+          determineTiming("1. Objec.", determineFirstObjective(enemyTeam)),
+          determineTiming("1. Kill", determineFirstKill(enemyTeam)),
+          determineTiming("1. Recall", determineFirstRecall(enemyTeam)),
+          determineTiming("1. Item", determineFirstItem(enemyTeam)),
           new Timing("Lategame", "Split", "Engage", "Carry", "Carry")
       );
 
       FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Geladen", "");
       FacesContext.getCurrentInstance().addMessage(null, message);
       System.out.println("GELADEN!!!!!");
-
-
-      /*this.picks = Arrays.asList(
-          new PickRow("Cho'Gath", "Vayne", "Shen"),
-          new PickRow("Jarvan IV", "Jhin", "Viego"),
-          new PickRow("Ahri", "Tahm Kench", "Viktor"),
-          new PickRow("Jinx", "Xerath", "Senna"),
-          new PickRow("Sett", "Veigar", "Galio")
-      );*/
 
     } catch (Exception exception) {
       exception.printStackTrace();
@@ -75,5 +72,46 @@ public class LoadPlayers implements Serializable {
       FacesContext.getCurrentInstance().addMessage(null, message);
       System.out.println("NICHT GELADEN!!!!!");
     }
+  }
+
+  private Timing determineTiming(String name, List<String> values) {
+    return new Timing(name, values.get(0), values.get(1), values.get(2), values.get(3));
+  }
+
+  private List<String> determineMatchups(TeamView ourTeam, Draft draft) {
+    final List<String> collect = IntStream.range(0, 3)
+        .mapToObj(i -> ourTeam.getPlayers().get(i).getPlayer().getMatchup(draft.getOur().getPicks().get(0), draft.getEnemy().getPicks().get(0)))
+        .map(matchup -> matchup.getGames() + " " + (Math.round(matchup.getWinrate() * 100) / 100) + "%")
+        .collect(Collectors.toList());
+    final Matchup matchupBot = ourTeam.getPlayers().get(3).getPlayer().getMatchup(draft.getOur().getPicks().get(0), draft.getEnemy().getPicks().get(0));
+    final Matchup matchupSup = ourTeam.getPlayers().get(3).getPlayer().getMatchup(draft.getOur().getPicks().get(0), draft.getEnemy().getPicks().get(0));
+    final String botSide = (matchupBot.getGames() + matchupSup.getGames()) + " " +
+        (Math.round(Util.div(matchupBot.getWins() + matchupSup.getWins(), matchupBot.getGames() + matchupSup.getGames()) * 100) / 100) + "%";
+    collect.add(botSide);
+    return collect;
+  }
+
+  private List<String> determineLeads(TeamView team) {
+    return team.getPlayers().stream().map(PlayerView::getLead).collect(Collectors.toList());
+  }
+
+  private List<String> determineFirstWard(TeamView team) {
+    return team.getPlayers().stream().map(PlayerView::getFirstWard).collect(Collectors.toList());
+  }
+
+  private List<String> determineFirstObjective(TeamView team) {
+    return team.getPlayers().stream().map(PlayerView::getFirstObjective).collect(Collectors.toList());
+  }
+
+  private List<String> determineFirstKill(TeamView team) {
+    return team.getPlayers().stream().map(PlayerView::getFirstKill).collect(Collectors.toList());
+  }
+
+  private List<String> determineFirstRecall(TeamView team) {
+    return team.getPlayers().stream().map(PlayerView::getFirstRecall).collect(Collectors.toList());
+  }
+
+  private List<String> determineFirstItem(TeamView team) {
+    return team.getPlayers().stream().map(PlayerView::getFirstItem).collect(Collectors.toList());
   }
 }

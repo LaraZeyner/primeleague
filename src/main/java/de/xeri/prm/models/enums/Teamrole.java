@@ -1,7 +1,7 @@
 package de.xeri.prm.models.enums;
 
 /**
- * Created by Lara on 25.03.2022 for TRUES
+ * @since 25.03.2022
  */
 public enum Teamrole {
   LEADER, CAPTAIN, SPIELER, NO_TEAM

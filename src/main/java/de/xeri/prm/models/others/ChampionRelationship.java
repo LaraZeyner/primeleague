@@ -3,85 +3,75 @@ package de.xeri.prm.models.others;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.EmbeddedId;
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.dynamic.Champion;
+import de.xeri.prm.models.enums.RelationshipType;
 import de.xeri.prm.models.ids.ChampionRelationshipId;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 
 @Entity(name = "Champion_Relationship")
 @Table(name = "champion_relationship", indexes = {
     @Index(name = "from_champion", columnList = "from_champion"),
     @Index(name = "to_champion", columnList = "to_champion")
 })
+@IdClass(ChampionRelationshipId.class)
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@AllArgsConstructor
 public class ChampionRelationship implements Serializable {
 
   @Transient
-  private static final long serialVersionUID = 3259168807202075733L;
+  private static final long serialVersionUID = -1662815460772674871L;
 
-  @EmbeddedId
-  private ChampionRelationshipId id;
+  @Id
+  @Enumerated(EnumType.STRING)
+  @Column(name = "relationship_type", nullable = false, length = 7)
+  private RelationshipType relationshipType;
 
-  @MapsId("fromChampion")
+  @Id
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "from_champion")
+  @ToString.Exclude
   private Champion fromChampion;
 
-  @MapsId("toChampion")
+  @Id
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "to_champion")
+  @ToString.Exclude
   private Champion toChampion;
-
-  //<editor-fold desc="getter and setter">
-  public Champion getToChampion() {
-    return toChampion;
-  }
-
-  public void setToChampion(Champion toChampion) {
-    this.toChampion = toChampion;
-  }
-
-  public Champion getFromChampion() {
-    return fromChampion;
-  }
-
-  public void setFromChampion(Champion fromChampion) {
-    this.fromChampion = fromChampion;
-  }
-
-  public ChampionRelationshipId getId() {
-    return id;
-  }
-
-  public void setId(ChampionRelationshipId id) {
-    this.id = id;
-  }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof ChampionRelationship)) return false;
-    final ChampionRelationship championRelationship = (ChampionRelationship) o;
-    return getId().equals(championRelationship.getId()) && getFromChampion().equals(championRelationship.getFromChampion()) && getToChampion().equals(championRelationship.getToChampion());
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final ChampionRelationship that = (ChampionRelationship) o;
+    return relationshipType != null && Objects.equals(relationshipType, that.relationshipType)
+        && fromChampion != null && Objects.equals(fromChampion, that.fromChampion)
+        && toChampion != null && Objects.equals(toChampion, that.toChampion);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getFromChampion(), getToChampion());
+    return Objects.hash(relationshipType, fromChampion, toChampion);
   }
 
-  @Override
-  public String toString() {
-    return "ChampionRelationship{" +
-        "id=" + id +
-        '}';
-  }
-  //</editor-fold>
 }

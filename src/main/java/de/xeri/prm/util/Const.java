@@ -15,6 +15,10 @@ public final class Const {
   public static final int ASSIST_FACTOR_ENDING_SECOND = 210;
   public static final double ASSIST_FACTOR_START_VALUE = 0.5;
   public static final double ASSIST_FACTOR_END_VALUE = 1.0;
+  public static final int COMPOSITION_COUNTER_FACTOR = 1;
+  public static final int COMPOSITION_MATCHUP_OVERALL_FACTOR = 1;
+  public static final int COMPOSITION_SYNERGY_FACTOR = 1;
+  public static final int COMPOSITION_COMP_CHANGE_FACTOR = 1;
   public static final int DAYS_UNTIL_INACTIVE = 180;
   public static final int DAYS_UNTIL_MATCH_CLOSED = 7;
   public static final int DISTANCE_BETWEEN_FIGHTS = 5000;

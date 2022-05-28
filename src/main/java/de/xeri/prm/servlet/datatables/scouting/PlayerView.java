@@ -20,6 +20,7 @@ public class PlayerView implements Serializable {
   private static final long serialVersionUID = -8701843635861320113L;
 
   private int games;
+  private Player player;
   private String name;
   private String positionalIconUrl;
   private String rankedIconUrl;
@@ -34,9 +35,16 @@ public class PlayerView implements Serializable {
   private String income;
   private String survival;
   private String laning;
+  private String lead;
+  private String firstWard;
+  private String firstObjective;
+  private String firstKill;
+  private String firstRecall;
+  private String firstItem;
   private List<String> playerTags; //TODO (Abgie) 24.05.2022:
 
   public PlayerView(Player player, Lane lane) {
+    this.player = player;
     this.name = player.getDisplayName();
     this.seasonElo = player.getCurrentElo();
     this.positionalIconUrl = player.getCurrentElo().getElo().getPositionalIconUrl(lane);
@@ -55,6 +63,12 @@ public class PlayerView implements Serializable {
     this.income = ratings.getIncome().format();
     this.survival = ratings.getSurvival().format();
     this.laning = ratings.getLaning().format();
+    this.lead = ratings.getLaning().getLaneBilance().getLead().display();
+    this.firstWard = ratings.getObjectives().getWards().getFirstWardTime().display();
+    this.firstObjective = ratings.getObjectives().getBotsideObjectives().getDragonTime().display();
+    this.firstKill = ratings.getSurvival().getEarlySurvival().getFirstKillDeath().display();
+    this.firstRecall = ratings.getLaning().getPostReset().getResetTime().display();
+    this.firstItem = ratings.getIncome().getEarlyIncome().getFirstFullItem().display();
   }
 
   /*public void onCellEdit(CellEditEvent event) {

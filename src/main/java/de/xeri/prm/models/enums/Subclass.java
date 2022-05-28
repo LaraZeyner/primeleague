@@ -1,8 +1,15 @@
 package de.xeri.prm.models.enums;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
 /**
- * Created by Lara on 24.03.2022 for TRUES
+ * @since 24.03.2022
  */
+@Getter
+@RequiredArgsConstructor
+@ToString
 public enum Subclass {
   ARTILLERYMAGE (Championclass.MAGE),
   ASSASSIN (Championclass.SLAYER),
@@ -19,17 +26,5 @@ public enum Subclass {
   VANGUARD (Championclass.TANK),
   WARDEN (Championclass.TANK);
 
-  private Championclass championclass;
-
-  Subclass(Championclass championclass) {
-    this.championclass = championclass;
-  }
-
-  public Championclass getChampionclass() {
-    return championclass;
-  }
-
-  public void setChampionclass(Championclass championclass) {
-    this.championclass = championclass;
-  }
+  private final Championclass championclass;
 }
