@@ -2,6 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
@@ -19,11 +21,12 @@
     <div class="p-grid">
         <div class="p-col-10">
 
-            <h1> Willkommen bei den TRUES</h1>
+            <h1>Willkommen bei den TRUES</h1>
 
-            <h:form>
+
+            <f:facet name="options">
                 <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
-            </h:form>
+            </f:facet>
         </div>
 
 

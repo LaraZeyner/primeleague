@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.scouting.draft;
+package de.xeri.prm.servlet.datatables.draft;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,8 +6,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import de.xeri.prm.models.dynamic.Champion;
-import de.xeri.prm.servlet.datatables.scouting.PickRow;
-import de.xeri.prm.servlet.datatables.scouting.TeamView;
 import lombok.Data;
 
 /**

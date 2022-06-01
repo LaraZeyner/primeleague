@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.scouting.draft;
+package de.xeri.prm.servlet.datatables.draft;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,9 +13,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import de.xeri.prm.models.dynamic.Champion;
-import de.xeri.prm.servlet.datatables.scouting.ChampionView;
-import de.xeri.prm.servlet.datatables.scouting.PlayerView;
-import de.xeri.prm.servlet.datatables.scouting.TeamView;
 import de.xeri.prm.util.Const;
 import lombok.Data;
 import lombok.val;
@@ -46,6 +43,8 @@ public class Composition {
   private List<CompositionAttribute> goodAttributes;
   private List<CompositionAttribute> badAttributes;
   private List<Champion> recommendedPicks;
+
+  private List<CompositionAttribute> badAttributesDisplay;
   private List<Champion> recommendedPicksDisplay;
 
   public Composition(TeamView view) {
@@ -75,14 +74,14 @@ public class Composition {
   }
 
   void addPick(int id, Champion champion, Composition enemyComposition) {
-    updateCompValues(champion, true);
+    this.compositionValues = updateCompValues(champion, true);
     picks.set(id, champion);
     updateChampions(enemyComposition);
     updateRecommendedPicks(enemyComposition);
   }
 
   void removePick(int id, Composition enemyComposition) {
-    updateCompValues(picks.get(id), false);
+    this.compositionValues = updateCompValues(picks.get(id), false);
     picks.set(id, null);
     picked.set(id, false);
     updateRecommendedPicks(enemyComposition);
@@ -185,12 +184,16 @@ public class Composition {
   }
 
   private void updateRecommendedPicks(Composition composition) {
-    this.recommendedPicksDisplay = recommendedPicks.stream()
+    this.badAttributesDisplay = badAttributes.size() > 9 ? badAttributes.subList(0, 9) : badAttributes;
+
+    final List<Champion> recommended = recommendedPicks.stream()
         .filter(pick -> !picks.contains(pick))
         .filter(pick -> !banns.contains(pick))
         .filter(pick -> !composition.getPicks().contains(pick))
         .filter(pick -> !composition.getBanns().contains(pick))
         .collect(Collectors.toList());
+    int size = 15 - badAttributesDisplay.size();
+    this.recommendedPicksDisplay = recommended.size() > size ? recommended.subList(0, size) : recommended;
   }
 
   @NotNull

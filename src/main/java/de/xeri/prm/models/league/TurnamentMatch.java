@@ -55,6 +55,17 @@ import org.jetbrains.annotations.Nullable;
 @NamedQuery(name = "TurnamentMatch.findAll", query = "FROM TurnamentMatch t")
 @NamedQuery(name = "TurnamentMatch.findById", query = "FROM TurnamentMatch t WHERE id = :pk")
 @NamedQuery(name = "TurnamentMatch.findByTeams", query = "FROM TurnamentMatch t WHERE homeTeam = :home AND guestTeam = :guest")
+@NamedQuery(name = "TurnamentMatch.findMatchesOf",
+    query = "SELECT id FROM TurnamentMatch t WHERE (homeTeam = :team OR guestTeam = :team) AND league = :league")
+@NamedQuery(name = "TurnamentMatch.findPerformancesOf",
+    query = "SELECT SUM(CASE WHEN homeTeam IS :team THEN (CASE WHEN score IS '2:0' THEN 1 ELSE 0 END) ELSE (CASE WHEN score IS '0:2' THEN 1 ELSE 0 END) END), " +
+        "SUM(CASE WHEN score IS '1:1' THEN 1 ELSE 0 END), " +
+        "SUM(CASE WHEN homeTeam IS :team THEN (CASE WHEN score IS '0:2' THEN 1 ELSE 0 END) ELSE (CASE WHEN score IS '2:0' THEN 1 ELSE 0 END) END) " +
+        "FROM TurnamentMatch t " +
+        "WHERE (homeTeam = :team OR guestTeam = :team) " +
+        "AND league = :league")
+@NamedQuery(name = "TurnamentMatch.leagueGames",
+    query = "FROM TurnamentMatch t WHERE league = :league")
 @Getter
 @Setter
 @ToString
@@ -179,9 +190,11 @@ public class TurnamentMatch implements Serializable {
    * </ul>
    */
   public boolean update() {
-    getPlayers().stream().map(Player::getActiveAccount).forEach(GameIdLoader::loadGameIds);
+    final boolean b = MatchLoader.analyseMatchPage(this);
+
+    getPlayers().stream().map(Player::getActiveAccount).forEach(account -> GameIdLoader.load(QueueType.TOURNEY, account));
     ScheduledGame.findMode(QueueType.TOURNEY).forEach(RiotGameRequester::loadCompetitive);
-    return MatchLoader.analyseMatchPage(this);
+    return b;
   }
 
 
@@ -285,6 +298,31 @@ public class TurnamentMatch implements Serializable {
 
   public boolean hasChanged(Date start) {
     return start.equals(this.start);
+  }
+
+  public String until() {
+    long distance = Math.abs((System.currentTimeMillis() - start.getTime()) / 1000);
+
+    final int seconds = (int) (distance % 60);
+    String secondsString = ("00" + seconds).substring(("00" + seconds).length() - 2);
+    final int minutes = (int) ((distance / 60) % 60);
+    String minutesString = ("00" + minutes).substring(("00" + minutes).length() - 2);
+    final int hours = (int) ((distance / 3_600) % 24);
+    String hoursString = ("00" + hours).substring(("00" + hours).length() - 2);
+    final int days = (int) (distance / 864_000);
+
+    StringBuilder str = new StringBuilder();
+    if (days > 1) {
+      str.append(days).append("d ").append(hoursString).append(":").append(minutesString).append(":").append(secondsString);
+    } else if (hours > 1) {
+      str.append(days * 24 + hours).append(":").append(minutesString).append(":").append(secondsString);
+    } else if (minutes > 1) {
+      str.append(hours * 60 + minutes).append(":").append(secondsString);
+    } else {
+      str.append(minutes * 60 + seconds).append("s");
+    }
+
+    return str.toString();
   }
   //</editor-fold>
 

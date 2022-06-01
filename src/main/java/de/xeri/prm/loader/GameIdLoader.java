@@ -33,7 +33,7 @@ public final class GameIdLoader {
     Data.getInstance().commit();
   }
 
-  private static void load(QueueType queueType, Account account) {
+  public static void load(QueueType queueType, Account account) {
     int start = 0;
     while (true) {
       val scheduled = load(queueType, account, start);

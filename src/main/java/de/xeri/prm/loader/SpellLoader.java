@@ -13,7 +13,7 @@ import org.json.JSONObject;
  * Created by Lara on 29.03.2022 for TRUES
  */
 public final class SpellLoader {
-  private static final JSON json = Data.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/summoner.json");
+  private static final JSON json = Data.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/summoner.json");
 
   public static void createItems() {
     final JSONObject spells = ((JSONElement) JSONParser.from(json)).getObject("data");

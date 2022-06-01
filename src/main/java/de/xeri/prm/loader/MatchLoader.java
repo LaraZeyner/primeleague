@@ -91,25 +91,26 @@ public final class MatchLoader {
 
   public static boolean analyseMatchPage(TurnamentMatch match) {
     val logger = Logger.getLogger("Match-Erstellung");
-    boolean changed = false;
+
     try {
       val html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/matches/" + match.getId());
       val doc = Jsoup.parse(html.toString());
 
       val timeString = doc.select("div#league-match-time").select("span").attr("data-time");
+      boolean changed;
       final Date start = new Date(Long.parseLong(timeString) * 1000L);
       changed = !start.equals(match.getStart());
       match.setStart(start);
 
       final boolean changedScore = updateScoreAndTeams(doc, match);
       changed = changed || changedScore;
-      return handleMatchlog(match, doc);
+      return handleMatchlog(match, doc) || changed;
     } catch (FileNotFoundException exception) {
       logger.warning("Match konnte nicht gefunden werden");
     } catch (IOException exception) {
       logger.severe(exception.getMessage());
     }
-    return changed;
+    return false;
   }
 
   public static boolean updateScoreAndTeams(Document doc, TurnamentMatch match) {

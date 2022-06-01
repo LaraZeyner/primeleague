@@ -45,6 +45,23 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Teamperformance.findBy", query = "FROM Teamperformance t WHERE game = :game AND firstPick = :first")
 @NamedQuery(name = "x", query = "SELECT AVG(CASE WHEN ((ganksTop + ganksMid + ganksBot) <> 0) THEN ((CAST(ganksTop AS int) - CAST" +
     "(ganksBot AS int)) / (ganksTop + ganksMid + ganksBot)) ELSE 0 END) FROM Playerperformance p")
+@NamedQuery(name = "Teamperformance.teamOwn",
+    query = "SELECT SUM(CASE WHEN team = :team THEN 1 ELSE 0 END), " +
+        "SUM(CASE WHEN team = :team THEN (CASE WHEN win IS true THEN 1 ELSE 0 END) ELSE NULL END), " +
+        "AVG(CASE WHEN team = :team THEN totalKills ELSE NULL END), SUM(CASE WHEN team = :team THEN totalKills ELSE CAST(totalKills*-1.0 as double) END), " +
+        "AVG(CASE WHEN team = :team THEN totalGold ELSE NULL END), SUM(CASE WHEN team = :team THEN totalGold ELSE CAST(totalGold*-1.0 as double) END), " +
+        "AVG(CASE WHEN team = :team THEN totalCs ELSE NULL END), SUM(CASE WHEN team = :team THEN totalCs ELSE CAST(totalCs*-1.0 as double) END), " +
+        "SUM(CASE WHEN team = :team THEN towers ELSE NULL END), AVG(CASE WHEN team = :team THEN towers ELSE NULL END), " +
+        "SUM(CASE WHEN team = :team THEN drakes ELSE NULL END), AVG(CASE WHEN team = :team THEN drakes ELSE NULL END), " +
+        "SUM(CASE WHEN team = :team THEN inhibs ELSE NULL END), AVG(CASE WHEN team = :team THEN inhibs ELSE NULL END), " +
+        "SUM(CASE WHEN team = :team THEN heralds ELSE NULL END), AVG(CASE WHEN team = :team THEN heralds ELSE NULL END), " +
+        "SUM(CASE WHEN team = :team THEN barons ELSE NULL END), AVG(CASE WHEN team = :team THEN barons ELSE NULL END), " +
+        "AVG(CASE WHEN team = :team THEN game.duration ELSE NULL END), " +
+        "AVG(CASE WHEN team = :team THEN (CASE WHEN win IS true THEN game.duration ELSE NULL END) ELSE NULL END), " +
+        "AVG(CASE WHEN team = :team THEN (CASE WHEN win IS false THEN game.duration ELSE NULL END) ELSE NULL END) " +
+        "FROM Teamperformance t " +
+        "WHERE game.turnamentmatch <> NULL AND " +
+        "game.turnamentmatch.id IN :matches")
 @Getter
 @Setter
 @NoArgsConstructor

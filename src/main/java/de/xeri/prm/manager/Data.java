@@ -5,6 +5,7 @@ import de.xeri.prm.models.league.Season;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.io.json.JSON;
 import de.xeri.prm.util.io.request.RequestManager;
 import de.xeri.prm.util.logger.Logger;
 import lombok.val;
@@ -24,19 +25,16 @@ public class Data {
 
   private final RequestManager requester;
   private final Session session;
-  /*private final EntityManagerFactory factory;
-  private final EntityManager manager;*/
   private final Transaction transaction;
   private final int statLimit = 180;
   private League currentGroup;
   private Season currentSeason;
+  private String currentVersion;
 
   public Data() {
     this.requester = new RequestManager();
     this.session = HibernateUtil.getSessionFactory().openSession();
     this.transaction = session.beginTransaction();
-    /*this.factory = Persistence.createEntityManagerFactory("Persistence");
-    this.manager = factory.createEntityManager();*/
   }
 
   public void init() {
@@ -76,6 +74,15 @@ public class Data {
     return currentSeason;
   }
 
+  public String getCurrentVersion() {
+    if (currentVersion == null) {
+      final JSON json = Data.getInstance().getRequester().requestJSON("https://ddragon.leagueoflegends.com/api/versions.json");
+      final Object versionObject = json.getJSONArray().get(0);
+      currentVersion = String.valueOf(versionObject);
+    }
+    return currentVersion;
+  }
+
   public void setCurrentSeason(Season currentSeason) {
     this.currentSeason = currentSeason;
   }
@@ -87,14 +94,6 @@ public class Data {
   public Session getSession() {
     return session;
   }
-
-  /*public EntityManagerFactory getFactory() {
-    return factory;
-  }
-
-  public EntityManager getManager() {
-    return manager;
-  }*/
 
   public Transaction getTransaction() {
     return transaction;

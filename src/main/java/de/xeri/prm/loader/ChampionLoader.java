@@ -24,7 +24,7 @@ import org.json.JSONObject;
  */
 public final class ChampionLoader {
   private static final JSON json = Data.getInstance().getRequester()
-      .requestJSON("http://ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/championFull.json");
+      .requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/championFull.json");
 
   public static void createChampions() {
     final JSONObject championsData = ((JSONElement) JSONParser.from(json)).getObject("data");
@@ -63,7 +63,7 @@ public final class ChampionLoader {
 
       // Class
       championObject.getJSONArray("tags").forEach(clazz -> Arrays.stream(Championclass.values())
-          .filter(championclazz -> championclazz.getName().equalsIgnoreCase(String.valueOf(clazz)))
+          .filter(championclazz -> championclazz.getDisplayName().equalsIgnoreCase(String.valueOf(clazz)))
           .findFirst().ifPresent(championclazz -> champion.getClasses().add(championclazz)));
 
       // Passive

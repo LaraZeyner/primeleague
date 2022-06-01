@@ -11,20 +11,22 @@ import lombok.ToString;
 @RequiredArgsConstructor
 @ToString
 public enum Subclass {
-  ARTILLERYMAGE (Championclass.MAGE),
-  ASSASSIN (Championclass.SLAYER),
-  CATCHER (Championclass.CONTROLLER),
-  BATTLEMAGE (Championclass.MAGE),
-  BURSTMAGE (Championclass.MAGE),
-  DIVER (Championclass.FIGHTER),
-  DOMINATOR (Championclass.MARKSMAN),
-  ENCHANTER (Championclass.CONTROLLER),
-  HYPERCARRY (Championclass.MARKSMAN),
-  JUGGERNAUT (Championclass.FIGHTER),
-  SCALER (Championclass.MARKSMAN),
-  SKIRMISHER (Championclass.SLAYER),
-  VANGUARD (Championclass.TANK),
-  WARDEN (Championclass.TANK);
+  ARTILLERYMAGE ("Artillerymage", Championclass.MAGE),
+  ASSASSIN ("Assassin", Championclass.SLAYER),
+  CATCHER ("Catcher", Championclass.CONTROLLER),
+  BATTLEMAGE ("Battlemage", Championclass.MAGE),
+  BURSTMAGE ("Burstmage", Championclass.MAGE),
+  DIVER ("Diver", Championclass.FIGHTER),
+  DOMINATOR ("Dominator", Championclass.MARKSMAN),
+  ENCHANTER ("Enchanter", Championclass.CONTROLLER),
+  HYPERCARRY ("Hypercarry", Championclass.MARKSMAN),
+  JUGGERNAUT ("Juggernaut", Championclass.FIGHTER),
+  SCALER ("Scaler", Championclass.MARKSMAN),
+  SKIRMISHER ("Skirmisher", Championclass.SLAYER),
+  VANGUARD ("Vanguard", Championclass.TANK),
+  WARDEN ("Warden", Championclass.TANK);
 
+  private final String displayName;
   private final Championclass championclass;
+
 }

@@ -62,7 +62,7 @@ import de.xeri.prm.models.match.playerperformance.PlayerperformanceSummonerspell
 import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.ratings.StatScope;
 import de.xeri.prm.models.others.ChampionRelationship;
-import de.xeri.prm.servlet.datatables.scouting.draft.CompositionAttribute;
+import de.xeri.prm.servlet.datatables.draft.CompositionAttribute;
 import de.xeri.prm.util.logger.Logger;
 import lombok.val;
 import org.hibernate.Session;
@@ -499,17 +499,10 @@ public final class HibernateUtil {
 
   public static List<Matchup> determineMatchups(Champion champion) {
     final Session session = Data.getInstance().getSession();
-    final Query<Object[]> query = session.getNamedQuery("Playerperformance.matchupOwn");
+    final Query<Object[]> query = session.getNamedQuery("Playerperformance.matchup");
     query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
     query.setParameter("picked", champion);
-    final List<Matchup> collect = query.list().stream().map(Matchup::fromObjects).collect(Collectors.toList());
-
-    final Query<Object[]> query2 = session.getNamedQuery("Playerperformance.matchupEnemy");
-    query2.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
-    query2.setParameter("picked", champion);
-    final List<Matchup> collect2 = query2.list().stream().map(Matchup::fromObjects).collect(Collectors.toList());
-    collect.forEach(matchup -> matchup.merge(collect2));
-    return collect2;
+    return query.list().stream().map(Matchup::fromObjects).collect(Collectors.toList());
   }
 
   public static Matchup determineMatchup(Champion champion, Champion versus) {

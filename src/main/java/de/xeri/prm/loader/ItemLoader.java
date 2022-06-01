@@ -22,7 +22,7 @@ import org.jsoup.nodes.Document;
  * Created by Lara on 29.03.2022 for TRUES
  */
 public final class ItemLoader {
-  private static final JSON json = Data.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/item.json");
+  private static final JSON json = Data.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/item.json");
 
   public static void createItems() {
     final JSONObject items = ((JSONElement) JSONParser.from(json)).getObject("data");

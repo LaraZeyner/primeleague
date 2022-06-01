@@ -1,8 +1,15 @@
 package de.xeri.prm.models.enums;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
 /**
- * Created by Lara on 24.03.2022 for TRUES
+ * @since 24.03.2022
  */
+@Getter
+@RequiredArgsConstructor
+@ToString
 public enum Championclass {
   CONTROLLER("Controller"),
   FIGHTER("Fighter"),
@@ -11,13 +18,6 @@ public enum Championclass {
   SLAYER("Assassin"),
   TANK("Tank");
 
-  String name;
+  private final String displayName;
 
-  Championclass(String name) {
-    this.name = name;
-  }
-
-  public String getName() {
-    return name;
-  }
 }

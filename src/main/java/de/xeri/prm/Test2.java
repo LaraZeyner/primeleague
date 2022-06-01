@@ -9,7 +9,8 @@ import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.playerperformance.Value;
 import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.servlet.datatables.scouting.LoadPlayers;
+import de.xeri.prm.servlet.datatables.draft.LoadPlayers;
+import de.xeri.prm.servlet.datatables.league.LoadLeague;
 
 /**
  * Created by Lara on 09.05.2022 for web
@@ -17,8 +18,10 @@ import de.xeri.prm.servlet.datatables.scouting.LoadPlayers;
 public class Test2 {
   public static void main(String[] args) {
     LoadupManager.init();
-    //final Map<Champion, Map<CompositionAttribute, Double>> wins = HibernateUtil.getChampionStats();
-    //final List<Matchup> seraphine = HibernateUtil.determineMatchups(Champion.find("Seraphine"));
+
+    final LoadLeague loadLeague = new LoadLeague();
+    loadLeague.init();
+
     final LoadPlayers loadPlayers = new LoadPlayers();
     loadPlayers.init();
     /*init();

@@ -136,18 +136,16 @@ import org.hibernate.annotations.NamedQuery;
     "AND championOwn = :picked " +
     "AND account IN :accounts " +
     "GROUP BY championEnemy")
-@NamedQuery(name = "Playerperformance.matchupOwn", query = "SELECT MIN(championEnemy), COUNT(championOwn), " +
-    "SUM(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) " +
-    "FROM Playerperformance p " +
-    "WHERE teamperformance.game.gameStart >= :since " +
-    "AND championOwn = :picked " +
-    "GROUP BY championEnemy")
-@NamedQuery(name = "Playerperformance.matchupEnemy", query = "SELECT MIN(championOwn), COUNT(championEnemy), " +
-    "SUM(CASE WHEN teamperformance.win IS true THEN 0 ELSE 1 END) " +
-    "FROM Playerperformance p " +
-    "WHERE teamperformance.game.gameStart >= :since " +
-    "AND championEnemy = :picked " +
-    "GROUP BY championOwn")
+@NamedQuery(name = "Playerperformance.matchup",
+    query = "SELECT MIN(CASE WHEN championEnemy = :picked THEN championOwn ELSE championEnemy END), " +
+        "COUNT(championOwn), " +
+        "SUM(CASE WHEN championEnemy = :picked THEN " +
+        "(CASE WHEN teamperformance.win IS true THEN 0 ELSE 1 END) ELSE " +
+        "(CASE WHEN teamperformance.win IS true THEN 1 ELSE 0 END) END) " +
+        "FROM Playerperformance p " +
+        "WHERE teamperformance.game.gameStart >= :since " +
+        "AND (championOwn = :picked OR championEnemy <> NULL AND championEnemy = :picked) " +
+        "GROUP BY (CASE WHEN championEnemy IS :picked THEN championOwn ELSE championEnemy END)")
 @Getter
 @Setter
 @ToString

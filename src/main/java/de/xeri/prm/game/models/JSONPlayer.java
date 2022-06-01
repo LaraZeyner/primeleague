@@ -222,7 +222,12 @@ public class JSONPlayer {
   }
 
   public int getStatAt(int minute, @NonNull TimelineStat stat) {
-    return infos.get(minute) != null ? getValue(minute, stat) : getValue(getLastMinute(), stat);
+    try {
+      return infos.size() > minute && infos.get(minute) != null ? getValue(minute, stat) : getValue(getLastMinute(), stat);
+    } catch (IndexOutOfBoundsException ex) {
+      ex.printStackTrace();
+    }
+    return 0;
   }
 
   public Position getPositionAt(int minute) {

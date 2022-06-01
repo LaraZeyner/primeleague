@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.scouting.draft;
+package de.xeri.prm.servlet.datatables.draft;
 
 import java.util.Arrays;
 

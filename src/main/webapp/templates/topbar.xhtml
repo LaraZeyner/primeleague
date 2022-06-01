@@ -2,7 +2,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
@@ -33,30 +32,22 @@
             <h:form>
                 <p:growl id="navigation"/>
                 <p:menubar styleClass="true-topbar">
-                    <p:submenu label="Die TRUEs" icon="pi pi-fw pi-file" url="index.xhtml">
-                    </p:submenu>
-                    <p:submenu label="1:1 vs LESEV SB">
-                    </p:submenu>
-                    <p:submenu label="Liga: Division 7.14">
-                    </p:submenu>
-                    <p:submenu label="Turniere">
-                    </p:submenu>
-                    <p:submenu label="Auswertung">
-                    </p:submenu>
-                    <p:submenu label="Datenbank">
-                    </p:submenu>
+                    <p:menuitem value="Das Team" url="team.xhtml"/>
+                    <p:menuitem value="Livespiel" url="live.xhtml"/>
+                    <p:menuitem value="Liga: #{loadLeague.league.name}" url="table.xhtml"/>
+                    <p:menuitem value="Scouting" url="scouting.xhtml"/>
+                    <p:menuitem value="Champions" url="champions.xhtml"/>
                     <p:divider layout="vertical"/>
-                    <p:submenu label="Settings" icon="pi pi-fw pi-pencil">
-                    </p:submenu>
-                    <f:facet name="options">
-                        <div class="ui-input-icon-left p-mr-2">
-                            <i class="pi pi-fw pi-search"/>
-                            <p:inputText placeholder="Search"/>
-                        </div>
-                        <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
-                    </f:facet>
+                    <p:menuitem value="Mein Profil" url="profile.xhtml"/>
                 </p:menubar>
             </h:form>
+        </div>
+
+
+        <div class="p-mr-auto">
+            Nächstes Spiel am So, den 12. Juni 15:00 <br/>
+            in 12 Tagen und 1 Stunde <br/>
+            gegen Krefelder Kloster Knaben
         </div>
 
         <p:sidebar widgetVar="sidebar1">
@@ -72,8 +63,8 @@
                         <p class="p-m-0">
                             <h:form>
                                 <div class="card">
-                                    <h5>Tabelle: Division 7.11</h5>
-                                    <p:dataTable lazy="false" var="team" value="#{shortTable.teams}" size="small"
+                                    <h5>Tabelle: #{loadLeague.leagueTeams}</h5>
+                                    <p:dataTable lazy="false" var="team" value="#{loadLeague.leagueTeams}" size="small"
                                                  rowIndexVar="rowIndex" showGridlines="false"
                                                  style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
                                                  'row-down' : (rowIndex lt 2 ? 'row-up' : (rowIndex eq 2 ?

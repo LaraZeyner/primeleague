@@ -20,21 +20,30 @@
     <ui:composition>
         <ui:fragment>
             <div class="card">
-                <h3>Aktuelle Draftsituation</h3>
-                <p:dataTable id="pickBans" lazy="true" value="#{loadPlayers.draft.picks}" var="pick" style="font-size: 14px;" size="small">
+                <p:dataTable id="pickBans" lazy="true" value="#{loadPlayers.draft.picks}" var="pick"
+                             style="font-size: 14px;" size="small">
                     <p:column headerText="Picks">#{pick.pickWe}</p:column>
                     <p:column headerText="Banns">#{pick.banWe}</p:column>
                     <p:column headerText="Picks">#{pick.pickEnemy}</p:column>
                 </p:dataTable>
 
-                <h3>Komposition TRUEs</h3>
                 <div class="p-grid">
-
+                    <c:forEach items="#{loadPlayers.draft.our.badAttributesDisplay}" var="bad">
+                        <div class="p-col-4 attributes attributes-bad">#{bad.name}</div>
+                    </c:forEach>
+                    <c:forEach items="#{loadPlayers.draft.our.recommendedPicksDisplay}" var="recommended">
+                        <div class="p-col-4 attributes attributes-recommended">#{recommended.name}</div>
+                    </c:forEach>
                 </div>
 
-                <h3>Komposition Gegner</h3>
+                <p:divider/>
                 <div class="p-grid">
-
+                    <c:forEach items="#{loadPlayers.draft.enemy.badAttributesDisplay}" var="bad">
+                        <div class="p-col-4 attributes attributes-bad">#{bad.name}</div>
+                    </c:forEach>
+                    <c:forEach items="#{loadPlayers.draft.enemy.recommendedPicksDisplay}" var="recommended">
+                        <div class="p-col-4 attributes attributes-recommended">#{recommended.name}</div>
+                    </c:forEach>
                 </div>
 
                 <p:dataTable id="smaller" value="#{loadPlayers.timings}" var="timings"

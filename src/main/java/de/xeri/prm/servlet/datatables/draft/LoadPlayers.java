@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.scouting;
+package de.xeri.prm.servlet.datatables.draft;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -16,7 +16,6 @@ import javax.faces.context.FacesContext;
 
 import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.league.Team;
-import de.xeri.prm.servlet.datatables.scouting.draft.Draft;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
 //TODO (Abgie) 18.05.2022: Wenn Spieler ausgewählt wird - Spiele suchen
@@ -34,19 +33,12 @@ public class LoadPlayers implements Serializable {
   private Draft draft;
   private List<Timing> timings;
 
-
   @PostConstruct
   public void init() {
     try {
-      Team we = Team.find("Technical Really Unique Esports");
-      final TeamView ourTeam = new TeamView(we);
-      this.ourTeam = ourTeam;
-
-      Team enemy = Team.find("Mieser Billiger Spielmodus");
-      final TeamView enemyTeam = new TeamView(enemy);
-      this.enemyTeam = enemyTeam;
-
-      this.draft = new Draft(this.ourTeam, this.enemyTeam);
+      this.ourTeam = new TeamView(Team.find("Technical Really Unique Esports"));
+      this.enemyTeam = new TeamView(Team.find("Mieser Billiger Spielmodus"));
+      this.draft = new Draft(ourTeam, enemyTeam);
 
       this.timings = Arrays.asList(
           determineTiming("Matchup", determineMatchups(ourTeam, draft)),

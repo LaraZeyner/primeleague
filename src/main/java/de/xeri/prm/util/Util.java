@@ -67,4 +67,13 @@ public final class Util {
   public static int getInt(Object object) {
     return (int) (((Long) object).longValue());
   }
+
+  public static int doubleToInt(Double d) {
+    return Integer.parseInt(String.valueOf(d));
+  }
+
+  public static int longToInt(Long l) {
+    return Integer.parseInt(String.valueOf(l));
+  }
+
 }

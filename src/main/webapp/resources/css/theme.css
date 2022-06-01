@@ -6425,7 +6425,7 @@ body .ui-accordion .ui-accordion-content:last-of-type {
     border-bottom-left-radius: 4px;
 }
 
-body .ui-card {
+/*body .ui-card {
     background: #ffffff;
     color: #495057;
     box-shadow: 0 2px 1px -1px rgba(0, 0, 0, 0.2), 0 1px 1px 0 rgba(0, 0, 0, 0.14), 0 1px 3px 0 rgba(0, 0, 0, 0.12);
@@ -6449,7 +6449,7 @@ body .ui-card .ui-card-content {
 }
 body .ui-card .ui-card-footer {
     padding: 1rem 0 0 0;
-}
+}*/
 
 body .ui-dashboard .ui-sortable-placeholder {
     background-color: #cfecff;

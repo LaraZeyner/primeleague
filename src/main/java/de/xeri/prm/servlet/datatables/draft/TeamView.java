@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.scouting;
+package de.xeri.prm.servlet.datatables.draft;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -37,9 +37,9 @@ public class TeamView implements Serializable {
     List<Map<Player, Integer>> gamesHome = Arrays.asList(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
 
     for (Player player : homeTeam.getPlayers()) {
-      List<Integer> gamesOnLane = player.getGamesOn();
-      for (int i = 0; i < gamesOnLane.size(); i++) {
-        gamesHome.get(i).put(player, gamesOnLane.get(i));
+      final List<Integer> gamesOn = player.getGamesOn();
+      for (int i = 0; i < gamesOn.size(); i++) {
+        gamesHome.get(i).put(player, gamesOn.get(i));
       }
     }
     final List<Player> highlightedPlayersHome = new ArrayList<>();

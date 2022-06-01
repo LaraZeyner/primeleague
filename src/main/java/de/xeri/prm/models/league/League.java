@@ -2,13 +2,12 @@ package de.xeri.prm.models.league;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,13 +24,24 @@ import javax.persistence.Transient;
 
 import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.HibernateUtil;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.val;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
+import org.hibernate.query.Query;
 
 @Entity(name = "League")
 @Table(name = "league", indexes = @Index(name = "idx_league_name", columnList = "stage, league_name", unique = true))
 @NamedQuery(name = "League.findAll", query = "FROM League l")
 @NamedQuery(name = "League.findById", query = "FROM League l WHERE id = :pk")
 @NamedQuery(name = "League.findBy", query = "FROM League l WHERE stage = :stage AND name = :name")
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class League implements Serializable {
 
   @Transient
@@ -73,6 +83,7 @@ public class League implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "stage")
+  @ToString.Exclude
   private Stage stage;
 
   @Column(name = "league_name", nullable = false, length = 25)
@@ -83,14 +94,12 @@ public class League implements Serializable {
       joinColumns = @JoinColumn(name = "league", referencedColumnName = "league_id"),
       inverseJoinColumns = @JoinColumn(name = "team", referencedColumnName = "team_id"),
       indexes = @Index(name = "idx_teamleagues", columnList = "league, team", unique = true))
+  @ToString.Exclude
   private final Set<Team> teams = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "league")
+  @ToString.Exclude
   private final Set<TurnamentMatch> matches = new LinkedHashSet<>();
-
-  // default constructor
-  public League() {
-  }
 
   public League(short id, String name) {
     this.id = id;
@@ -113,70 +122,35 @@ public class League implements Serializable {
     }
   }
 
-  public Team atPlace(int place) {
-    final Set<Team> teamList = teams.stream()
-        .collect(Collectors.toMap(team -> team, team -> new TeamLeaguePerformance(this, team).getScore(), (a, b) -> b))
-        .entrySet().stream()
-        .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new))
-        .keySet();
-    return new ArrayList<>(teamList).get(place - 1);
-  }
+  public Map<Matchday, List<TurnamentMatch>> getMatchdays() {
+    final Query<TurnamentMatch> namedQuery = Data.getInstance().getSession().getNamedQuery("TurnamentMatch.leagueGames");
+    namedQuery.setParameter("league", Data.getInstance().getCurrentGroup());
+    final List<TurnamentMatch> list = namedQuery.list();
+    Map<Matchday, List<TurnamentMatch>> map = new HashMap<>();
+    for (TurnamentMatch objects : list) {
+      val day = objects.getMatchday();
+      if (map.containsKey(day)) {
+        map.get(day).add(objects);
+      } else {
+        final List<TurnamentMatch> matches = new ArrayList<>();
+        matches.add(objects);
+        map.put(day, matches);
+      }
+    }
 
-  //<editor-fold desc="getter and setter">
-  public Set<TurnamentMatch> getMatches() {
-    return matches;
-  }
-
-  public Set<Team> getTeams() {
-    return teams;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String leagueName) {
-    this.name = leagueName;
-  }
-
-  public Stage getStage() {
-    return stage;
-  }
-
-  void setStage(Stage stage) {
-    this.stage = stage;
-  }
-
-  public short getId() {
-    return id;
-  }
-
-  public void setId(short id) {
-    this.id = id;
+    return map;
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof League)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final League league = (League) o;
-    return getId() == league.getId() && getStage().equals(league.getStage()) && getName().equals(league.getName());
+    return Objects.equals(id, league.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getStage(), getName());
+    return getClass().hashCode();
   }
-
-  @Override
-  public String toString() {
-    return "League{" +
-        "id=" + id +
-        ", stage=" + stage +
-        ", leagueName='" + name + '\'' +
-        ", matches='" + matches.size() + '\'' +
-        '}';
-  }
-  //</editor-fold>
 }

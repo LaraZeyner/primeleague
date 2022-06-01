@@ -38,7 +38,7 @@ import de.xeri.prm.models.enums.Subclass;
 import de.xeri.prm.models.match.ChampionSelection;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.others.ChampionRelationship;
-import de.xeri.prm.servlet.datatables.scouting.draft.CompositionAttribute;
+import de.xeri.prm.servlet.datatables.draft.CompositionAttribute;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -90,18 +90,24 @@ public class Champion implements Serializable {
   }
 
   public static boolean has(short id) {
-    return HibernateUtil.has(Champion.class, id);
+    return get().stream().anyMatch(champion -> champion.getId() == id);
   }
 
   public static boolean has(String name) {
-    return HibernateUtil.has(Champion.class, new String[]{"name"}, new Object[]{name});
+    return get().stream().anyMatch(champion -> champion.getName().equals(name));
   }
 
   public static Champion find(String name) {
-    return HibernateUtil.find(Champion.class, new String[]{"name"}, new Object[]{name});
+    return get().stream().filter(champion -> champion.getName().equals(name)).findFirst()
+        .orElse(HibernateUtil.find(Champion.class, new String[]{"name"}, new Object[]{name}));
   }
 
   public static Champion find(int id) {
+    final Champion champion = get().stream().filter(c -> c.getId() == id).findFirst().orElse(null);
+    if (champion != null) {
+      return champion;
+    }
+    System.out.println(id);
     return HibernateUtil.find(Champion.class, id);
   }
 
@@ -406,6 +412,10 @@ public class Champion implements Serializable {
 
   public Map<CompositionAttribute, Double> getStats() {
     return HibernateUtil.getChampionStats().get(this);
+  }
+
+  public String getImage() {
+    return "http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/img/champion/" + name + ".png";
   }
 
   @Override

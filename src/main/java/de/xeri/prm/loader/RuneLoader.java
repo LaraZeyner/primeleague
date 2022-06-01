@@ -14,7 +14,7 @@ import org.json.JSONObject;
  */
 public final class RuneLoader {
   private static final JSON json = Data.getInstance().getRequester()
-      .requestJSON("http://ddragon.leagueoflegends.com/cdn/12.6.1/data/en_US/runesReforged.json");
+      .requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/runesReforged.json");
 
   public static void createItems() {
     final JSONArray trees = ((JSONList) JSONParser.from(json)).getArray();

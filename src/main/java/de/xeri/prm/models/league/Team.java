@@ -2,6 +2,7 @@ package de.xeri.prm.models.league;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -32,6 +33,7 @@ import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.servlet.datatables.league.LeagueTeam;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import de.xeri.prm.util.logger.Logger;
@@ -43,6 +45,7 @@ import lombok.val;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
+import org.hibernate.query.Query;
 
 @Entity(name = "Team")
 @Table(name = "team", indexes = {
@@ -171,6 +174,8 @@ public class Team implements Serializable {
   private String teamAbbr;
 
   @ManyToMany(mappedBy = "teams")
+  @LazyCollection(LazyCollectionOption.EXTRA)
+  @OrderColumn
   private final Set<League> leagues = new LinkedHashSet<>();
 
   @Column(name = "team_result", length = 30)
@@ -286,7 +291,7 @@ public class Team implements Serializable {
 
   public List<Teamperformance> getLeaguePerformances() {
     return teamperformances.stream()
-        .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch().getLeague().equals(Data.getInstance().getCurrentGroup()))
+        .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch() != null && teamperformance.getGame().getTurnamentmatch().getLeague().equals(Data.getInstance().getCurrentGroup()))
         .collect(Collectors.toList());
   }
 
@@ -475,56 +480,56 @@ public class Team implements Serializable {
 
   public String getKills() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).sum() + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
-            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalKills).sum();
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
+            .mapToInt(Teamperformance::getTotalKills).sum();
   }
 
   public int getKillDiff() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).sum() -
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
-            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalKills).sum();
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
+            .mapToInt(Teamperformance::getTotalKills).sum();
   }
 
   public String getKillsPerMatch() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).average().orElse(0) * 2 + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
             .mapToInt(Teamperformance::getTotalKills).average().orElse(0) * 2;
   }
 
   public String getGold() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).sum() + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
-            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalGold).sum();
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
+            .mapToInt(Teamperformance::getTotalGold).sum();
   }
 
   public int getGoldDiff() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).sum() -
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
-            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalGold).sum();
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
+            .mapToInt(Teamperformance::getTotalGold).sum();
   }
 
   public String getGoldPerMatch() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).average().orElse(0) * 2 + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
             .mapToInt(Teamperformance::getTotalGold).average().orElse(0) * 2;
   }
 
 
   public String getCreeps() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).sum() + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
-            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalCs).sum();
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
+            .mapToInt(Teamperformance::getTotalCs).sum();
   }
 
   public int getCreepDiff() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).sum() -
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
-            .filter(Objects::nonNull).mapToInt(Teamperformance::getTotalCs).sum();
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
+            .mapToInt(Teamperformance::getTotalCs).sum();
   }
 
   public String getCreepsPerMatch() {
     return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).average().orElse(0) * 2 + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance)
+        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
             .mapToInt(Teamperformance::getTotalCs).average().orElse(0) * 2;
   }
 
@@ -587,6 +592,37 @@ public class Team implements Serializable {
     final long killScore = getKillDiff() * 1_000_000_000_000L;               //    100.000.000.000.000      100
     final long winsScore = (long) Integer.parseInt(getWinsPerMatch().replace("%", "")) * 1_000_000_000_000L;
     return idScore + csScore + goldScore + killScore + winsScore;
+  }
+
+
+
+  public LeagueTeam getLeagueTeam() {
+    final Query<Object[]> query = Data.getInstance().getSession().getNamedQuery("TurnamentMatch.findPerformancesOf");
+    query.setParameter("team", this);
+    query.setParameter("league", Data.getInstance().getCurrentGroup());
+    final Object[] list = query.list().get(0);
+
+
+    final Query<Integer> query2 = Data.getInstance().getSession().getNamedQuery("TurnamentMatch.findMatchesOf");
+    query2.setParameter("team", this);
+    query2.setParameter("league", Data.getInstance().getCurrentGroup());
+    final List<Integer> matchIds = query2.list();
+
+    final Query<Object[]> query3 = Data.getInstance().getSession().getNamedQuery("Teamperformance.teamOwn");
+    query3.setParameter("team", this);
+    query3.setParameter("matches", matchIds);
+    final List<Object[]> list2 = query3.list();
+    List<Double> doubles = Arrays.stream(list2.get(0)).map(o -> o != null ? Double.parseDouble(String.valueOf(o)) : 0).collect(Collectors.toList());
+
+    LeagueTeam team = new LeagueTeam(turneyId, teamName, teamAbbr, getLogoUrl(),
+        Util.longToInt((long) list[0]) + Util.longToInt((long) list[1]) + Util.longToInt((long) list[2]),
+        Util.longToInt((long) list[0]), Util.longToInt((long) list[1]), Util.longToInt((long) list[2]));
+
+
+
+    team.add(doubles);
+
+    return team;
   }
 
 

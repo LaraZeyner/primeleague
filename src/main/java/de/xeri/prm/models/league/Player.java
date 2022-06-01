@@ -32,7 +32,7 @@ import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.Teamrole;
 import de.xeri.prm.models.match.ratings.StatScope;
-import de.xeri.prm.servlet.datatables.scouting.ChampionView;
+import de.xeri.prm.servlet.datatables.draft.ChampionView;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;

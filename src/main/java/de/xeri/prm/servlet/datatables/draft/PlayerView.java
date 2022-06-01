@@ -1,4 +1,4 @@
-package de.xeri.prm.servlet.datatables.scouting;
+package de.xeri.prm.servlet.datatables.draft;
 
 import java.io.Serializable;
 import java.util.List;
