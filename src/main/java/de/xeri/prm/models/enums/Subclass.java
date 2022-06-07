@@ -1,15 +1,15 @@
 package de.xeri.prm.models.enums;
 
+import java.util.Arrays;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 /**
  * @since 24.03.2022
  */
 @Getter
 @RequiredArgsConstructor
-@ToString
 public enum Subclass {
   ARTILLERYMAGE ("Artillerymage", Championclass.MAGE),
   ASSASSIN ("Assassin", Championclass.SLAYER),
@@ -29,4 +29,12 @@ public enum Subclass {
   private final String displayName;
   private final Championclass championclass;
 
+  @Override
+  public String toString() {
+    return championclass.getDisplayName() + " - " + displayName;
+  }
+
+  public static Subclass fromName(String name) {
+    return Arrays.stream(Subclass.values()).filter(subclass -> subclass.toString().equals(name)).findFirst().orElse(null);
+  }
 }

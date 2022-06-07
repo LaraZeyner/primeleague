@@ -5,12 +5,14 @@ import java.util.Map;
 import de.xeri.prm.manager.LoadupManager;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Account;
+import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.playerperformance.Value;
 import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.servlet.datatables.draft.LoadPlayers;
 import de.xeri.prm.servlet.datatables.league.LoadLeague;
+import de.xeri.prm.servlet.datatables.scheduling.AllEventsTimelineView;
 
 /**
  * Created by Lara on 09.05.2022 for web
@@ -18,6 +20,15 @@ import de.xeri.prm.servlet.datatables.league.LoadLeague;
 public class Test2 {
   public static void main(String[] args) {
     LoadupManager.init();
+
+    /*final Query<Playerperformance> namedQuery = PrimeData.getInstance().getSession().getNamedQuery("Playerperformance.forChampion");
+    namedQuery.setParameter("champion", Champion.find("Ahri"));
+    namedQuery.setMaxResults(28);
+    final List<Playerperformance> list = namedQuery.list();*/
+
+    AllEventsTimelineView view = new AllEventsTimelineView();
+    view.init();
+    view.getPlayers().forEach(Player::getCurrentEloString);
 
     final LoadLeague loadLeague = new LoadLeague();
     loadLeague.init();

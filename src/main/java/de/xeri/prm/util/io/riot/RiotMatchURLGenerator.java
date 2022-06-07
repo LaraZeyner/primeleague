@@ -1,6 +1,6 @@
 package de.xeri.prm.util.io.riot;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.io.json.JSON;
@@ -11,7 +11,7 @@ import de.xeri.prm.util.io.json.JSON;
 public class RiotMatchURLGenerator {
 
   public JSON getMatchList(Account account, int startIndex) {
-    return Data.getInstance().getRequester()
+    return PrimeData.getInstance().getRequester()
         .requestRiotJSON("https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/" + account.getPuuid() +
             "/ids?startTime=" + account.getLastUpdate().getTime() / 1000 +
             "&start=" + startIndex +
@@ -19,7 +19,7 @@ public class RiotMatchURLGenerator {
   }
 
   public JSON getMatchList(Account account, int queueId, int startIndex) {
-    return Data.getInstance().getRequester()
+    return PrimeData.getInstance().getRequester()
         .requestRiotJSON("https://europe.api.riotgames.com/lol/match/v5/matches/by-puuid/" + account.getPuuid() +
             "/ids?startTime=" + account.getLastUpdate().getTime() / 1000 +
             "&queue=" + queueId +
@@ -28,12 +28,12 @@ public class RiotMatchURLGenerator {
   }
 
   public JSON getMatch(String matchid) {
-    return Data.getInstance().getRequester()
+    return PrimeData.getInstance().getRequester()
         .requestRiotJSON("https://europe.api.riotgames.com/lol/match/v5/matches/" + matchid + Const.API_KEY);
   }
 
   public JSON getTimeline(String matchid) {
-    return Data.getInstance().getRequester()
+    return PrimeData.getInstance().getRequester()
         .requestRiotJSON("https://europe.api.riotgames.com/lol/match/v5/matches/" + matchid + "/timeline" + Const.API_KEY2);
   }
 }

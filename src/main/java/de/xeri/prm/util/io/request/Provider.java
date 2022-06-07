@@ -73,16 +73,14 @@ public class Provider {
           final long half = requests.get(range / 2 - 1);
           long waitingTime = (timeframe * 1000) - (current + 1000 - half);
           if (waitingTime > 0) {
-            System.out.println(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
+            System.out.println(Const.TIMEOUT_MESSAGE + "(" + waitingTime / 1000 + " s)");
             final long until = waitingTime + System.currentTimeMillis();
             if (System.currentTimeMillis() <= until) {
-              logger.attention("noch " + BreakManager.loop(waitingTime/1000) + " Spiele - ");
+              BreakManager.loop(waitingTime/1000);
             }
             waitingTime = until - System.currentTimeMillis();
-            logger.attention(Const.TIMEOUT_MESSAGE + "(" + waitingTime + "ms)");
             TimeUnit.SECONDS.sleep(waitingTime / 1000);
           }
-
           requests = requests.subList(range / 2, requests.size());
         }
       }

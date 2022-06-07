@@ -3,6 +3,7 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
@@ -22,19 +23,27 @@
             <h:form id="scoutingForm">
                 <p:growl id="msgs" showDetail="true"/>
                 <div class="p-grid">
-                    <c:forEach items="#{loadPlayers.ourTeam.players}" var="homes">
+                    <c:forEach items="#{loadPlayers.ourTeam.views}" var="homes">
                         <div class="p-col">
                             <div id="homeScoutingHead" class="p-grid">
                                 <div class="p-col-fixed ui-card-sidetitle games-amount">
-                                    #{homes.games}
+                                    #{homes.view.games}
                                 </div>
                                 <div class="p-col ui-card-title">
-                                    #{homes.name}
+                                    <p:inplace>
+                                        <p:selectOneMenu id="advanced" value="#{homes.selected}" dynamic="true"
+                                                         effect="fade" filter="true" filterMatchMode="startsWith"
+                                                         valueChangeListener="#{homes.PresetGroupChangeEvent}">>
+                                            <f:selectItem itemLabel="#{homes.selected}"/>
+                                            <f:selectItems value="#{homes.playersList}"/>
+                                            <p:ajax update="@form"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
                                 </div>
                                 <div class="p-col-fixed ranked-position-size">
-                                    <p:graphicImage id="rankImg" styleClass="ranked-position" url="#{homes.positionalIconUrl}"
+                                    <p:graphicImage id="rankImg" styleClass="ranked-position" url="#{homes.view.positionalIconUrl}"
                                                     onmouseover=""/>
-                                    <p:tooltip for="rankImg" value="#{homes.seasonElo.display}" showEffect="clip"
+                                    <p:tooltip for="rankImg" value="#{homes.view.seasonElo.display}" showEffect="clip"
                                                hideEffect="fold"/>
                                 </div>
                             </div>
@@ -42,54 +51,54 @@
                             <div id="homeScountingStats" class="p-grid">
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.kda}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.kda}</div>
                                         <div class="p-col-12 substat-tag">KDA</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.objectives}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.objectives}</div>
                                         <div class="p-col-12 substat-tag">Wards</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.roaming}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.roaming}</div>
                                         <div class="p-col-12 substat-tag">Roams</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.fighting}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.fighting}</div>
                                         <div class="p-col-12 substat-tag">Fight</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.income}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.income}</div>
                                         <div class="p-col-12 substat-tag">Gold</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.survival}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.survival}</div>
                                         <div class="p-col-12 substat-tag">Alive</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.laning}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.laning}</div>
                                         <div class="p-col-12 substat-tag">Lane</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <p:dataTable id="homeChampStats" lazy="false" var="champ" value="#{homes.champions}"
+                            <p:dataTable id="homeChampStats" lazy="false" var="champ" value="#{homes.view.champions}"
                                          scrollable="true" scrollHeight="200" frozenRows="3"
                                          size="small" style="font-size: 14px;">
                                 <!--  editable="true" editMode="cell" widgetVar="cellC" -->
 
-                                <p:column width="40%" headerText="#{homes.totalGames}">
+                                <p:column width="40%" headerText="#{homes.view.totalGames}">
                                     #{champ.name}
                                     <!-- <p:cellEditor>
                                          <f:facet name="output">
@@ -121,19 +130,27 @@
                     </c:forEach>
                 </div>
                 <div class="p-grid">
-                    <c:forEach items="#{loadPlayers.enemyTeam.players}" var="homes">
+                    <c:forEach items="#{loadPlayers.enemyTeam.views}" var="homes">
                         <div class="p-col">
                             <div id="enemyScoutingHead" class="p-grid">
                                 <div class="p-col-fixed ui-card-sidetitle games-amount">
-                                    #{homes.games}
+                                    #{homes.view.games}
                                 </div>
                                 <div class="p-col ui-card-title">
-                                    #{homes.name}
+                                    <p:inplace>
+                                        <p:selectOneMenu id="advanced2" value="#{homes.selected}" dynamic="true"
+                                                         effect="fade" filter="true" filterMatchMode="startsWith"
+                                                         valueChangeListener="#{homes.PresetGroupChangeEvent}">>
+                                            <f:selectItem itemLabel="#{homes.selected}"/>
+                                            <f:selectItems value="#{homes.playersList}"/>
+                                            <p:ajax update="@form"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
                                 </div>
                                 <div class="p-col-fixed ranked-position-size">
-                                    <p:graphicImage id="enemyRankImg" styleClass="ranked-position" url="#{homes.positionalIconUrl}"
+                                    <p:graphicImage id="enemyRankImg" styleClass="ranked-position" url="#{homes.view.positionalIconUrl}"
                                                     onmouseover=""/>
-                                    <p:tooltip for="enemyRankImg" value="#{homes.seasonElo.display}" showEffect="clip"
+                                    <p:tooltip for="enemyRankImg" value="#{homes.view.seasonElo.display}" showEffect="clip"
                                                hideEffect="fold"/>
                                 </div>
                             </div>
@@ -141,54 +158,54 @@
                             <div id="enemyScountingStats" class="p-grid">
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.kda}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.kda}</div>
                                         <div class="p-col-12 substat-tag">KDA</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.objectives}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.objectives}</div>
                                         <div class="p-col-12 substat-tag">Wards</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.roaming}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.roaming}</div>
                                         <div class="p-col-12 substat-tag">Roams</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.fighting}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.fighting}</div>
                                         <div class="p-col-12 substat-tag">Fight</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.income}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.income}</div>
                                         <div class="p-col-12 substat-tag">Gold</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.survival}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.survival}</div>
                                         <div class="p-col-12 substat-tag">Alive</div>
                                     </div>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.laning}</div>
+                                        <div class="p-col-12 substat-value">#{homes.view.laning}</div>
                                         <div class="p-col-12 substat-tag">Lane</div>
                                     </div>
                                 </div>
                             </div>
 
-                            <p:dataTable id="enemyChampStats" lazy="false" var="champ" value="#{homes.champions}"
+                            <p:dataTable id="enemyChampStats" lazy="false" var="champ" value="#{homes.view.champions}"
                                          scrollable="true" scrollHeight="200" frozenRows="3"
                                          size="small" style="font-size: 14px;">
                                 <!--  editable="true" editMode="cell" widgetVar="cellC" -->
 
-                                <p:column width="40%" headerText="#{homes.totalGames}">
+                                <p:column width="40%" headerText="#{homes.view.totalGames}">
                                     #{champ.name}
                                     <!-- <p:cellEditor>
                                          <f:facet name="output">
@@ -218,6 +235,13 @@
                         </div>
 
                     </c:forEach>
+                </div>
+
+
+                <div class="p-grid">
+                    <p:commandButton styleClass="p-col" value="Refresh" action="#{loadPlayers.init()}"/>
+                    <p:commandButton styleClass="p-col" value="Zum Team" />
+                    <p:commandButton styleClass="p-col" value="OP.gg" />
                 </div>
             </h:form>
         </div>

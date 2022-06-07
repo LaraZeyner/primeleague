@@ -3,74 +3,84 @@ package de.xeri.prm.loader;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Item;
 import de.xeri.prm.models.dynamic.ItemStat;
 import de.xeri.prm.models.dynamic.Itemstyle;
 import de.xeri.prm.models.enums.ItemType;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.io.DataType;
 import de.xeri.prm.util.io.JSONElement;
 import de.xeri.prm.util.io.JSONParser;
 import de.xeri.prm.util.io.json.HTML;
 import de.xeri.prm.util.io.json.JSON;
+import lombok.val;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 
 /**
  * Created by Lara on 29.03.2022 for TRUES
  */
 public final class ItemLoader {
-  private static final JSON json = Data.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/item.json");
+  private static final JSON json = PrimeData.getInstance().getRequester().requestJSON("http://ddragon.leagueoflegends.com/cdn/" + PrimeData.getInstance().getCurrentVersion() + "/data/en_US/item.json");
 
   public static void createItems() {
-    final JSONObject items = ((JSONElement) JSONParser.from(json)).getObject("data");
+    val itemsObject = ((JSONElement) JSONParser.from(json)).getObject("data");
 
-    for (String id : items.keySet()) {// create Item
-      final JSONObject itemObject = items.getJSONObject(id);
-      final String name = itemObject.getString("name");
+    for (String id : itemsObject.keySet()) {// create Item
+      val itemObject = itemsObject.getJSONObject(id);
+      String name = itemObject.getString("name");
+      String description = "";
+      if (name.contains("<br>")) {
+        description = name.substring(name.split("<br>")[0].length());
+        name = name.split("<br>")[0];
+      }
+      if (name.contains("</")) {
+        name = name.split(">")[1].split("<")[0];
+      }
+
       if (!Item.has(name) || Item.find(name).getId() == Short.parseShort(id)) {
-        final String description = itemObject.getString("description");
-        final String finalDescription = determineDescription(description);
+        description = description + itemObject.getString("description");
+        val finalDescription = determineDescription(description);
         String shortDescription = itemObject.getString("plaintext");
         if (shortDescription.equals("")) shortDescription = description.length() > 250 ? description.substring(0, 250) : description;
         final short cost = (short) ((int) JSONParser.from(itemObject).getSubParameter(DataType.INTEGER, "gold.total"));
-        final JSONArray tags = JSONParser.from(itemObject).getArray("tags");
-        final ItemType type = getItemType(description, cost, tags, itemObject);
-        final Item item = Item.get(new Item(Short.parseShort(id), type, name, finalDescription, shortDescription, cost));
+        val tags = JSONParser.from(itemObject).getArray("tags");
+        val type = getItemType(description, cost, tags, itemObject);
+        val item = Item.get(new Item(Short.parseShort(id), type, name, finalDescription, shortDescription, cost));
 
         // Stats
-        final Document doc = Jsoup.parse(description);
-        final String statString = doc.select("maintext").select("stats").html();
-        final List<String> stats = new HTML(statString).find("br", null, false).stream()
-            .map(HTML::toString)
-            .collect(Collectors.toList());
+        val doc = Jsoup.parse(description);
+        val statString = doc.select("maintext").select("stats").html();
+        val stats = new HTML(statString).find("br", null, false).stream().map(HTML::toString).collect(Collectors.toList());
 
         for (String s : stats) {
           stats.set(stats.indexOf(s), s.replace("<attention>", "")
               .replace("</attention>", "")
+              .replace("<ornnbonus>", "")
+              .replace("</ornnbonus>", "")
               .replace("\n", "")
               .replace("  ", " "));
         }
 
         for (String statId : stats) {
-          final String statStr = (statId.startsWith(" ")) ? statId.substring(1) : statId;
-          final String statStringOfStat = statStr.split(" ")[0];
+          val statStr = (statId.startsWith(" ")) ? statId.substring(1) : statId;
+          val statStringOfStat = statStr.split(" ")[0];
           if (!statStringOfStat.isEmpty()) {
-            final String statNameKey = statStr.substring(statStringOfStat.length() + 1);
+            val statNameKey = statStr.substring(statStringOfStat.length() + 1);
+
             final double statDouble = (statStringOfStat.endsWith("%")) ?
                 Double.parseDouble(statStringOfStat.replace("%", "")) / 100 : Double.parseDouble(statStringOfStat);
 
-            final ItemStat stat = createItemStat(itemObject, statNameKey, statDouble);
+            val stat = createItemStat(itemObject, statNameKey, statDouble);
             item.addItemStat(stat, statDouble);
           }
         }
 
         // Styles
         for (Object tag : tags.toList()) {
-          final String tagString = String.valueOf(tag);
-          final Itemstyle itemstyle = Itemstyle.get(new Itemstyle(tagString));
+          val tagString = String.valueOf(tag);
+          val itemstyle = Itemstyle.get(new Itemstyle(tagString));
           item.addItemStyle(itemstyle);
         }
       }
@@ -78,15 +88,15 @@ public final class ItemLoader {
   }
 
   private static ItemStat createItemStat(JSONObject itemObject, String statNameKey, double statDouble) {
-    final ItemStat stat = ItemStat.get(new ItemStat(statNameKey));
+    val itemStat = ItemStat.get(new ItemStat(statNameKey));
     if (!ItemStat.has(statNameKey) || ItemStat.has(statNameKey) && ItemStat.find(statNameKey).getName() == null) {
       final JSONObject statsListing = JSONParser.from(itemObject).getObject("stats");
       final List<String> possibleMatches = statsListing.keySet().stream()
           .filter(statName -> statsListing.getDouble(statName) == statDouble)
           .collect(Collectors.toList());
-      if (possibleMatches.size() == 1 && stat.getName() == null) stat.setName(possibleMatches.get(0));
+      if (possibleMatches.size() == 1 && itemStat.getName() == null) itemStat.setName(possibleMatches.get(0));
     }
-    return stat;
+    return itemStat;
   }
 
   private static String determineDescription(String description) {
@@ -134,17 +144,20 @@ public final class ItemLoader {
   }
 
   private static ItemType getItemType(String description, short cost, JSONArray tags, JSONObject itemObject) {
-    final JSONArray from = JSONParser.from(itemObject).getArray("from");
-    final JSONArray into = JSONParser.from(itemObject).getArray("into");
+    val from = JSONParser.from(itemObject).getArray("from");
+    val into = JSONParser.from(itemObject).getArray("into");
     final ItemType type;
-    if (tags.toList().contains("Boots")) type = ItemType.BOOTS;
-    else if (tags.toList().contains("Consumable") && cost <= 500) type = ItemType.CONSUMABLE;
-    else if (from == null || from.isEmpty()) {
-      if (into == null || into.isEmpty()) type = (tags.toList().contains("Trinket")) ? ItemType.TRINKET : ItemType.STARTING;
-      else type = ItemType.BASIC;
+    if (tags.toList().contains("Boots")) {
+      type = ItemType.BOOTS;
+    } else if (tags.toList().contains("Consumable") && cost <= 500) {
+      type = ItemType.CONSUMABLE;
+    } else if (from == null || from.isEmpty()) {
+      type = into == null || into.isEmpty() ? (tags.toList().contains("Trinket")) ? ItemType.TRINKET : ItemType.STARTING : ItemType.BASIC;
+    } else if (into == null || into.isEmpty()) {
+      type = (description.contains("Mythic Passive")) ? ItemType.MYTHIC : ItemType.LEGENDARY;
     } else {
-      if (into == null || into.isEmpty()) type = (description.contains("Mythic Passive")) ? ItemType.MYTHIC : ItemType.LEGENDARY;
-      else type = ItemType.EPIC;
+      type = ItemType.EPIC;
+
     }
     return type;
   }

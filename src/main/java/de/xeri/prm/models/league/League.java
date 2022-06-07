@@ -12,6 +12,8 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
@@ -22,7 +24,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,7 @@ import org.hibernate.query.Query;
 @Entity(name = "League")
 @Table(name = "league", indexes = @Index(name = "idx_league_name", columnList = "stage, league_name", unique = true))
 @NamedQuery(name = "League.findAll", query = "FROM League l")
-@NamedQuery(name = "League.findById", query = "FROM League l WHERE id = :pk")
+@NamedQuery(name = "League.findById", query = "FROM League l WHERE ind = :pk")
 @NamedQuery(name = "League.findBy", query = "FROM League l WHERE stage = :stage AND name = :name")
 @Getter
 @Setter
@@ -52,12 +54,13 @@ public class League implements Serializable {
   }
 
   public static League get(League neu, Stage stage) {
-    if (has(neu.getId())) {
-      return find(neu.getId());
+    final League league = find(stage, neu.getName());
+    if (league != null) {
+      return league;
     }
     stage.getLeagues().add(neu);
     neu.setStage(stage);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -65,21 +68,25 @@ public class League implements Serializable {
     return HibernateUtil.has(League.class, new String[]{"stage", "name"}, new Object[]{stage, name});
   }
 
-  public static boolean has(short id) {
-    return HibernateUtil.has(League.class, id);
+  public static boolean has(short index) {
+    return HibernateUtil.has(League.class, index);
   }
 
   public static League find(Stage stage, String name) {
     return HibernateUtil.find(League.class, new String[]{"stage", "name"}, new Object[]{stage, name});
   }
 
-  public static League find(short id) {
-    return HibernateUtil.find(League.class, id);
+  public static League find(short index) {
+    return HibernateUtil.find(League.class, index);
   }
 
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "league_id", nullable = false)
   private short id;
+
+  @Column(name = "league_index", nullable = false)
+  private short ind;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "stage")
@@ -101,8 +108,8 @@ public class League implements Serializable {
   @ToString.Exclude
   private final Set<TurnamentMatch> matches = new LinkedHashSet<>();
 
-  public League(short id, String name) {
-    this.id = id;
+  public League(short index, String name) {
+    this.ind = index;
     this.name = name;
   }
 
@@ -110,8 +117,8 @@ public class League implements Serializable {
     if (teams.stream().noneMatch(team1 -> team1.getTurneyId() == team.getTurneyId())) {
       teams.add(team);
       team.getLeagues().add(this);
-      Data.getInstance().save(team);
-      Data.getInstance().save(this);
+      PrimeData.getInstance().save(team);
+      PrimeData.getInstance().save(this);
     }
   }
 
@@ -123,8 +130,8 @@ public class League implements Serializable {
   }
 
   public Map<Matchday, List<TurnamentMatch>> getMatchdays() {
-    final Query<TurnamentMatch> namedQuery = Data.getInstance().getSession().getNamedQuery("TurnamentMatch.leagueGames");
-    namedQuery.setParameter("league", Data.getInstance().getCurrentGroup());
+    final Query<TurnamentMatch> namedQuery = PrimeData.getInstance().getSession().getNamedQuery("TurnamentMatch.leagueGames");
+    namedQuery.setParameter("league", PrimeData.getInstance().getCurrentGroup());
     final List<TurnamentMatch> list = namedQuery.list();
     Map<Matchday, List<TurnamentMatch>> map = new HashMap<>();
     for (TurnamentMatch objects : list) {
@@ -139,6 +146,10 @@ public class League implements Serializable {
     }
 
     return map;
+  }
+
+  public String getShortName() {
+    return name.replace("Division", "Div.");
   }
 
   @Override

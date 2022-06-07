@@ -3,7 +3,7 @@ package de.xeri.prm.loader;
 import java.util.Arrays;
 import java.util.List;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
 import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.ratings.StatCategory;
@@ -32,7 +32,7 @@ public final class StatCatLoader {
 
 
   public static void load() {
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 }
 

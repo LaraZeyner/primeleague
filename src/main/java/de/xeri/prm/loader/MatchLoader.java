@@ -19,7 +19,7 @@ import de.xeri.prm.models.league.Matchlog;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.league.TurnamentMatch;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.logger.Logger;
 import lombok.val;
 import lombok.var;
@@ -93,7 +93,7 @@ public final class MatchLoader {
     val logger = Logger.getLogger("Match-Erstellung");
 
     try {
-      val html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/matches/" + match.getId());
+      val html = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/matches/" + match.getId());
       val doc = Jsoup.parse(html.toString());
 
       val timeString = doc.select("div#league-match-time").select("span").attr("data-time");
@@ -121,10 +121,10 @@ public final class MatchLoader {
       match.setScore(scoreText);
     }
 
-    val teamPlaceholder1 = doc.select("content-match-head-team-top").get(0);
+    val teamPlaceholder1 = doc.select(".content-match-head-team-top").get(0);
     boolean changedTeam1 = handleTeam(teamPlaceholder1, match, true, match.getLeague());
 
-    val teamPlaceholder2 = doc.select("content-match-head-team-top").get(1);
+    val teamPlaceholder2 = doc.select(".content-match-head-team-top").get(1);
     boolean changedTeam2 = handleTeam(teamPlaceholder2, match, false, match.getLeague());
 
     return changed || changedTeam1 || changedTeam2;

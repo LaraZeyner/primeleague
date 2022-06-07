@@ -16,21 +16,54 @@
         <ui:include src="/templates/topbar.xhtml"/>
     </ui:insert>
 
-    <div class="p-grid">
+    <div class="p-grid nested-grid">
         <div class="p-col-10">
-
             <h1> Willkommen bei den TRUES</h1>
+            <div class="p-grid">
+                <div class="p-col-4">
+                    <h:form>
+                        <div class="ui-card">
+                            <h5>Anmeldung</h5>
+                            <div class="ui-fluid">
+                                <div class="p-field">
+                                    <label for="username">Kennung</label>
+                                    <p:inputText id="username" type="text"/>
+                                </div>
+                                <div class="p-field">
+                                    <label for="password">Passwort</label>
+                                    <p:inputText id="password" type="text"/>
+                                </div>
+                                <p:commandButton type="button" value="Anmelden"/>
+                            </div>
+                        </div>
+                        <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
+                    </h:form>
 
-            <h:form>
-                <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
-            </h:form>
+                    <div id="angemeldet">
+                        Angemeldet.
+
+                        <p>
+                            Wähle entsprechendes Team aus.
+                            Aktuell wird nur TRUE unterstützt.
+                        </p>
+
+                    </div>
+                </div>
+
+                <div id="nicht-gemeldet" class="p-col-8">
+                    <div class="ui-card">
+                        <h5>Aktuelle Scrimtermine</h5>
+                        <p:dataTable lazy="false" var="scrims" value="#{loadScrims.scrimmagePlannings}" size="small">
+                            <p:column headerText="Startzeit">#{scrims.start}</p:column>
+                            <p:column headerText="Anzahl Spiele">#{scrims.games}</p:column>
+                        </p:dataTable>
+                    </div>
+
+                </div>
+            </div>
         </div>
-
-
         <div class="p-col-2">
-            <ui:insert name="sidebar">
-                <ui:include src="/templates/sidebar.xhtml"/>
-            </ui:insert>
+            Sidebar
         </div>
     </div>
 

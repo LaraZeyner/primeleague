@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.dynamic.Item;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -44,7 +44,7 @@ public class PlayerperformanceItem implements Serializable {
   public static PlayerperformanceItem get(PlayerperformanceItem neu) {
     neu.getPlayerperformance().getItems().add(neu);
     neu.getItem().getPlayerperformances().add(neu);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

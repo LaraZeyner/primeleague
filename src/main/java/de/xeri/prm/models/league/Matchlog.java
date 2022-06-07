@@ -23,7 +23,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.enums.LogAction;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -51,7 +51,7 @@ public class Matchlog implements Serializable {
     }
     match.getLogEntries().add(neu);
     neu.setMatch(match);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

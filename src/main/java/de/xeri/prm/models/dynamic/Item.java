@@ -22,7 +22,7 @@ import javax.persistence.Transient;
 import de.xeri.prm.models.enums.ItemSubType;
 import de.xeri.prm.models.enums.ItemType;
 import de.xeri.prm.models.match.playerperformance.PlayerperformanceItem;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -52,7 +52,7 @@ public class Item implements Serializable {
     if (has(neu.getId())) {
       return find(neu.getId());
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -133,7 +133,7 @@ public class Item implements Serializable {
   }
 
   public String getImage() {
-    return "http://ddragon.leagueoflegends.com/cdn/img/item/" + id + ".jpg";
+    return "http://ddragon.leagueoflegends.com/cdn/" + PrimeData.getInstance().getCurrentVersion() + "/img/item/" + id + ".png";
   }
 
   //<editor-fold desc="getter and setter">

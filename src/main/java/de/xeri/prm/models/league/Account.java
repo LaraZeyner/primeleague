@@ -24,12 +24,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+import javax.persistence.PersistenceException;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.match.Game;
@@ -45,6 +46,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
+import org.hibernate.query.Query;
 
 @Entity(name = "Account")
 @Table(name = "account", indexes = {
@@ -80,7 +82,7 @@ public class Account implements Serializable {
       if (account.getLastUpdate() == null) account.setLastUpdate(new Date(System.currentTimeMillis() - 15_552_000_000L));
       return account;
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -89,7 +91,13 @@ public class Account implements Serializable {
   }
 
   public static boolean hasName(String name) {
-    return HibernateUtil.has(Account.class, new String[]{"name"}, new Object[]{name}, "findByName");
+    try {
+      return HibernateUtil.has(Account.class, new String[]{"name"}, new Object[]{name}, "findByName");
+    } catch (PersistenceException exception) {
+      final Query sqlQuery = PrimeData.getInstance().getSession()
+          .createSQLQuery("SELECT * FROM trues.account WHERE account_name = '" + name + "'");
+      return !sqlQuery.list().isEmpty();
+    }
   }
 
   public static boolean hasPuuid(String puuid) {
@@ -101,11 +109,24 @@ public class Account implements Serializable {
   }
 
   public static Account findName(String name) {
-    return HibernateUtil.find(Account.class, new String[]{"name"}, new Object[]{name}, "findByName");
+    try {
+      return HibernateUtil.find(Account.class, new String[]{"name"}, new Object[]{name}, "findByName");
+    } catch (PersistenceException exception) {
+      final Query sqlQuery = PrimeData.getInstance().getSession()
+          .createSQLQuery("SELECT account_id FROM trues.account WHERE account_name = '" + name + "'");
+      return sqlQuery.list().isEmpty() ? null : Account.find((Byte) sqlQuery.list().get(0));
+    }
   }
 
   public static Account findPuuid(String puuid) {
-    return HibernateUtil.find(Account.class, new String[]{"puuid"}, new Object[]{puuid}, "findByPuuid");
+    try {
+      return HibernateUtil.find(Account.class, new String[]{"puuid"}, new Object[]{puuid}, "findByPuuid");
+    } catch (PersistenceException exception) {
+      final Query sqlQuery = PrimeData.getInstance().getSession()
+          .createSQLQuery("SELECT account_id FROM trues.account WHERE puuid = '" + puuid + "'");
+      return sqlQuery.list().isEmpty() ? null : Account.find((Byte) sqlQuery.list().get(0));
+    }
+
   }
   
   @Id
@@ -242,19 +263,6 @@ public class Account implements Serializable {
 
   public Team getOfficialTeam() {
     return player != null ? player.getTeam() : null;
-  }
-
-  public Lane getMainRole() {
-    int amount = 0;
-    Lane lane = null;
-    for (Lane laneIteration : Lane.values()) {
-      final int gamesOnLaneAmount = getGamesOn(laneIteration, true).size();
-      if (gamesOnLaneAmount > amount) {
-        amount = gamesOnLaneAmount;
-        lane = laneIteration;
-      }
-    }
-    return lane;
   }
 
   public String getDisplayName(Lane lane) {

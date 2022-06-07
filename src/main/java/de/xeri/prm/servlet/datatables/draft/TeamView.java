@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Player;
@@ -22,12 +21,7 @@ import lombok.Data;
 @Data
 public class TeamView implements Serializable {
   private Team homeTeam;
-  private List<PlayerView> players;
-  private List<Player> topPlayers;
-  private List<Player> jglPlayers;
-  private List<Player> midPlayers;
-  private List<Player> botPlayers;
-  private List<Player> supPlayers;
+  private List<LaneView> views;
   private List<String> teamStyle;
   private List<String> teamTags; //TODO (Abgie) 24.05.2022:
 
@@ -35,6 +29,9 @@ public class TeamView implements Serializable {
   public TeamView(Team homeTeam) {
     this.homeTeam = homeTeam;
     List<Map<Player, Integer>> gamesHome = Arrays.asList(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
+
+    List<LaneView> views = Arrays.asList(new LaneView(Lane.TOP), new LaneView(Lane.JUNGLE), new LaneView(Lane.MIDDLE),
+        new LaneView(Lane.BOTTOM), new LaneView(Lane.UTILITY));
 
     for (Player player : homeTeam.getPlayers()) {
       final List<Integer> gamesOn = player.getGamesOn();
@@ -51,14 +48,18 @@ public class TeamView implements Serializable {
       highlightedPlayersHome.add(new ArrayList<>(players.keySet()).get(0));
     }
 
-    this.topPlayers = new ArrayList<>(gamesHome.get(0).keySet());
-    this.jglPlayers = new ArrayList<>(gamesHome.get(1).keySet());
-    this.midPlayers = new ArrayList<>(gamesHome.get(2).keySet());
-    this.botPlayers = new ArrayList<>(gamesHome.get(3).keySet());
-    this.supPlayers = new ArrayList<>(gamesHome.get(4).keySet());
-    this.players = IntStream.range(0, highlightedPlayersHome.size())
-        .mapToObj(i -> new PlayerView(highlightedPlayersHome.get(i),
-            i == 0 ? Lane.TOP : i == 1 ? Lane.JUNGLE : i == 2 ? Lane.MIDDLE : i == 3 ? Lane.BOTTOM : Lane.UTILITY))
-        .collect(Collectors.toList());
+    for (int i = 0; i < 5; i++) {
+      views.get(i).setPlayers(new ArrayList<>(gamesHome.get(i).keySet()));
+      views.get(i).setPlayersList(gamesHome.get(i).keySet().stream().map(Player::getName).collect(Collectors.toList()));
+    }
+    for (int i = 0; i < highlightedPlayersHome.size(); i++) {
+      final PlayerView playerView = new PlayerView(highlightedPlayersHome.get(i),
+          i == 0 ? Lane.TOP : i == 1 ? Lane.JUNGLE : i == 2 ? Lane.MIDDLE : i == 3 ? Lane.BOTTOM : Lane.UTILITY);
+      views.get(i).setView(playerView);
+      views.get(i).setSelected(playerView.getName());
+      views.get(i).setSelectedPlayer(playerView.getPlayer());
+    }
+
+    this.views = views;
   }
 }

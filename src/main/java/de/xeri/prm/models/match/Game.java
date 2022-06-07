@@ -1,6 +1,7 @@
 package de.xeri.prm.models.match;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -22,7 +23,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.league.Account;
@@ -64,7 +65,7 @@ public class Game implements Serializable {
     }
     gametype.getGames().add(neu);
     neu.setGametype(gametype);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -77,7 +78,6 @@ public class Game implements Serializable {
   }
 
 
-
   public List<GamePause> getNotClosed() {
     return HibernateUtil.findList(GamePause.class, new String[]{"game", "end"}, new Object[]{this, (long) 0}, "findByEnd");
   }
@@ -85,6 +85,7 @@ public class Game implements Serializable {
   public List<GamePause> getNotOpened() {
     return HibernateUtil.findList(GamePause.class, new String[]{"game", "start"}, new Object[]{this, (long) 0});
   }
+
   @Id
   @Check(constraints = "game_id REGEXP ('^EUW')")
   @Column(name = "game_id", nullable = false, length = 16)
@@ -165,6 +166,14 @@ public class Game implements Serializable {
 
   public List<Team> getTeams() {
     return teamperformances.stream().map(Teamperformance::getTeam).collect(Collectors.toList());
+  }
+
+  public String getStartString() {
+    return new SimpleDateFormat("dd.MM. HH:mm").format(gameStart);
+  }
+
+  public String getDurationString() {
+    return duration / 60 + ":" + (duration % 60 < 10 ? "0" + duration % 60 : duration % 60);
   }
 
   @Override

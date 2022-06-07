@@ -2,12 +2,15 @@ package de.xeri.prm.util;
 
 import java.awt.geom.Point2D;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import de.xeri.prm.game.events.location.Position;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import org.hibernate.Session;
 
 /**
@@ -47,13 +50,13 @@ public final class Util {
   }
 
   public static List query(String entityType) {
-    final Session session = Data.getInstance().getSession();
+    final Session session = PrimeData.getInstance().getSession();
     return session.createQuery("from " + entityType).list();
   }
 
   public static boolean inRange(Date date) {
-    if (Data.getInstance().getStatLimit() == 0) return true;
-    return date.after(new Date(System.currentTimeMillis() - Data.getInstance().getStatLimit() * 86_400_000L));
+    if (PrimeData.getInstance().getStatLimit() == 0) return true;
+    return date.after(new Date(System.currentTimeMillis() - PrimeData.getInstance().getStatLimit() * 86_400_000L));
   }
 
   public static String capitalizeFirst(String str) {
@@ -65,15 +68,46 @@ public final class Util {
   }
 
   public static int getInt(Object object) {
-    return (int) (((Long) object).longValue());
-  }
-
-  public static int doubleToInt(Double d) {
-    return Integer.parseInt(String.valueOf(d));
+    return object != null ? (int) (((Long) object).longValue()) : 0;
   }
 
   public static int longToInt(Long l) {
     return Integer.parseInt(String.valueOf(l));
+  }
+
+  public static String until(Date start, String prefix) {
+    long distance = Math.abs((System.currentTimeMillis() - start.getTime()) / 1000);
+
+    final int seconds = (int) (distance % 60);
+    String secondsString = ("00" + seconds).substring(("00" + seconds).length() - 2);
+    final int minutes = (int) ((distance / 60) % 60);
+    String minutesString = ("00" + minutes).substring(("00" + minutes).length() - 2);
+    final int hours = (int) ((distance / 3_600) % 24);
+    String hoursString = ("00" + hours).substring(("00" + hours).length() - 2);
+    final int days = (int) (distance / 86_400);
+
+    StringBuilder str = new StringBuilder(prefix);
+    if (days > 2) {
+      return new SimpleDateFormat("dd.MM. HH:mm").format(start);
+    } else if (days > 1) {
+      str.append(days).append("d ").append(hoursString).append(":").append(minutesString).append(":").append(secondsString);
+    } else if (hours > 1) {
+      str.append(days * 24 + hours).append(":").append(minutesString).append(":").append(secondsString);
+    } else if (minutes > 1) {
+      str.append(hours * 60 + minutes).append(":").append(secondsString);
+    } else {
+      str.append(minutes * 60 + seconds).append("s");
+    }
+
+    return str.toString();
+  }
+
+  public static Date getDate(LocalDateTime dateToConvert) {
+    return Date.from(dateToConvert.atZone(ZoneId.systemDefault()).toInstant());
+  }
+
+  public static LocalDateTime getLocalDate(Date dateToConvert) {
+    return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
   }
 
 }

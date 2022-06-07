@@ -32,7 +32,11 @@ public class HTML {
   }
 
   public HTML readTag(String tag) {
-    return new HTML(html.substring(html.indexOf("<" + tag + ">") + tag.length() + 2, html.indexOf("</" + tag + ">")));
+    if (html.contains("<" + tag + ">")) {
+      return new HTML(html.substring(html.indexOf("<" + tag + ">") + tag.length() + 2, html.indexOf("</" + tag + ">")));
+    }
+    return this;
+
   }
 
   public List<HTML> find(String tag, String clazz, boolean closing) {

@@ -1,22 +1,26 @@
 package de.xeri.prm.servlet.datatables.league;
 
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.context.FacesContext;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.loader.MatchLoader;
+import de.xeri.prm.manager.PrimeData;
+import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.league.League;
+import de.xeri.prm.models.league.Matchday;
+import de.xeri.prm.models.league.Season;
 import de.xeri.prm.models.league.TurnamentMatch;
+import de.xeri.prm.util.Const;
+import de.xeri.prm.util.FacesUtil;
 import lombok.Getter;
 //TODO (Abgie) 18.05.2022: Wenn Spieler ausgewählt wird - Spiele suchen
 
@@ -35,7 +39,7 @@ public class LoadLeague implements Serializable {
   @PostConstruct
   public void init() {
     try {
-      this.league = Data.getInstance().getCurrentGroup();
+      this.league = PrimeData.getInstance().getCurrentGroup();
       this.leagueTeams = new ArrayList<>();
       league.getTeams().forEach(team -> leagueTeams.add(team.getLeagueTeam()));
       Collections.sort(leagueTeams);
@@ -52,26 +56,52 @@ public class LoadLeague implements Serializable {
       Collections.sort(matchdays);
 
 
-
       // league.getMatches().forEach(TurnamentMatch::update);
 
     } catch (Exception exception) {
-      exception.printStackTrace();
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      exception.printStackTrace(pw);
-      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Exception loading Ligaatable ", sw.toString());
-      FacesContext.getCurrentInstance().addMessage(null, message);
-      System.err.println("NICHT GELADEN!!!!!");
+      FacesUtil.sendException("Ligatabelle wurde nicht geladen", exception);
     }
   }
 
 
   public void update() {
-    boolean updated = lookForUpdates();
+    for (TurnamentMatch match : league.getMatches()) {
+      MatchLoader.analyseMatchPage(match);
+    }
+
+    /*boolean updated = lookForUpdates();
     if (updated) {
       init();
+    }*/
+    FacesUtil.sendMessage("Matches aktualisiert", "");
+  }
+
+  public List<TurnamentMatch> getMatches() {
+    return matchdays.stream().flatMap(matchday -> matchday.getMatches().stream()).collect(Collectors.toList());
+  }
+
+  public List<Matchday> getDays() {
+    final Season season = league.getStage().getSeason();
+    final List<Matchday> collects = season.getStages().stream()
+        .flatMap(stage -> stage.getMatchdays().stream())
+        .sorted(Comparator.comparing(Matchday::getStart))
+        .collect(Collectors.toList());
+
+    List<Matchday> collect = new ArrayList<>();
+    Date kali = null;
+    for (Matchday matchday : collects) {
+      if (matchday.getStage().getStageType().equals(StageType.GRUPPENPHASE)) {
+        collect.add(matchday);
+      } else {
+        if (kali == null || matchday.getStart().getTime() - kali.getTime() >= Const.MILLIS_PER_DAY) {
+          kali = matchday.getStart();
+          collect.add(matchday);
+        }
+      }
     }
+    return collect.stream()
+        .sorted(Comparator.comparing(Matchday::getStart))
+        .collect(Collectors.toList());
   }
 
 

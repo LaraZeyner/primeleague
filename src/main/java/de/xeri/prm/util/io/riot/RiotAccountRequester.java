@@ -7,7 +7,7 @@ import de.xeri.prm.models.enums.EloQueueType;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.SeasonElo;
 import de.xeri.prm.util.Const;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import lombok.val;
 import org.json.JSONObject;
 
@@ -29,8 +29,8 @@ public final class RiotAccountRequester {
 
   public static void loadElo(Account account) {
     if (account != null && account.getSummonerId() != null) {
-      val season = Data.getInstance().getCurrentSeason();
-      val json = Data.getInstance().getRequester().requestRiotJSON(
+      val season = PrimeData.getInstance().getCurrentSeason();
+      val json = PrimeData.getInstance().getRequester().requestRiotJSON(
           "https://euw1.api.riotgames.com/lol/league/v4/entries/by-summoner/" + account.getSummonerId() + Const.API_KEY);
       if (json != null) {
         val rankedLeagues = json.getJSONArray();

@@ -21,7 +21,7 @@ import de.xeri.prm.game.events.location.JungleCamp;
 import de.xeri.prm.game.events.location.Position;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.util.Const;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
@@ -60,7 +60,7 @@ public class JunglePath implements Serializable {
         teamperformance.isFirstPick());
     neu.getTeamperformances().add(teamperformance);
     teamperformance.setJunglePath(neu);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return find(positionAt2, positionAt3, positionAt4, positionAt5, positionAt6, positionAt7);
   }
 

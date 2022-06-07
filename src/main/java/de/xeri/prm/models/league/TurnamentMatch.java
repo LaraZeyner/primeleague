@@ -1,6 +1,7 @@
 package de.xeri.prm.models.league;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,7 +27,7 @@ import javax.persistence.Transient;
 import de.xeri.prm.game.RiotGameRequester;
 import de.xeri.prm.loader.GameIdLoader;
 import de.xeri.prm.loader.MatchLoader;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.LogAction;
 import de.xeri.prm.models.enums.Matchstate;
 import de.xeri.prm.models.enums.QueueType;
@@ -86,7 +87,7 @@ public class TurnamentMatch implements Serializable {
     }
     league.addMatch(neu);
     matchday.addMatch(neu);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -159,8 +160,8 @@ public class TurnamentMatch implements Serializable {
   public void addGame(Game game) {
     games.add(game);
     game.setTurnamentmatch(this);
-    Data.getInstance().save(game);
-    Data.getInstance().save(this);
+    PrimeData.getInstance().save(game);
+    PrimeData.getInstance().save(this);
   }
 
   public Matchlog addEntry(Matchlog entry) {
@@ -215,7 +216,7 @@ public class TurnamentMatch implements Serializable {
 
   public boolean isRecently() {
     final Date openingDate = new Date(matchday.getStart().getTime() - 7 * Const.MILLIS_PER_DAY);
-    final Date closingDate = new Date(matchday.getEnd().getTime() + 14 * Const.MILLIS_PER_DAY);
+    final Date closingDate = new Date(matchday.getEnd().getTime() + 30 * Const.MILLIS_PER_DAY);
     return new Date().before(closingDate) && new Date().after(openingDate);
   }
 
@@ -292,37 +293,16 @@ public class TurnamentMatch implements Serializable {
     return null;
   }
 
+  public String getStartShort() {
+    return new SimpleDateFormat("E HH:mm").format(start);
+  }
+
   public boolean hasTeam(Team team) {
     return homeTeam != null && homeTeam.equals(team) || guestTeam != null && guestTeam.equals(team);
   }
 
   public boolean hasChanged(Date start) {
     return start.equals(this.start);
-  }
-
-  public String until() {
-    long distance = Math.abs((System.currentTimeMillis() - start.getTime()) / 1000);
-
-    final int seconds = (int) (distance % 60);
-    String secondsString = ("00" + seconds).substring(("00" + seconds).length() - 2);
-    final int minutes = (int) ((distance / 60) % 60);
-    String minutesString = ("00" + minutes).substring(("00" + minutes).length() - 2);
-    final int hours = (int) ((distance / 3_600) % 24);
-    String hoursString = ("00" + hours).substring(("00" + hours).length() - 2);
-    final int days = (int) (distance / 864_000);
-
-    StringBuilder str = new StringBuilder();
-    if (days > 1) {
-      str.append(days).append("d ").append(hoursString).append(":").append(minutesString).append(":").append(secondsString);
-    } else if (hours > 1) {
-      str.append(days * 24 + hours).append(":").append(minutesString).append(":").append(secondsString);
-    } else if (minutes > 1) {
-      str.append(hours * 60 + minutes).append(":").append(secondsString);
-    } else {
-      str.append(minutes * 60 + seconds).append("s");
-    }
-
-    return str.toString();
   }
   //</editor-fold>
 

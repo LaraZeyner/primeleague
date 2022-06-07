@@ -2,7 +2,7 @@ package de.xeri.prm.loader;
 
 import de.xeri.prm.models.dynamic.Rune;
 import de.xeri.prm.models.dynamic.Runetree;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.io.JSONList;
 import de.xeri.prm.util.io.JSONParser;
 import de.xeri.prm.util.io.json.JSON;
@@ -13,8 +13,8 @@ import org.json.JSONObject;
  * Created by Lara on 29.03.2022 for TRUES
  */
 public final class RuneLoader {
-  private static final JSON json = Data.getInstance().getRequester()
-      .requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/runesReforged.json");
+  private static final JSON json = PrimeData.getInstance().getRequester()
+      .requestJSON("http://ddragon.leagueoflegends.com/cdn/" + PrimeData.getInstance().getCurrentVersion() + "/data/en_US/runesReforged.json");
 
   public static void createItems() {
     final JSONArray trees = ((JSONList) JSONParser.from(json)).getArray();

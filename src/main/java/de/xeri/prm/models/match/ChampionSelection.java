@@ -16,7 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.enums.SelectionType;
 import de.xeri.prm.models.ids.ChampionSelectionId;
@@ -73,7 +73,7 @@ public class ChampionSelection implements Serializable {
     neu.setGame(game);
     champion.getChampionSelections().add(neu);
     neu.setChampion(champion);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

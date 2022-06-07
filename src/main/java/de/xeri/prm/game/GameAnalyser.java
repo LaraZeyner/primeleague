@@ -597,7 +597,7 @@ public final class GameAnalyser {
 
   private Byte handleLevelup(JSONPlayer player) throws ConstraintException {
     final Byte levelUpAllin = player.getTiny(StoredStat.LEVELUP_TAKEDOWNS);
-    if (levelUpAllin > 17) {
+    if (levelUpAllin != null && levelUpAllin > 17) {
       throw new ConstraintException("Mehr als 17 Levelups");
     }
     return levelUpAllin;

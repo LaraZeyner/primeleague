@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.Matchstate;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.league.Account;
@@ -40,7 +40,7 @@ public final class SeasonLoader {
   static {
     final Logger logger = Logger.getLogger("Season-Erstellung");
     try {
-      final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/");
+      final HTML html = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/");
       final Document doc = Jsoup.parse(html.toString());
 
       loadSeasons(doc);
@@ -48,10 +48,10 @@ public final class SeasonLoader {
       final String[] split = doc.select("body").attr("class").split("body-");
       final short id = Short.parseShort(split[split.length - 1].split("-")[0]);
       loadSeasonStages(id, true);
-      Data.getInstance().commit();
+      PrimeData.getInstance().commit();
 
       //TODO Do this at night
-      updateSeason(Data.getInstance().getCurrentSeason().getId());
+      updateSeason(PrimeData.getInstance().getCurrentSeason());
       logger.info("Season wurde aktualisiert.");
 
     } catch (FileNotFoundException exception) {
@@ -61,8 +61,7 @@ public final class SeasonLoader {
     }
   }
 
-  private static void updateSeason(short id) {
-    final Season season = Season.find(id);
+  private static void updateSeason(Season season) {
     final List<Team> teams = loadTeams(season);
     TeamLoader.loadMatches(teams, season);
 
@@ -83,7 +82,7 @@ public final class SeasonLoader {
       }
     }
 
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 
   /**
@@ -103,7 +102,7 @@ public final class SeasonLoader {
       }
     }
 
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 
   private static void loadSeasons(Document doc) {
@@ -118,7 +117,7 @@ public final class SeasonLoader {
   private static void loadSeasonStages(short id, boolean last) {
     final Logger logger = Logger.getLogger("Season-Erstellung");
     try {
-      final HTML seasonHTML = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/" + id);
+      final HTML seasonHTML = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/prm/" + id);
       final Document seasonDoc = Jsoup.parse(seasonHTML.toString());
       final String seasonName = seasonDoc.select("li.breadcrumbs-subs").select("span").text();
 
@@ -151,7 +150,7 @@ public final class SeasonLoader {
   private static List<Team> loadTeams(Season season) {
     final List<Team> teams = new ArrayList<>();
     try {
-      final RequestManager requester = Data.getInstance().getRequester();
+      final RequestManager requester = PrimeData.getInstance().getRequester();
       final HTML html = requester.requestHTML("https://www.primeleague.gg/leagues/prm/" + season.getId() + "/participants");
       final Document doc = Jsoup.parse(html.toString());
       for (Element element : doc.select("section.league-participants").select("tbody").select("tr")) {

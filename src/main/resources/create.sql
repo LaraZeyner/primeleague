@@ -826,71 +826,13 @@ CREATE TABLE `rating`
     PRIMARY KEY (rating_category, rating_type, rating_subtype)
 );
 
-INSERT INTO input (input_category)
-VALUES ('aktuelles Team');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7)
-VALUES ('Top Championstats', 'Spiele', 'KDA', 'Spiele', 'Winrate', 'Lane lead', 'Early Creep Score', 'Turretplates');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7)
-VALUES ('Jungle Championstats', 'Spiele', 'KDA', 'Spiele', 'Winrate', 'Lane lead', 'Killbeteiligung', 'Invading Farm');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7)
-VALUES ('Middle Championstats', 'Spiele', 'Teamschaden', 'Spiele', 'Winrate', 'Lane lead', 'Spellbilanz', 'XP pro
-Minute');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7)
-VALUES ('Bottom Championstats', 'Spiele', 'Teamschaden', 'Spiele', 'Winrate', 'Lane lead', 'Gold pro Minute',
-        'Teamschaden');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7)
-VALUES ('Utility Championstats', 'Spiele', 'KDA', 'Spiele', 'Winrate', 'Lane lead', 'Visionscore Lead', 'Roams');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7, input_value8)
-VALUES ('Top Playerstats', 'Lane lead', 'Gold pro Minute', 'Turrets Splitpushing', 'Turretplates', 'Divebilanz',
-        'Turret Zeitbilanz', 'Kills durch Teleport', 'Solokills');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7, input_value8)
-VALUES ('Jungle Playerstats', 'Lane lead', 'Invading Farm', 'Objectiveschaden', 'Wardbilanz', 'Gankerfolgrate',
-        'Vision Gegnerjungle', 'Gank-Priorität', 'Jungle Proximity');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7, input_value8)
-VALUES ('Middle Playerstats', 'Lane lead', 'Gold pro Minute', 'Creep Score pro Minute', 'Spellbilanz', 'Roams',
-        'Wards beschützt', 'Teamschaden', 'Solokills');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7, input_value8)
-VALUES ('Bottom Playerstats', 'Lane lead', 'Gold pro Minute', 'Creep Score pro Minute', 'Early Creep Score',
-        'Divebilanz', 'Turret Zeitbilanz', 'Teamschaden', 'Levelup Allins');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7, input_value8)
-VALUES ('Utility Playerstats', 'Lane lead', 'Visionscore Lead', 'Immobilisationen', 'Wardbilanz', 'Roams',
-        'Vision Gegnerjungle', 'Teamtankyness', 'Killbeteiligung');
-
-INSERT INTO input (input_category, input_value1, input_value2, input_value3, input_value4, input_value5, input_value6,
-                   input_value7, input_value8, input_value9, input_value10)
-VALUES ('Teamstats', '', '', '', '', '', '', '', '', '', '');
-
-INSERT INTO input (input_category, input_value1, input_value2)
-VALUES ('Top', 'TRUE Seven', 'beatmeattillyeet');
-
-INSERT INTO input (input_category, input_value1, input_value2)
-VALUES ('Jungle', 'ThorDerBabo', 'Reflexzi');
-
-INSERT INTO input (input_category, input_value1, input_value2)
-VALUES ('Middle', 'TRUE Zoeasy', 'XxBeatZx');
-
-INSERT INTO input (input_category, input_value1, input_value2)
-VALUES ('Bottom', 'TRUE Xeri', 'burgerflipper95');
-
-INSERT INTO input (input_category, input_value1, input_value2)
-VALUES ('Utility', 'TRUE Whitelizard', 'Serghei');
+CREATE TABLE `absence`
+(
+    absence_id         SMALLINT(5) PRIMARY KEY AUTO_INCREMENT,
+    player             INTEGER(7) UNSIGNED NOT NULL,
+    absence_start_time TIMESTAMP           NOT NULL,
+    absence_end_time   TIMESTAMP           NULL,
+    absence_type       VARCHAR(12)         NOT NULL,
+    FOREIGN KEY (player) REFERENCES `player` (player_id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);

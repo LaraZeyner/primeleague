@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -21,6 +22,7 @@ import de.xeri.prm.util.logger.Logger;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 /**
@@ -190,6 +192,7 @@ public class JSONPlayer {
     return account != null;
   }
 
+  @Nullable
   public List<Team> getTeams() {
     return account != null ? account.getTeams() : null;
   }
@@ -199,7 +202,7 @@ public class JSONPlayer {
   }
 
   public boolean hasTeam() {
-    return getTeams() != null;
+    return getTeams() != null && getTeams().stream().anyMatch(Objects::nonNull);
   }
 
   private List<JSONPlayer> getJSONPlayers() {

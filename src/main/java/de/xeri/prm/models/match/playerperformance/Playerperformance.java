@@ -28,7 +28,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.dynamic.Item;
 import de.xeri.prm.models.dynamic.Rune;
@@ -146,6 +146,7 @@ import org.hibernate.annotations.NamedQuery;
         "WHERE teamperformance.game.gameStart >= :since " +
         "AND (championOwn = :picked OR championEnemy <> NULL AND championEnemy = :picked) " +
         "GROUP BY (CASE WHEN championEnemy IS :picked THEN championOwn ELSE championEnemy END)")
+@NamedQuery(name = "Playerperformance.forChampion", query = "FROM Playerperformance p WHERE championOwn = :champion AND teamperformance.team <> NULL ORDER BY id DESC")
 @Getter
 @Setter
 @ToString
@@ -265,7 +266,7 @@ public class Playerperformance implements Serializable {
     performance.getPlayerperformances().add(neu);
     neu.setTeamperformance(performance);
     neu.setAccount(account);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
   }
 
   public static boolean has(Teamperformance teamperformance, Account account) {
@@ -756,6 +757,17 @@ public class Playerperformance implements Serializable {
     return teamperformance.getGame().getChampionSelections().stream().map(ChampionSelection::getChampion).collect(Collectors.toList());
   }
 
+  public List<String> getItemsEnded() {
+    final List<String> collect = items.stream().filter(PlayerperformanceItem::remains).map(PlayerperformanceItem::getItem)
+        .sorted((item1, item2) -> item2.getCost() - item1.getCost()).map(Item::getImage)
+        .collect(Collectors.toList());
+    final List<String> items = collect.size() <= 7 ? collect : collect.subList(0, 7);
+    while (items.size() < 7) {
+      items.add("http://ddragon.leagueoflegends.com/cdn/5.5.1/img/ui/items.png");
+    }
+    return items;
+  }
+
   public boolean wasPresent(Champion champion) {
     return getPresentChampions().contains(champion);
   }
@@ -778,6 +790,10 @@ public class Playerperformance implements Serializable {
 
   public int getSoulratePerfect() {
     return (teamperformance.isPerfectSoul() ? 1 : 0) * 5 + (teamperformance.getSoul() != null ? 1 : 0);
+  }
+
+  public String getKDAString() {
+    return kills + "/" + deaths + "/" + assists + " (" + Math.round(stats.getTrueKdaValue() * 10 ) / 10d + ")";
   }
 
   @Override

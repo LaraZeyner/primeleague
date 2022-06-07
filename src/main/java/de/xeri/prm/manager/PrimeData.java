@@ -15,12 +15,12 @@ import org.hibernate.Transaction;
 /**
  * Created by Lara on 29.03.2022 for TRUES
  */
-public class Data {
-  private static Data data;
+public class PrimeData {
+  private static PrimeData PrimeData;
 
-  public static Data getInstance() {
-    if (data == null) data = new Data();
-    return data;
+  public static PrimeData getInstance() {
+    if (PrimeData == null) PrimeData = new PrimeData();
+    return PrimeData;
   }
 
   private final RequestManager requester;
@@ -31,7 +31,7 @@ public class Data {
   private Season currentSeason;
   private String currentVersion;
 
-  public Data() {
+  public PrimeData() {
     this.requester = new RequestManager();
     this.session = HibernateUtil.getSessionFactory().openSession();
     this.transaction = session.beginTransaction();
@@ -41,11 +41,11 @@ public class Data {
     if (currentGroup == null) {
       Logger logger = Logger.getLogger("Init");
       val team = Team.findTid(Const.TEAMID);
-      data.setCurrentGroup(team.getLastLeague());
+      PrimeData.setCurrentGroup(team.getLastLeague());
       logger.info("Gruppe geladen");
 
       val season = Season.current();
-      data.setCurrentSeason(season);
+      PrimeData.setCurrentSeason(season);
       logger.info("Season geladen");
       logger.info("Datenbank geladen");
     }
@@ -58,7 +58,7 @@ public class Data {
   //<editor-fold desc="getter and setter">
   public League getCurrentGroup() {
     if (currentGroup == null) {
-      data.init();
+      PrimeData.init();
     }
     return currentGroup;
   }
@@ -69,14 +69,14 @@ public class Data {
 
   public Season getCurrentSeason() {
     if (currentSeason == null) {
-      data.init();
+      PrimeData.init();
     }
     return currentSeason;
   }
 
   public String getCurrentVersion() {
     if (currentVersion == null) {
-      final JSON json = Data.getInstance().getRequester().requestJSON("https://ddragon.leagueoflegends.com/api/versions.json");
+      final JSON json = PrimeData.getInstance().getRequester().requestJSON("https://ddragon.leagueoflegends.com/api/versions.json");
       final Object versionObject = json.getJSONArray().get(0);
       currentVersion = String.valueOf(versionObject);
     }
@@ -93,10 +93,6 @@ public class Data {
 
   public Session getSession() {
     return session;
-  }
-
-  public Transaction getTransaction() {
-    return transaction;
   }
 
   public void commit() {

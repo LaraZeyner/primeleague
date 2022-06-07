@@ -26,7 +26,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.enums.Lane;
@@ -69,8 +69,10 @@ public class Player implements Serializable {
       player.setRole(neu.getRole());
 
       final Team currentTeam = player.getTeam();
-      if (!currentTeam.equals(team)) {
-        currentTeam.getPlayers().remove(player);
+      if (currentTeam == null || !currentTeam.equals(team)) {
+        if (currentTeam != null) {
+          currentTeam.getPlayers().remove(player);
+        }
         team.getPlayers().add(player);
         player.setTeam(team);
       }
@@ -78,7 +80,7 @@ public class Player implements Serializable {
     }
     team.getPlayers().add(neu);
     neu.setTeam(team);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -146,7 +148,7 @@ public class Player implements Serializable {
   public void removeTeam() {
     team.getPlayers().remove(this);
     team = null;
-    Data.getInstance().save(this);
+    PrimeData.getInstance().save(this);
   }
 
   public String getDisplayName() {
@@ -165,17 +167,28 @@ public class Player implements Serializable {
     Season season = null;
     for (Account account : accounts) {
       final SeasonElo mostRecentElo = account.getMostRecentElo();
-      if (season == null || mostRecentElo.getSeason().getId() > season.getId()) {
-        season = mostRecentElo.getSeason();
-        points = 0;
-        wins = 0;
-        losses = 0;
+      if (mostRecentElo != null) {
+        if (season == null || mostRecentElo.getSeason().getId() > season.getId()) {
+          season = mostRecentElo.getSeason();
+          points = 0;
+          wins = 0;
+          losses = 0;
+        }
+        points += mostRecentElo.getMmr() * mostRecentElo.getGames();
+
+        wins += mostRecentElo.getWins();
+        losses += mostRecentElo.getLosses();
       }
-      points += mostRecentElo.getMmr() * mostRecentElo.getGames();
-      wins += mostRecentElo.getWins();
-      losses += mostRecentElo.getLosses();
     }
-    return new SeasonElo((short) (points / (wins + losses)), (short) wins, (short) losses);
+    return new SeasonElo((short) Util.div(points, wins + losses), (short) wins, (short) losses);
+  }
+
+  public String getCurrentEloString() {
+    final SeasonElo currentElo = getCurrentElo();
+    if (currentElo != null) {
+      return currentElo.getElo().toString() + " " + currentElo.getLP();
+    }
+    return "Not ranked";
   }
 
   public String getLogoUrl() {
@@ -263,7 +276,7 @@ public class Player implements Serializable {
     val winrateString = winrate != -1 ? Math.round(100 * winrate) + "%" : "-";
     final Champion champion = Champion.find(id);
 
-    return new ChampionView(id, champion, champion.getName(), presence + "%", presence , picked, pickedRecent, winrateString);
+    return new ChampionView(id, champion, champion.getName(), presence + "%", presence, picked, pickedRecent, winrateString);
   }
 
   public List<Integer> getGamesOn() {
@@ -279,6 +292,21 @@ public class Player implements Serializable {
       }
     }
     return games;
+  }
+
+  public Lane getMainLane() {
+    int index = -1;
+    int games = Integer.MIN_VALUE;
+    List<Integer> gamesOn = getGamesOn();
+    for (int i = 0; i < gamesOn.size(); i++) {
+      final Integer integer = gamesOn.get(i);
+      if (integer > games) {
+        index = i;
+        games = integer;
+      }
+    }
+    final int finalIndex = index;
+    return Arrays.stream(Lane.values()).filter(lane -> lane.ordinal() == finalIndex).findFirst().orElse(Lane.UNKNOWN);
   }
 
   public List<Matchup> getMatchups(Champion champion) {

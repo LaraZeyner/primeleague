@@ -9,25 +9,42 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.faces.bean.ManagedBean;
-import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.enums.ChampionPlaystyle;
 import de.xeri.prm.models.enums.FightStyle;
 import de.xeri.prm.models.enums.FightType;
+import de.xeri.prm.models.enums.RelationshipType;
+import de.xeri.prm.models.enums.Subclass;
+import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.others.ChampionRelationship;
+import de.xeri.prm.util.FacesUtil;
 import lombok.Data;
+import lombok.val;
+import org.hibernate.query.Query;
+import org.primefaces.model.DualListModel;
 
 /**
  * Created by Lara on 31.05.2022 for web
  */
 @ManagedBean
-@RequestScoped
+@SessionScoped
 @Data
 public class LoadChampions implements Serializable {
   private static final transient long serialVersionUID = 8793193815956627574L;
 
+  private List<String> championClasses;
+  private String championClass;
+  private List<Playerperformance> playerperformances;
+
   private List<String> champions;
   private String champion;
+
+  private DualListModel<String> synergies;
+  private DualListModel<String> counters;
+
   private Champion selected;
 
   private List<String> fightTypes;
@@ -44,33 +61,137 @@ public class LoadChampions implements Serializable {
   private String midgame;
   private String lategame;
 
+  private int allin;
+  private int sustain;
+  private int trade;
+  private int waveclear;
+
   @PostConstruct
   public void init() {
     this.champions = new ArrayList<>(Champion.get()).stream().map(Champion::getName).collect(Collectors.toList());
     champions.sort(Comparator.comparing(s -> s));
 
-    this.fightTypes = Arrays.stream(FightType.values()).map(Enum::name).collect(Collectors.toList());
-    this.fightStyles = Arrays.stream(FightStyle.values()).map(Enum::name).collect(Collectors.toList());
+    this.synergies = new DualListModel<>(new ArrayList<>(champions), new ArrayList<>());
+    this.counters = new DualListModel<>(new ArrayList<>(champions), new ArrayList<>());
+
+    this.fightTypes = Arrays.stream(FightType.values()).map(FightType::getDisplayName).collect(Collectors.toList());
+    this.fightStyles = Arrays.stream(FightStyle.values()).map(FightStyle::getDisplayName).collect(Collectors.toList());
     this.playStyles = Arrays.stream(ChampionPlaystyle.values()).map(ChampionPlaystyle::getDisplayname).collect(Collectors.toList());
+    this.championClasses = Arrays.stream(Subclass.values()).map(Subclass::toString).collect(Collectors.toList());
+    championClasses.sort(Comparator.comparing(s -> s));
   }
 
   public void update() {
-    this.selected = Champion.find(champion);
+    try {
+      this.selected = Champion.find(champion);
+      this.overall = getPlaystyleOverall();
+      this.earlygame = getPlaystyleEarly();
+      this.pre6 = getPlaystylePre6();
+      this.post6 = getPlaystylePost6();
+      this.midgame = getPlaystyleMid();
+      this.lategame = getPlaystyleLate();
+
+      this.fightType = (isSelected() && selected.getFightType() != null) ? selected.getFightType().getDisplayName() : "Typ eingeben...";
+      this.fightStyle = (isSelected() && selected.getFightStyle() != null) ? selected.getFightStyle().getDisplayName() : "Typ eingeben...";
+      this.championClass = (isSelected() && selected.getSubclass() != null) ? selected.getSubclass().toString() : "Championklassifizierung nicht festgelegt";
+
+      this.allin = selected.getAllin();
+      this.sustain = selected.getSustain();
+      this.trade = selected.getTrade();
+      this.waveclear = (isSelected() && selected.getWaveClear() != null) ? selected.getWaveClear() : 0;
+
+      if (isSelected()) {
+        this.synergies = getRelationship(selected.getSynergies());
+        this.counters = getRelationship(selected.getCounters());
+      }
+
+      final Query<Playerperformance> namedQuery = PrimeData.getInstance().getSession().getNamedQuery("Playerperformance.forChampion");
+      namedQuery.setParameter("champion", selected);
+      namedQuery.setMaxResults(27);
+      this.playerperformances = namedQuery.list();
+
+      FacesUtil.sendMessage("Champion geladen", "");
+    } catch (Exception exception) {
+      FacesUtil.sendException("Fehler beim Laden", exception);
+    }
   }
 
   public void save() {
-    if (isSelected()) {
-      selected.setFightType(FightType.fromName(fightType));
-      selected.setFightStyle(FightStyle.fromName(fightStyle));
+    try {
+      if (isSelected()) {
+        selected.setSubclass(Subclass.fromName(championClass));
 
-      selected.setOverall(ChampionPlaystyle.fromName(overall));
-      selected.setEarlygame(ChampionPlaystyle.fromName(earlygame));
-      selected.setPre6(ChampionPlaystyle.fromName(pre6));
-      selected.setPost6(ChampionPlaystyle.fromName(post6));
-      selected.setMidgame(ChampionPlaystyle.fromName(midgame));
-      selected.setLategame(ChampionPlaystyle.fromName(lategame));
+        selected.setFightType(FightType.fromName(fightType));
+        selected.setFightStyle(FightStyle.fromName(fightStyle));
 
-      de.xeri.prm.manager.Data.getInstance().save(selected);
+        selected.setOverall(ChampionPlaystyle.fromName(overall));
+        selected.setEarlygame(ChampionPlaystyle.fromName(earlygame));
+        selected.setPre6(ChampionPlaystyle.fromName(pre6));
+        selected.setPost6(ChampionPlaystyle.fromName(post6));
+        selected.setMidgame(ChampionPlaystyle.fromName(midgame));
+        selected.setLategame(ChampionPlaystyle.fromName(lategame));
+
+        if (allin + sustain + trade <= 15) {
+          selected.setAllin((byte) allin);
+          selected.setSustain((byte) sustain);
+          selected.setTrade((byte) trade);
+        } else {
+          allin = selected.getAllin();
+          sustain = selected.getSustain();
+          trade = selected.getTrade();
+          FacesUtil.sendWarning("Fehler bei Winconditions", "Die Summe aller Werte in Winconditions darf nicht größer als 15 sein.");
+        }
+
+        selected.setWaveClear((byte) waveclear);
+
+        handleRelationships(synergies, RelationshipType.SYNERGY);
+        handleRelationships(counters, RelationshipType.COUNTER);
+
+        PrimeData.getInstance().save(selected);
+        PrimeData.getInstance().commit();
+        FacesUtil.sendMessage("Änderungen gespeichert", "");
+      } else {
+        FacesUtil.sendWarning("kein Champion ausgewählt", "");
+      }
+    } catch (Exception exception) {
+      FacesUtil.sendException("Fehler beim Speichern", exception);
+    }
+
+  }
+
+  private DualListModel<String> getRelationship(List<Champion> source) {
+    final List<String> current = source.stream().map(Champion::getName).collect(Collectors.toList());
+    final List<String> other = new ArrayList<>(champions);
+    other.remove(selected);
+    other.removeIf(current::contains);
+    return new DualListModel<>(other, current);
+  }
+
+  private void handleRelationships(DualListModel<String> source, RelationshipType type) {
+    val champs = type.equals(RelationshipType.SYNERGY) ? selected.getSynergies() : selected.getCounters();
+    final List<String> target = source.getTarget();
+    for (Champion champion : champs) {
+      if (!target.contains(champion.getName())) {
+        if (type.equals(RelationshipType.SYNERGY)) {
+          selected.getChampionRelationshipsFrom().stream()
+              .filter(championRelationship -> championRelationship.getRelationshipType().equals(type))
+              .collect(Collectors.toList()).stream()
+              .filter(championRelationship -> championRelationship.has(champion))
+              .findFirst().ifPresent(ChampionRelationship::remove);
+        }
+        selected.getChampionRelationshipsTo().stream()
+            .filter(championRelationship -> championRelationship.getRelationshipType().equals(type))
+            .collect(Collectors.toList()).stream()
+            .filter(championRelationship -> championRelationship.has(champion))
+            .findFirst().ifPresent(ChampionRelationship::remove);
+      }
+    }
+
+    for (String championName : target) {
+      val other = Champion.find(championName);
+      if (champs.stream().noneMatch(champion -> champion.equals(other))) {
+        new ChampionRelationship(type, selected, other).create();
+      }
     }
   }
 
@@ -81,20 +202,6 @@ public class LoadChampions implements Serializable {
   public String getTitle() {
     if (isSelected()) {
       return "   - " + selected.getTitle();
-    }
-    return "";
-  }
-
-  public String getSubclassName() {
-    if (isSelected() && selected.getSubclass() != null) {
-      return "   - " + selected.getSubclass().getDisplayName();
-    }
-    return "";
-  }
-
-  public String getClassName() {
-    if (isSelected() && selected.getSubclass() != null) {
-      return selected.getSubclass().getChampionclass().getDisplayName();
     }
     return "";
   }
@@ -132,27 +239,6 @@ public class LoadChampions implements Serializable {
       return String.valueOf(Math.round(selected.getAttackSpeed() * 1000) / 1000d);
     }
     return "";
-  }
-
-  public String getWaveclear() {
-    if (isSelected() && selected.getWaveClear() != null) {
-      return String.valueOf(selected.getWaveClear());
-    }
-    return "";
-  }
-
-  public String getFightType() {
-    if (isSelected() && selected.getFightType() != null) {
-      return selected.getFightType().name();
-    }
-    return "Typ eingeben...";
-  }
-
-  public String getFightStyle() {
-    if (isSelected() && selected.getFightStyle() != null) {
-      return selected.getFightStyle().name();
-    }
-    return "Stil eingeben...";
   }
 
   public String getPlaystyleOverall() {

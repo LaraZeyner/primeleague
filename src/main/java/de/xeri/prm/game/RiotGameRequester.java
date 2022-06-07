@@ -1,6 +1,6 @@
 package de.xeri.prm.game;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.util.io.riot.RiotURLGenerator;
@@ -31,12 +31,12 @@ public final class RiotGameRequester {
     if (game != null) {
       val timeline = matchGenerator.getTimeline(scheduledGame.getId());
       if (new GameAnalyser().validate(game, timeline, queueType)) {
-        Data.getInstance().remove(scheduledGame);
+        PrimeData.getInstance().remove(scheduledGame);
       }
     } else {
       System.err.println("Spiel " + scheduledGame.getId() + " konnte nicht geladen werden");
     }
-    Data.getInstance().getSession().remove(scheduledGame);
-    Data.getInstance().commit();
+    PrimeData.getInstance().getSession().remove(scheduledGame);
+    PrimeData.getInstance().commit();
   }
 }

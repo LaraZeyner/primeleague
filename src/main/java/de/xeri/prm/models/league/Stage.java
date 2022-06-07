@@ -24,7 +24,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
@@ -65,7 +65,7 @@ public class Stage implements Serializable {
     }
     season.getStages().add(neu);
     neu.setSeason(season);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

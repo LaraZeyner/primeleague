@@ -25,23 +25,25 @@ import javax.persistence.Transient;
 
 import de.xeri.prm.game.Clash;
 import de.xeri.prm.loader.TeamLoader;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.QueueType;
-import de.xeri.prm.models.enums.Result;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.servlet.datatables.league.LeagueTeam;
+import de.xeri.prm.servlet.datatables.scheduling.InventoryStatus;
+import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import de.xeri.prm.util.logger.Logger;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.val;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
@@ -59,15 +61,17 @@ import org.hibernate.query.Query;
 @NamedQuery(name = "Team.findByScrim", query = "FROM Team t WHERE scrims = :scrims")
 @NamedQuery(name = "Team.findByTId", query = "FROM Team t WHERE turneyId = :tid")
 @NamedQuery(name = "Team.valueableTeams", query = "FROM Team t WHERE scrims = true OR id IN :teamIds")
+@NamedQuery(name = "Team.scrimTeams", query = "FROM Team t WHERE scrims = true")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@ToString
+@RequiredArgsConstructor
 public class Team implements Serializable {
   @Transient
   private static final long serialVersionUID = 2656015802095877363L;
 
   private static List<Team> valueableTeams;
+  private static List<Team> scrimTeams;
 
   public static Set<Team> get() {
     return new LinkedHashSet<>(HibernateUtil.findList(Team.class));
@@ -81,7 +85,7 @@ public class Team implements Serializable {
       return team;
     }
 
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -104,29 +108,30 @@ public class Team implements Serializable {
   public static List<Team> getValueableTeams() {
     if (valueableTeams == null) {
       valueableTeams = HibernateUtil.findList(Team.class, new String[]{"teamIds"},
-          new Object[]{Data.getInstance().getCurrentGroup().getTeams().stream().map(Team::getId).collect(Collectors.toList())}, "valueableTeams");
+          new Object[]{PrimeData.getInstance().getCurrentGroup().getTeams().stream().map(Team::getId).collect(Collectors.toList())}, "valueableTeams");
     }
     return valueableTeams;
   }
 
+  public static List<Team> getScrimTeams() {
+    if (scrimTeams == null) {
+      final Query namedQuery = PrimeData.getInstance().getSession().getNamedQuery("Team.scrimTeams");
+      scrimTeams = namedQuery.list();
+    }
+    return scrimTeams;
+  }
+
   public static Team find(String name, League league) {
     final Logger logger = Logger.getLogger("Team-Finder");
-    if (has(name, league)) {
-      final List<Team> teams = findAll(name).stream()
-          .filter(team -> team.getLeagues().contains(league))
-          .collect(Collectors.toList());
+    final List<Team> teams = findAll(name);
+    if (!teams.isEmpty()) {
       if (teams.size() > 1) {
-        logger.config("Meherere Teams gefunden");
+        return league.getTeams().stream().filter(teams::contains).findFirst().orElse(null);
       }
       return teams.get(0);
     }
-
-    if (has(name)) {
-      return find(name);
-    } else {
-      logger.warning("Team konnte nicht gefunden werden", name);
-      return null;
-    }
+    logger.warning("Team konnte nicht gefunden werden", name);
+    return null;
   }
 
   public static Team find(String name) {
@@ -176,6 +181,7 @@ public class Team implements Serializable {
   @ManyToMany(mappedBy = "teams")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<League> leagues = new LinkedHashSet<>();
 
   @Column(name = "team_result", length = 30)
@@ -185,31 +191,37 @@ public class Team implements Serializable {
   private boolean scrims;
 
   @OneToMany(mappedBy = "team")
+  @ToString.Exclude
   private final Set<Teamperformance> teamperformances = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "enemyTeam")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Schedule> schedules = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "homeTeam")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<TurnamentMatch> matchesHome = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "guestTeam")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<TurnamentMatch> matchesGuest = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "team")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Player> players = new LinkedHashSet<>();
 
   @OneToMany(mappedBy = "team")
   @LazyCollection(LazyCollectionOption.EXTRA)
   @OrderColumn
+  @ToString.Exclude
   private final Set<Matchlog> logEntries = new LinkedHashSet<>();
 
   public Team(int turneyId, String teamName, String teamAbbr) {
@@ -221,6 +233,12 @@ public class Team implements Serializable {
   public void addSchedule(Schedule schedule) {
     schedules.add(schedule);
     schedule.setEnemyTeam(this);
+  }
+
+  public void removeSchedule(Schedule schedule) {
+    schedules.remove(schedule);
+    schedule.setEnemyTeam(null);
+    PrimeData.getInstance().remove(schedule);
   }
 
   public boolean addMatch(TurnamentMatch match, boolean home) {
@@ -243,7 +261,7 @@ public class Team implements Serializable {
 
   public Player addPlayer(Player player) {
     val oldTeam = player.getTeam();
-    if (!this.equals(oldTeam)) {
+    if (oldTeam != null && !this.equals(oldTeam)) {
       oldTeam.removePlayer(player);
     }
     return Player.get(player, this);
@@ -251,7 +269,7 @@ public class Team implements Serializable {
 
   private void removePlayer(Player player) {
     players.remove(player);
-    Data.getInstance().save(this);
+    PrimeData.getInstance().save(this);
   }
 
   public void addLogEntry(Matchlog entry) {
@@ -260,12 +278,12 @@ public class Team implements Serializable {
   }
 
   public List<Clash> getClashDays() {
-    final List<Game> clashGames = teamperformances.stream()
+    val clashGames = teamperformances.stream()
         .map(Teamperformance::getGame)
         .filter(game -> game.isQueue(QueueType.CLASH))
         .sorted(Comparator.comparingLong(game -> game.getGameStart().getTime()))
         .collect(Collectors.toList());
-    final List<Clash> clashes = new ArrayList<>();
+    val clashes = new ArrayList<Clash>();
     long millis = 0;
     for (Game game : clashGames) {
       final long gameMillis = game.getGameStart().getTime();
@@ -273,11 +291,9 @@ public class Team implements Serializable {
       if (difference > 43_200_000L) { // 12 Stunden
         clashes.add(new Clash(game.getGameStart(), this));
       }
-
-      final Clash clash = clashes.get(clashes.size() - 1);
-      final Teamperformance teamperformance = game.getPerformanceOf(this);
+      val clash = clashes.get(clashes.size() - 1);
+      val teamperformance = game.getPerformanceOf(this);
       clash.addGame(teamperformance);
-
       millis = gameMillis;
     }
     return clashes;
@@ -291,7 +307,8 @@ public class Team implements Serializable {
 
   public List<Teamperformance> getLeaguePerformances() {
     return teamperformances.stream()
-        .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch() != null && teamperformance.getGame().getTurnamentmatch().getLeague().equals(Data.getInstance().getCurrentGroup()))
+        .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch() != null &&
+            teamperformance.getGame().getTurnamentmatch().getLeague().equals(PrimeData.getInstance().getCurrentGroup()))
         .collect(Collectors.toList());
   }
 
@@ -302,7 +319,6 @@ public class Team implements Serializable {
         .filter(account -> !account.getGamesOn(lane, true).isEmpty())
         .sorted((account1, account2) -> account2.getGamesOn(lane, true).size() - account1.getGamesOn(lane, true).size())
         .collect(Collectors.toList());
-
   }
 
   public League getLastLeague() {
@@ -328,7 +344,7 @@ public class Team implements Serializable {
   }
 
   public boolean isValueable() {
-    return valueableTeams.contains(this);
+    return getValueableTeams().contains(this) || scrims;
   }
 
   public String getLogoUrl() {
@@ -341,62 +357,17 @@ public class Team implements Serializable {
     return allmatches;
   }
 
-  public String getBilance() {
-    int wins = 0;
-    int ties = 0;
-    int defeats = 0;
-    for (TurnamentMatch turnamentMatch : getTurnamentMatches()) {
-      if (turnamentMatch.getLeague().equals(Data.getInstance().getCurrentGroup())) {
-        final Result result = turnamentMatch.getResult(this);
-        if (result.equals(Result.VICTORY)) {
-          wins++;
-        } else if (result.equals(Result.TIE)) {
-          ties++;
-        } else if (result.equals(Result.DEFEAT)) {
-          defeats++;
-        }
-      }
-    }
-
-    return wins + "   " + ties + "   " + defeats;
+  public String getStatus() {
+    return "ACTIVE";
   }
 
-  public String getWinsPerMatch() {
-    int wins = 0;
-    int ties = 0;
-    int defeats = 0;
-    int score1 = 0;
-    for (TurnamentMatch turnamentMatch : getTurnamentMatches()) {
-      if (turnamentMatch.getLeague().equals(Data.getInstance().getCurrentGroup())) {
-        final Result result = turnamentMatch.getResult(this);
-        if (result.equals(Result.VICTORY)) {
-          wins++;
-        } else if (result.equals(Result.TIE)) {
-          ties++;
-        } else if (result.equals(Result.DEFEAT)) {
-          defeats++;
-        }
-        score1 += turnamentMatch.getPointsOfTeam(this);
-      }
+  public InventoryStatus getStatusTag() {
+    if (getStatus().equals("ACTIVE")) {
+      return InventoryStatus.INSTOCK;
+    } else if (getStatus().equals("INACTIVE")) {
+      return InventoryStatus.LOWSTOCK;
     }
-    final int games = wins + ties + defeats;
-    final double winsPerMatch = games == 0 ? 0 : score1 * 1d / games;
-    return Math.round(winsPerMatch * 50) + "%";
-  }
-
-  public String getTeamScore() {
-    int score1 = 0;
-    int score2 = 0;
-    for (TurnamentMatch turnamentMatch : getTurnamentMatches()) {
-      if (turnamentMatch.getLeague().equals(Data.getInstance().getCurrentGroup())) {
-        score1 += turnamentMatch.getPointsOfTeam(this);
-        final Team otherTeam = turnamentMatch.getOtherTeam(this);
-        if (otherTeam != null) {
-          score2 += turnamentMatch.getPointsOfTeam(otherTeam);
-        }
-      }
-    }
-    return score1 + ":" + score2;
+    return InventoryStatus.OUTOFSTOCK;
   }
 
   public TurnamentMatch getClosestTurnamentMatch(Date date) {
@@ -414,201 +385,35 @@ public class Team implements Serializable {
 
     return match;
   }
-  //<editor-fold desc="getter and setter">
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Team)) return false;
-    final Team team = (Team) o;
-    return getId() == team.getId() && getTurneyId() == team.getTurneyId();
+  public String getBilance() {
+    return getBilanceFor(Team.findTid(Const.TEAMID));
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(getId(), getTurneyId(), getTeamName(), getTeamAbbr(), getLeagues(), getTeamResult());
+  public String getBilanceFor(Team team) {
+    final Query<Object[]> query = PrimeData.getInstance().getSession().getNamedQuery("Teamperformance.gamesOfTeam");
+    query.setParameter("team", team);
+    List<String> gameIds = query.list().stream().map(object -> String.valueOf(object[0])).collect(Collectors.toList());
+    final Query<Object[]> query2 = PrimeData.getInstance().getSession().getNamedQuery("Teamperformance.bilanceOfTeamMatchup");
+    query2.setParameter("gameids", gameIds);
+    query2.setParameter("teamId", id);
+    final List<Object[]> list2 = query2.list();
+    return Util.getInt(list2.get(0)[0]) + ":" + Util.getInt(list2.get(0)[1]);
   }
-
-  @Override
-  public String toString() {
-    return "Team{" +
-        "id=" + id +
-        ", teamTid=" + turneyId +
-        ", teamName='" + teamName + '\'' +
-        ", teamAbbr='" + teamAbbr + '\'' +
-        ", leagues='" + leagues.size() + '\'' +
-        ", teamResult='" + teamResult + '\'' +
-        '}';
-  }
-  //</editor-fold>
-
-
-  public String getMatchtime() {
-    int time = (int) getLeaguePerformances().stream()
-        .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
-        .average().orElse(0);
-    return time / 60 + (time % 60 < 10 ? ":0" : ":") + time % 60;
-  }
-
-  public String getWintime() {
-    int time = (int) getLeaguePerformances().stream()
-        .filter(Teamperformance::isWin)
-        .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
-        .average().orElse(0);
-    return time / 60 + (time % 60 < 10 ? ":0" : ":") + time % 60;
-  }
-
-  public String getLosetime() {
-    int time = (int) getLeaguePerformances().stream()
-        .filter(teamperformance -> !teamperformance.isWin())
-        .mapToInt(leaguePerformance -> leaguePerformance.getGame().getDuration())
-        .average().orElse(0);
-    return time / 60 + (time % 60 < 10 ? ":0" : ":") + time % 60;
-  }
-
-  public int getGames() {
-    return getWins() + getLosses();
-  }
-
-  public int getWins() {
-    return (int) getLeaguePerformances().stream().filter(Teamperformance::isWin).count();
-  }
-
-  public int getLosses() {
-    return (int) getLeaguePerformances().stream().filter(teamperformance -> !teamperformance.isWin()).count();
-  }
-
-  public String getKills() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).sum() + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalKills).sum();
-  }
-
-  public int getKillDiff() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).sum() -
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalKills).sum();
-  }
-
-  public String getKillsPerMatch() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalKills).average().orElse(0) * 2 + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalKills).average().orElse(0) * 2;
-  }
-
-  public String getGold() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).sum() + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalGold).sum();
-  }
-
-  public int getGoldDiff() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).sum() -
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalGold).sum();
-  }
-
-  public String getGoldPerMatch() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalGold).average().orElse(0) * 2 + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalGold).average().orElse(0) * 2;
-  }
-
-
-  public String getCreeps() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).sum() + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalCs).sum();
-  }
-
-  public int getCreepDiff() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).sum() -
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalCs).sum();
-  }
-
-  public String getCreepsPerMatch() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTotalCs).average().orElse(0) * 2 + ":" +
-        getLeaguePerformances().stream().map(Teamperformance::getOtherTeamperformance).filter(Objects::nonNull)
-            .mapToInt(Teamperformance::getTotalCs).average().orElse(0) * 2;
-  }
-
-  public int getObjectives() {
-    return getTowers() + getDrakes() + getHeralds() + getInhibs() + getBarons();
-  }
-
-  public int getObjectivesPerMatch() {
-    if (getGames() == 0) {
-      return 0;
-    }
-    return getObjectives() * 2 / getGames();
-  }
-
-
-  public int getTowers() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getTowers).sum();
-  }
-
-  public int getTowersPerMatch() {
-    return (int) Util.div(getTowers() * 2, getGames());
-  }
-
-  public int getDrakes() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getDrakes).sum();
-  }
-
-  public int getDrakesPerMatch() {
-    return (int) Util.div(getDrakes() * 2, getGames());
-  }
-
-  public int getInhibs() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getInhibs).sum();
-  }
-
-  public int getInhibsPerMatch() {
-    return (int) Util.div(getInhibs() * 2, getGames());
-  }
-
-  public int getHeralds() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getHeralds).sum();
-  }
-
-  public int getHeraldsPerMatch() {
-    return (int) Util.div(getHeralds() * 2, getGames());
-  }
-
-  public int getBarons() {
-    return getLeaguePerformances().stream().mapToInt(Teamperformance::getBarons).sum();
-  }
-
-  public int getBaronsPerMatch() {
-    return (int) Util.div(getBarons() * 2, getGames());
-  }
-
-  public long getScore() {
-    final int idScore = id;                                      //                -10.000   10.000
-    final int csScore = getCreepDiff() * 10_000;                             //             10.000.000    1.000
-    final long goldScore = getGoldDiff() * 10_000_000L;                      //      1.000.000.000.000  100.000
-    final long killScore = getKillDiff() * 1_000_000_000_000L;               //    100.000.000.000.000      100
-    final long winsScore = (long) Integer.parseInt(getWinsPerMatch().replace("%", "")) * 1_000_000_000_000L;
-    return idScore + csScore + goldScore + killScore + winsScore;
-  }
-
 
 
   public LeagueTeam getLeagueTeam() {
-    final Query<Object[]> query = Data.getInstance().getSession().getNamedQuery("TurnamentMatch.findPerformancesOf");
+    final Query<Object[]> query = PrimeData.getInstance().getSession().getNamedQuery("TurnamentMatch.findPerformancesOf");
     query.setParameter("team", this);
-    query.setParameter("league", Data.getInstance().getCurrentGroup());
+    query.setParameter("league", PrimeData.getInstance().getCurrentGroup());
     final Object[] list = query.list().get(0);
 
-
-    final Query<Integer> query2 = Data.getInstance().getSession().getNamedQuery("TurnamentMatch.findMatchesOf");
+    final Query<Integer> query2 = PrimeData.getInstance().getSession().getNamedQuery("TurnamentMatch.findMatchesOf");
     query2.setParameter("team", this);
-    query2.setParameter("league", Data.getInstance().getCurrentGroup());
+    query2.setParameter("league", PrimeData.getInstance().getCurrentGroup());
     final List<Integer> matchIds = query2.list();
 
-    final Query<Object[]> query3 = Data.getInstance().getSession().getNamedQuery("Teamperformance.teamOwn");
+    final Query<Object[]> query3 = PrimeData.getInstance().getSession().getNamedQuery("Teamperformance.teamOwn");
     query3.setParameter("team", this);
     query3.setParameter("matches", matchIds);
     final List<Object[]> list2 = query3.list();
@@ -618,12 +423,21 @@ public class Team implements Serializable {
         Util.longToInt((long) list[0]) + Util.longToInt((long) list[1]) + Util.longToInt((long) list[2]),
         Util.longToInt((long) list[0]), Util.longToInt((long) list[1]), Util.longToInt((long) list[2]));
 
-
-
     team.add(doubles);
 
     return team;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final Team team = (Team) o;
+    return Objects.equals(id, team.id);
+  }
 
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
 }

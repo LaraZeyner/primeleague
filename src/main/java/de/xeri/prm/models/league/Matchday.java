@@ -22,8 +22,9 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.NamedQuery;
@@ -52,7 +53,7 @@ public class Matchday implements Serializable {
     }
     stage.getMatchdays().add(neu);
     neu.setStage(stage);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -155,6 +156,16 @@ public class Matchday implements Serializable {
 
   public void setId(short id) {
     this.id = id;
+  }
+
+  public String until() {
+    if (new Date().before(start)) {
+      return Util.until(start, "in ");
+    } else if (new Date().after(end)) {
+      return Util.until(end, "vor ");
+    } else {
+      return Util.until(end, "noch ");
+    }
   }
 
   @Override

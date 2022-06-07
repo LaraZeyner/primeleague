@@ -6,7 +6,7 @@ import java.util.Map;
 
 import de.xeri.prm.models.match.Gametype;
 import de.xeri.prm.models.dynamic.LeagueMap;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.io.json.JSON;
 import de.xeri.prm.util.io.JSONList;
 import de.xeri.prm.util.io.JSONParser;
@@ -17,16 +17,16 @@ import org.json.JSONObject;
  * Created by Lara on 29.03.2022 for TRUES
  */
 public final class GametypeLoader {
-  private static final JSON json = Data.getInstance().getRequester()
+  private static final JSON json = PrimeData.getInstance().getRequester()
       .requestJSON("https://static.developer.riotgames.com/docs/lol/queues.json");
   private static final Map<String, LeagueMap> maps = new HashMap<>();
   private static final Map<Short, Gametype> gameTypes = new HashMap<>();
 
   public static void createTypes() {
-    final List<LeagueMap> mapList = (List<LeagueMap>) Data.getInstance().getSession().createQuery("from LeagueMap").list();
+    final List<LeagueMap> mapList = (List<LeagueMap>) PrimeData.getInstance().getSession().createQuery("from LeagueMap").list();
     mapList.forEach(map -> maps.put(map.getName(), map));
 
-    final List<Gametype> typeList = (List<Gametype>) Data.getInstance().getSession().createQuery("from Gametype").list();
+    final List<Gametype> typeList = (List<Gametype>) PrimeData.getInstance().getSession().createQuery("from Gametype").list();
     typeList.forEach(type -> gameTypes.put(type.getId(), type));
 
     final JSONArray types = ((JSONList) JSONParser.from(json)).getArray();
@@ -44,8 +44,8 @@ public final class GametypeLoader {
     }
 
 
-    maps.forEach((s, map) -> Data.getInstance().getSession().saveOrUpdate(map));
-    gameTypes.forEach((i, gametype) -> Data.getInstance().getSession().saveOrUpdate(gametype));
+    maps.forEach((s, map) -> PrimeData.getInstance().getSession().saveOrUpdate(map));
+    gameTypes.forEach((i, gametype) -> PrimeData.getInstance().getSession().saveOrUpdate(gametype));
   }
 
   private static void manageEntry(short queue, String mapName, String name) {

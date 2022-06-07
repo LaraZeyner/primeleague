@@ -3,7 +3,7 @@ package de.xeri.prm.loader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.util.io.json.HTML;
 import de.xeri.prm.util.logger.Logger;
@@ -19,7 +19,7 @@ public final class AccountLoader {
     try {
       for (Team team : Team.get()) {
         final int teamTid = team.getTurneyId();
-        final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + teamTid);
+        final HTML html = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + teamTid);
         TeamLoader.handleMembers(Jsoup.parse(html.toString()), Team.findTid(teamTid));
       }
     } catch (FileNotFoundException exception) {
@@ -27,12 +27,12 @@ public final class AccountLoader {
     } catch (IOException exception) {
       logger.severe(exception.getMessage());
     }
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 
   public static void updateTeams() {
     Team.get().stream().filter(Team::isValueable).forEach(AccountLoader::updateAccounts);
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 
   private static void updateAccounts(Team team) {

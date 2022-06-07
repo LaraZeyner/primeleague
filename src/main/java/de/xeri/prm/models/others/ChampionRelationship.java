@@ -16,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.enums.RelationshipType;
 import de.xeri.prm.models.ids.ChampionRelationshipId;
@@ -58,6 +59,22 @@ public class ChampionRelationship implements Serializable {
   @JoinColumn(name = "to_champion")
   @ToString.Exclude
   private Champion toChampion;
+
+  public void create() {
+    fromChampion.addRelationship(this, true);
+    toChampion.addRelationship(this, false);
+    PrimeData.getInstance().save(this);
+  }
+
+  public void remove() {
+    fromChampion.removeRelationship(this, true);
+    toChampion.removeRelationship(this, false);
+    PrimeData.getInstance().remove(this);
+  }
+
+  public boolean has(Champion champion) {
+    return fromChampion.equals(champion) || toChampion.equals(champion);
+  }
 
   @Override
   public boolean equals(Object o) {

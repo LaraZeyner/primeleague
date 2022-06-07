@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Scrim hinzufügen</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+    <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
+</h:head>
+
+<h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
+    <ui:insert name="topbar">
+        <ui:include src="/templates/topbar.xhtml"/>
+    </ui:insert>
+
+    <div class="p-grid">
+        <div class="p-col-9">
+            <h:form>
+                <div id="schedule-select-load" class="p-field p-col-9">
+                    <p:inplace>
+                        <p:selectOneMenu id="advanced" value="#{loadSchedule.schedule}" dynamic="true" effect="fade"
+                                         filter="true" filterMatchMode="startsWith" required="true">
+                            <f:selectItem itemLabel="Wähle einen Eintrag ..."/>
+                            <f:selectItems value="#{loadSchedule.schedules}"/>
+                        </p:selectOneMenu>
+                    </p:inplace>
+                </div>
+
+                <div id="load" class="p-field p-col-3">
+                    <p:commandButton value="Laden" action="#{loadSchedule.load()}"/>
+                </div>
+
+                <div class="p-field p-col-12">
+                    <p:selectOneMenu id="type" value="#{loadSchedule.type}" dynamic="true" effect="fade"
+                                     filter="true" filterMatchMode="startsWith" required="true">
+                        <f:selectItem itemLabel="Typ eintragen..."/>
+                        <f:selectItems value="#{loadSchedule.types}"/>
+                    </p:selectOneMenu>
+                </div>
+
+                <div id="startDate" class="p-field p-col-6">
+                    <p:outputLabel for="start" value="Startzeit"/>
+                    <p:datePicker id="start" value="#{loadSchedule.startTime}" showTime="true" locale="de"
+                                  pattern="dd.MM.yyyy"/>
+                </div>
+
+                <div id="endDate" class="p-field p-col-6">
+                    <p:outputLabel for="end" value="Endzeit"/>
+                    <p:datePicker id="end" value="#{loadSchedule.endTime}" showTime="true" locale="de"
+                                  pattern="dd.MM.yyyy"/>
+                </div>
+
+                <div id="enemy" class="p-field p-col-12">
+                    <p:selectOneMenu id="enemies" value="#{loadSchedule.valueableTeams}" dynamic="true" effect="fade"
+                                     filter="true" filterMatchMode="startsWith" required="true">
+                        <f:selectItem itemLabel="Wähle einen Eintrag ..."/>
+                        <f:selectItems value="#{loadSchedule.valueableTeams}"/>
+                    </p:selectOneMenu>
+                </div>
+
+                <div id="title" class="p-field p-col-12">
+                    <div class="ui-inputgroup">
+                        <div class="ui-inputgroup-addon"><i class="pi pi-user"/></div>
+                        <p:inputText placeholder="Titel" value="#{loadSchedule.title}"/>
+                    </div>
+                </div>
+
+                <div id="participants" class="p-field p-col-12">
+                    <div class="text-sectiontitle compact">Counter</div>
+                    <p:pickList id="pick-counters" value="#{loadChampions.counters}" var="counter"
+                                itemLabel="#{counter}" itemValue="#{counter}" style="width: 33%"/>
+                </div>
+
+                <div class="p-field p-col-12">
+                    <p:commandButton value="Speichern"/>
+                </div>
+            </h:form>
+
+        </div>
+
+
+        <div class="p-col-3">
+            <h:form>
+                <p:dataTable lazy="false" var="team" value="#{allEventsTimelineView.scrimpartners}" size="small"
+                             rowKey="#{team.id}" style="font-size: 14px">
+                    <p:column width="10%" headerText=""><p:graphicImage width="100%" url="#{team.logoUrl}"/></p:column>
+                    <p:column width="15%" headerText="">#{team.teamAbbr}</p:column>
+                    <p:column width="35%" headerText="">#{team.teamName}</p:column>
+                    <p:column width="20%" headerText="">#{team.lastLeague.name}</p:column>
+                    <p:column width="15%" headerText="">#{team.bilance}</p:column>
+                </p:dataTable>
+            </h:form>
+        </div>
+    </div>
+
+</h:body>
+</html>

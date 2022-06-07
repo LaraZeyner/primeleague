@@ -2,9 +2,12 @@ package de.xeri.prm.models.match;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,12 +24,13 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.DragonSoul;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.match.playerperformance.JunglePath;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
@@ -34,6 +38,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NamedQuery;
+import org.hibernate.query.Query;
 
 @Entity(name = "Teamperformance")
 @Table(name = "teamperformance", indexes = {
@@ -62,6 +67,12 @@ import org.hibernate.annotations.NamedQuery;
         "FROM Teamperformance t " +
         "WHERE game.turnamentmatch <> NULL AND " +
         "game.turnamentmatch.id IN :matches")
+@NamedQuery(name = "Teamperformance.gamesOfTeam", query = "SELECT game.id FROM Teamperformance t WHERE team = :team")
+@NamedQuery(name = "Teamperformance.bilanceOfTeamMatchup",
+    query = "SELECT SUM(CASE WHEN win IS true THEN 0 ELSE 1 END), SUM(CASE WHEN win IS false THEN 0 ELSE 1 END) " +
+        "FROM Teamperformance t " +
+        "WHERE game.id IN :gameids " +
+        "AND team.id = :teamId")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -84,7 +95,7 @@ public class Teamperformance implements Serializable {
       team.getTeamperformances().add(neu);
       neu.setTeam(team);
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -295,6 +306,12 @@ public class Teamperformance implements Serializable {
         playerperformances.stream().mapToInt(Playerperformance::getFirstturretAdvantage).min().orElse(-1));
   }
 
+  public String getTeamDuel() {
+    String team1 = team != null ? team.getTeamAbbr() : "";
+    String team2 = getOtherTeamperformance() != null && getOtherTeamperformance().getTeam() != null ? getOtherTeamperformance().getTeam().getTeamAbbr() : "";
+    return (team1.length() > 7 ? team1.substring(0, 7) : team1) + " - " + (team2.length() > 7 ? team2.substring(0, 7) : team2);
+  }
+
   //<editor-fold desc="getter and setter">
   public double getRiftTurrets() {
     return Util.getDouble(riftTurrets);
@@ -302,6 +319,10 @@ public class Teamperformance implements Serializable {
 
   public void setRiftTurrets(double riftTurrets) {
     this.riftTurrets = BigDecimal.valueOf(riftTurrets);
+  }
+
+  public String getResultString() {
+    return win ? "Victory" : "Defeat";
   }
 
   //</editor-fold>

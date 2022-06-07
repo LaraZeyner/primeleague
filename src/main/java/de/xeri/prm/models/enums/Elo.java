@@ -63,6 +63,11 @@ public enum Elo {
     return Util.capitalizeFirst(tierUnformatted.toLowerCase());
   }
 
+  @Override
+  public String toString() {
+    return getTier() + " " + (name().contains("_") ? name().split("_")[1] : "");
+  }
+
   public String getSuffix() {
     if (name().contains("_")) {
       switch (name().split("_")[1]) {

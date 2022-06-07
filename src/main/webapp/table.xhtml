@@ -2,6 +2,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
       xmlns:p="http://primefaces.org/ui"
@@ -31,7 +32,8 @@
                         <p:column width="1%"><p:rowToggler/></p:column>
                         <p:column width="1%" headerText="Pl">#{team.place}</p:column>
                         <p:column width="3%"><h:graphicImage style="width: 80%" value="#{team.logoUrl}"/></p:column>
-                        <p:column width="10%" style="font-weight: bold" headerText="#{loadLeague.league.name}">#{team.name}</p:column>
+                        <p:column width="10%" style="font-weight: bold"
+                                  headerText="#{loadLeague.league.name}">#{team.name}</p:column>
                         <p:column headerText="Win">#{team.winsPerMatch}</p:column>
                         <p:column headerText="Pkt.">#{team.teamScore}</p:column>
                         <p:column headerText="SUN">#{team.bilance}</p:column>
@@ -59,9 +61,9 @@
             </h:form>
             <div class="p-grid">
                 <c:forEach items="#{loadLeague.matchdays}" var="matchday">
-                    <div class="p-col">
-                        <h5>#{matchday.matchday.type}</h5>
-                        <p:dataTable lazy="false" var="match" value="#{matchday.matches}" size="small">
+                    <div class="p-col-3">
+                        <p:dataTable lazy="false" var="match" value="#{matchday.matches}" size="small" style="font-size: 14px">
+                            <p:column headerText="#{matchday.matchday.type}">#{match.startShort}</p:column>
                             <p:column headerText="Home">#{match.homeTeam.teamAbbr}</p:column>
                             <p:column headerText="Score">#{match.score}</p:column>
                             <p:column headerText="Guest">#{match.guestTeam.teamAbbr}</p:column>
@@ -71,10 +73,19 @@
             </div>
         </div>
         <div class="p-col-2">
-            <ui:insert name="sidebar">
-                <ui:include src="/templates/sidebar.xhtml"/>
-            </ui:insert>
+            <p:chronoline value="#{loadLeague.days}" var="day">
+                <small>#{day.stage.stageType.name} - #{day.type}</small>
+
+                <f:facet name="opposite">
+                    <small class="text-secondary">#{day.until()}</small>
+                </f:facet>
+            </p:chronoline>
         </div>
+
+        <h:form>
+            <p:commandButton value="Update" action="#{allEventsTimelineView.updateMatches()}"/>
+        </h:form>
+
     </div>
 </h:body>
 </html>

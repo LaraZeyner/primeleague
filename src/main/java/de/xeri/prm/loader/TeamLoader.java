@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.enums.Teamrole;
 import de.xeri.prm.models.league.Account;
@@ -39,13 +39,13 @@ public class TeamLoader {
   private static final Map<Team, Long> updated = new HashMap<>();
 
   public static Team handleTeam(int turnamentId) {
-    return handleTeam(turnamentId, Data.getInstance().getCurrentSeason(), true, null);
+    return handleTeam(turnamentId, PrimeData.getInstance().getCurrentSeason(), true, null);
   }
 
   public static Team handleTeam(int turnamentId, Season season, boolean updateMatches, String name) {
     final Logger logger = Logger.getLogger("Team-Erstellung");
     try {
-      final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + turnamentId);
+      final HTML html = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + turnamentId);
       if (!html.toString().contains("webmaster has already been notified")) {
         final Document doc = Jsoup.parse(html.toString());
         final Team team = handleTeamCore(doc, turnamentId);
@@ -111,9 +111,17 @@ public class TeamLoader {
       val elements = playerElement.select("a");
       val idString = elements.attr("href").split("/users/")[1].split("-")[0];
       final int id = Integer.parseInt(idString);
-      val name = elements.text().equals("") ? null : elements.text();
+      final String name = elements.text().equals("") ? null : elements.text();
       val roleString = playerElement.select("div.txt-subtitle").text();
       val summonerName = playerElement.select("div.txt-info").select("span").get(0).text();
+
+      if (!Player.has(id)) {
+        final Player player1 = Player.find(name);
+        if (player1 != null) {
+          player1.setId(id);
+          PrimeData.getInstance().save(player1);
+        }
+      }
 
       if (Player.has(id)) {
         val player = Player.get(new Player(id, name, Teamrole.valueOf(roleString.toUpperCase())), team);
@@ -169,9 +177,9 @@ public class TeamLoader {
     final long last = updated.containsKey(team) ? updated.get(team) : 0;
     if (System.currentTimeMillis() - last > 300_000L) {
       try {
-        final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
+        final HTML html = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
         final Document doc = Jsoup.parse(html.toString());
-        handleSeason(Data.getInstance().getCurrentSeason(), doc, team);
+        handleSeason(PrimeData.getInstance().getCurrentSeason(), doc, team);
         updated.put(team, System.currentTimeMillis());
         logger.info("Team " + team.getId() + ": " + team.getTeamName() + " aktualisiert");
         return team;
@@ -203,7 +211,7 @@ public class TeamLoader {
     for (Team team : teams) {
       if (team != null && team.getTurneyId() != 0) {
         try {
-          final HTML html = Data.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
+          final HTML html = PrimeData.getInstance().getRequester().requestHTML("https://www.primeleague.gg/leagues/teams/" + team.getTurneyId());
           final Document doc = Jsoup.parse(html.toString());
           loadMatchesOfTeam(doc, season);
         } catch (IOException e) {

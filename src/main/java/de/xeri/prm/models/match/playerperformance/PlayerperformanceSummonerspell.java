@@ -18,7 +18,7 @@ import javax.persistence.Transient;
 
 import de.xeri.prm.models.dynamic.Summonerspell;
 import de.xeri.prm.models.ids.PlayerperformanceSummonerspellId;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -48,7 +48,7 @@ public class PlayerperformanceSummonerspell implements Serializable {
     }
     neu.getPlayerperformance().getSummonerspells().add(neu);
     neu.getSummonerspell().getPlayerperformances().add(neu);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

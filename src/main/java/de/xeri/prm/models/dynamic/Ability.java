@@ -22,7 +22,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.enums.Abilitytype;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -43,7 +43,7 @@ public class Ability implements Serializable {
     if (has(neu.getChampion(), neu.getAbilityType())) {
       return find(neu.getChampion(), neu.getAbilityType());
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

@@ -1,7 +1,9 @@
 package de.xeri.prm.servlet.datatables.league;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.xeri.prm.models.league.League;
 import de.xeri.prm.models.league.Matchday;
@@ -21,7 +23,8 @@ public class MatchdayMatches implements Comparable<MatchdayMatches>, Serializabl
 
   public MatchdayMatches(Matchday matchday, League league) {
     this.matchday = matchday;
-    this.matches = league.getMatchdays().get(matchday);
+    this.matches = league.getMatchdays().get(matchday)
+        .stream().sorted(Comparator.comparing(TurnamentMatch::getStart)).collect(Collectors.toList());
   }
 
   @Override

@@ -11,7 +11,7 @@ import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.dynamic.Resource;
 import de.xeri.prm.models.enums.Abilitytype;
 import de.xeri.prm.models.enums.Championclass;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.io.DataType;
 import de.xeri.prm.util.io.JSONElement;
 import de.xeri.prm.util.io.JSONParser;
@@ -23,8 +23,8 @@ import org.json.JSONObject;
  * Created by Lara on 29.03.2022 for TRUES
  */
 public final class ChampionLoader {
-  private static final JSON json = Data.getInstance().getRequester()
-      .requestJSON("http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/data/en_US/championFull.json");
+  private static final JSON json = PrimeData.getInstance().getRequester()
+      .requestJSON("http://ddragon.leagueoflegends.com/cdn/" + PrimeData.getInstance().getCurrentVersion() + "/data/en_US/championFull.json");
 
   public static void createChampions() {
     final JSONObject championsData = ((JSONElement) JSONParser.from(json)).getObject("data");
@@ -77,7 +77,7 @@ public final class ChampionLoader {
       if (spells.length() > 2) manageAbility(champion, spells.getJSONObject(2), Abilitytype.E_SPELL);
       if (spells.length() > 3) manageAbility(champion, spells.getJSONObject(3), Abilitytype.ULTIMATE);
 
-      Data.getInstance().save(champion);
+      PrimeData.getInstance().save(champion);
     }
   }
 

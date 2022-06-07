@@ -27,7 +27,7 @@ import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.Abilitytype;
 import de.xeri.prm.models.enums.ChampionPlaystyle;
 import de.xeri.prm.models.enums.Championclass;
@@ -40,7 +40,6 @@ import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.others.ChampionRelationship;
 import de.xeri.prm.servlet.datatables.draft.CompositionAttribute;
 import de.xeri.prm.util.HibernateUtil;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -85,7 +84,7 @@ public class Champion implements Serializable {
     if (champion != null) {
       return champion;
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -170,11 +169,11 @@ public class Champion implements Serializable {
   private BigDecimal attackSpeed;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "fight_type", length = 9)
+  @Column(name = "fight_type", length = 4)
   private FightType fightType;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "fight_style", length = 4)
+  @Column(name = "fight_style", length = 9)
   private FightStyle fightStyle;
 
   @Column(name = "waveclear")
@@ -218,12 +217,10 @@ public class Champion implements Serializable {
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "fromChampion")
   @ToString.Exclude
-  @Getter(AccessLevel.NONE)
   private final Set<ChampionRelationship> championRelationshipsFrom = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "toChampion")
   @ToString.Exclude
-  @Getter(AccessLevel.NONE)
   private final Set<ChampionRelationship> championRelationshipsTo = new LinkedHashSet<>();
 
   @OneToMany(fetch = FetchType.LAZY, mappedBy = "championOwn")
@@ -298,6 +295,16 @@ public class Champion implements Serializable {
     } else {
       this.championRelationshipsTo.add(relationship);
       relationship.setToChampion(this);
+    }
+  }
+
+  public void removeRelationship(ChampionRelationship relationship, boolean from) {
+    if (from) {
+      this.championRelationshipsFrom.remove(relationship);
+      relationship.setFromChampion(null);
+    } else {
+      this.championRelationshipsTo.add(relationship);
+      relationship.setToChampion(null);
     }
   }
 
@@ -415,7 +422,7 @@ public class Champion implements Serializable {
   }
 
   public String getImage() {
-    return "http://ddragon.leagueoflegends.com/cdn/" + Data.getInstance().getCurrentVersion() + "/img/champion/" + name + ".png";
+    return "http://ddragon.leagueoflegends.com/cdn/" + PrimeData.getInstance().getCurrentVersion() + "/img/champion/" + name + ".png";
   }
 
   @Override

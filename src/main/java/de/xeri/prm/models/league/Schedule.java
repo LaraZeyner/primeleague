@@ -1,6 +1,7 @@
 package de.xeri.prm.models.league;
 
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,9 +25,15 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.ScheduleType;
-import de.xeri.prm.manager.Data;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "Schedule")
@@ -34,6 +41,9 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "Schedule.findAll", query = "FROM Schedule p")
 @NamedQuery(name = "Schedule.findById", query = "FROM Schedule p WHERE id = :pk")
 @NamedQuery(name = "Schedule.findBy", query = "FROM Schedule p WHERE title = :title AND startTime = :start")
+@Getter
+@Setter
+@RequiredArgsConstructor
 public class Schedule implements Serializable {
   @Transient
   private static final long serialVersionUID = 3439077356822417423L;
@@ -49,7 +59,7 @@ public class Schedule implements Serializable {
       schedule.setSmallTitle(neu.getSmallTitle());
       return schedule;
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -68,8 +78,6 @@ public class Schedule implements Serializable {
   public static Schedule find(int id) {
     return HibernateUtil.find(Schedule.class, id);
   }
-
-
 
   public static List<Schedule> last() {
     return get().stream()
@@ -103,6 +111,7 @@ public class Schedule implements Serializable {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "enemy_team")
+  @ToString.Exclude
   private Team enemyTeam;
 
   @Column(name = "title", nullable = false, length = 100)
@@ -114,10 +123,6 @@ public class Schedule implements Serializable {
   @Column(name = "participants", length = 100)
   private String participants;
 
-  // default constructor
-  public Schedule() {
-  }
-
   public Schedule(ScheduleType type, Date startTime, String title, String smallTitle) {
     this.type = type;
     this.startTime = startTime;
@@ -126,92 +131,29 @@ public class Schedule implements Serializable {
     this.endTime = new Date(type.getDuration() + startTime.getTime());
   }
 
-  //<editor-fold desc="getter and setter">
-  public short getId() {
-    return id;
+  public String getStartString() {
+    return Util.until(startTime, "in ");
   }
 
-  public void setId(short id) {
-    this.id = id;
-  }
-
-  public ScheduleType getType() {
-    return type;
-  }
-
-  public void setType(ScheduleType type) {
-    this.type = type;
-  }
-
-  public Date getStartTime() {
-    return startTime;
-  }
-
-  public Date getEndTime() {
-    return endTime;
-  }
-
-  public void setEndTime(Date endTime) {
-    this.endTime = endTime;
-  }
-
-  public Team getEnemyTeam() {
-    return enemyTeam;
-  }
-
-  void setEnemyTeam(Team enemyTeam) {
-    this.enemyTeam = enemyTeam;
-  }
-
-  public void setSmallTitle(String smallTitle) {
-    this.smallTitle = smallTitle;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
-
-  public String getSmallTitle() {
-    return smallTitle;
-  }
-
-  public String getParticipants() {
-    return participants;
-  }
-
-  public void setParticipants(String participants) {
-    this.participants = participants;
+  public String getStartStringLong() {
+    return new SimpleDateFormat("E dd.MMMM HH:mm").format(startTime);
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof Schedule)) return false;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
     final Schedule schedule = (Schedule) o;
-    return getId() == schedule.getId() && getType() == schedule.getType() && getStartTime().equals(schedule.getStartTime()) && Objects.equals(getEndTime(), schedule.getEndTime()) && Objects.equals(getEnemyTeam(), schedule.getEnemyTeam()) && getTitle().equals(schedule.getTitle()) && Objects.equals(getSmallTitle(), schedule.getSmallTitle()) && Objects.equals(getParticipants(), schedule.getParticipants());
+    return Objects.equals(id, schedule.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getType(), getStartTime(), getEndTime(), getEnemyTeam(), getTitle(), getSmallTitle(), getParticipants());
+    return getClass().hashCode();
   }
 
   @Override
   public String toString() {
-    return "Schedule{" +
-        "id=" + id +
-        ", type=" + type +
-        ", startTime=" + startTime +
-        ", endTime=" + endTime +
-        ", enemyTeam=" + enemyTeam +
-        ", title='" + title + '\'' +
-        ", smallTitle='" + smallTitle + '\'' +
-        ", participants='" + participants + '\'' +
-        '}';
+    return type.getDisplayname() + " vs. " + enemyTeam + " - " + smallTitle;
   }
-  //</editor-fold>
 }

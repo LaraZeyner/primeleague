@@ -13,7 +13,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -35,7 +35,7 @@ public class ItemStat implements Serializable {
     if (has(neu.getId())) {
       return find(neu.getId());
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

@@ -20,7 +20,7 @@ import javax.persistence.Transient;
 import de.xeri.prm.game.events.location.PlayerPosition;
 import de.xeri.prm.game.events.location.Position;
 import de.xeri.prm.models.ids.PlayerperformanceInfoId;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -53,7 +53,7 @@ public class PlayerperformanceInfo extends Position {
     }
     playerperformance.getInfos().add(neu);
     neu.setPlayerperformance(playerperformance);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

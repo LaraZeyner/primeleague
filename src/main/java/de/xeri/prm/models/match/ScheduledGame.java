@@ -13,7 +13,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.enums.QueueType;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.logger.Logger;
 import lombok.Getter;
@@ -40,7 +40,7 @@ public class ScheduledGame implements Serializable {
     if (!Game.has(neu.getId())) {
       if (neu.getId().startsWith("EUW")) {
         Logger.getLogger("Scheduled-Game-Creation").info("Spiel erstellt", neu.getId());
-        Data.getInstance().save(neu);
+        PrimeData.getInstance().save(neu);
         return neu;
       } else {
         Logger.getLogger("Scheduled-Game-Creation").attention("Spiel auf anderem Server", neu.getId());

@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.dynamic.LeagueMap;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.NamedQuery;
 
@@ -42,7 +42,7 @@ public class Gametype implements Serializable {
       gametype.setName(neu.getName());
       return gametype;
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

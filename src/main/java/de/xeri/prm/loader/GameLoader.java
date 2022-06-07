@@ -11,7 +11,6 @@ public final class GameLoader {
 
   static {
     ScheduledGame.findMode(QueueType.TOURNEY).forEach(RiotGameRequester::loadCompetitive);
-
     ScheduledGame.findMode(QueueType.CLASH).forEach(RiotGameRequester::loadClashGame);
     ScheduledGame.findMode(QueueType.OTHER).forEach(RiotGameRequester::loadMatchmade);
   }

@@ -48,7 +48,7 @@ public class Composition {
   private List<Champion> recommendedPicksDisplay;
 
   public Composition(TeamView view) {
-    final List<PlayerView> players = view.getPlayers();
+    final List<PlayerView> players = view.getViews().stream().map(LaneView::getView).collect(Collectors.toList());
     final List<List<Champion>> presentChampions = players.stream()
         .map(player -> player.getChampions().stream()
             .map(ChampionView::getChampion)
@@ -202,7 +202,8 @@ public class Composition {
     for (int i = 0; i < picks.size(); i++) {
       final Map<Champion, Double> champs = new HashMap<>();
       if (picks.get(i) == null) {
-        champs.putAll(teamView.getPlayers().stream()
+        champs.putAll(teamView.getViews().stream()
+            .map(LaneView::getView)
             .flatMap(player -> player.getChampions().stream())
             .collect(Collectors.toMap(ChampionView::getChampion, champion -> champion.getPresenceNum() / 100., (a, b) -> b)));
       } else {

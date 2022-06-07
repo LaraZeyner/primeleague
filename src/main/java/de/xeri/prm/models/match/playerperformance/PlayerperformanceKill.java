@@ -26,7 +26,7 @@ import de.xeri.prm.models.ids.PlayerperformanceKillId;
 import de.xeri.prm.game.events.location.KillPosition;
 import de.xeri.prm.game.events.location.Position;
 import de.xeri.prm.models.match.Game;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
@@ -58,7 +58,7 @@ public class PlayerperformanceKill implements Serializable {
     }
     playerperformance.getKillEvents().add(neu);
     neu.setPlayerperformance(playerperformance);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -129,7 +129,7 @@ public class PlayerperformanceKill implements Serializable {
 
   public void setType(KillType type) {
     this.type = type;
-    Data.getInstance().save(this);
+    PrimeData.getInstance().save(this);
   }
 
   @Override

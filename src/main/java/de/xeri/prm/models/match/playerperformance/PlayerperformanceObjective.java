@@ -22,7 +22,7 @@ import javax.persistence.Transient;
 import de.xeri.prm.models.enums.KillRole;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.ObjectiveSubtype;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -52,7 +52,7 @@ public class PlayerperformanceObjective implements Serializable {
   public static PlayerperformanceObjective get(PlayerperformanceObjective neu, Playerperformance playerperformance) {
     playerperformance.getObjectives().add(neu);
     neu.setPlayerperformance(playerperformance);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 

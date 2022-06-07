@@ -16,10 +16,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.Elo;
 import de.xeri.prm.models.ids.SeasonEloId;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -53,9 +54,11 @@ public class SeasonElo implements Serializable {
       elo.setLosses(neu.getLosses());
       return elo;
     }
+    neu.setSeason(season);
+    neu.setAccount(account);
     season.addSeaonElo(neu);
     account.addSeasonElo(neu);
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -98,11 +101,15 @@ public class SeasonElo implements Serializable {
     return Elo.getDivision(mmr);
   }
 
-  public String getRank() {
+  public String getLP() {
     int lp = mmr - getElo().getMmr();
     if (getElo().equals(Elo.GRANDMASTER)) lp+= 500;
     if (getElo().equals(Elo.CHALLENGER)) lp+= 1000;
-    return getElo() + " " + lp + " LP";
+    return lp + " LP";
+  }
+
+  public String getRank() {
+    return getElo().getTier() + " " + getLP();
   }
 
   public String getDisplay() {
@@ -113,8 +120,8 @@ public class SeasonElo implements Serializable {
     return (short) (wins + losses);
   }
 
-  private int getRatio() {
-    return wins * 100 / getGames();
+  public int getRatio() {
+    return (int) Util.div(wins * 100, getGames());
   }
 
   @Override

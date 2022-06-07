@@ -18,7 +18,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.HibernateUtil;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.LazyCollection;
@@ -43,7 +43,7 @@ public class Rune implements Serializable {
     if (has(neu.getId())) {
       return find(neu.getId());
     }
-    Data.getInstance().save(neu);
+    PrimeData.getInstance().save(neu);
     return neu;
   }
 
@@ -100,7 +100,6 @@ public class Rune implements Serializable {
     this.description = description;
     this.shortDescription = shortDescription;
   }
-
   //<editor-fold desc="getter and setter">
   public short getId() {
     return id;

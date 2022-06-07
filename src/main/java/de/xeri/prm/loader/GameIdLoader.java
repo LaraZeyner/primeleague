@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.match.ScheduledGame;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.io.json.JSON;
 import de.xeri.prm.util.io.riot.RiotURLGenerator;
 import lombok.val;
@@ -30,7 +30,7 @@ public final class GameIdLoader {
     }
     account.setLastUpdate(new Date());
 
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 
   public static void load(QueueType queueType, Account account) {

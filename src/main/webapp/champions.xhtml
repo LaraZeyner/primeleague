@@ -17,208 +17,251 @@
         <ui:include src="/templates/topbar.xhtml"/>
     </ui:insert>
 
-
-    <div class="ui-fluid p-formgrid p-grid nested-grid">
-        <div class="p-col-6 ui-card">
-            <h4> Champion laden </h4>
-            <h:form>
-                <div class="p-grid">
-                    <div class="p-field p-col-8">
-                        <p:selectOneMenu id="advanced" value="#{loadChampions.champion}" dynamic="true" effect="fade"
-                                         filter="true" filterMatchMode="startsWith" required="true">
-                            <f:selectItem itemLabel="Wähle einen Champion..." itemValue=""/>
-                            <f:selectItems value="#{loadChampions.champions}" var="champ" itemLabel="#{champ}"
-                                           itemValue="#{champ}"/>
-
-                            <f:facet name="footer">
-                                <h:outputText value="#{loadChampions.champions.size()} Champions"
-                                              style="font-weight:bold;"
-                                              styleClass="p-py-1 p-d-block"/>
-                            </f:facet>
-                        </p:selectOneMenu>
-                    </div>
-                    <div class="p-field p-col-2">
-                        <p:commandButton action="#{loadChampions.update()}" update="@(form)" value="Laden"
-                                         styleClass="p-mr-2"/>
-                    </div>
-                    <div class="p-field p-col-2">
-                        <p:commandButton action="#{loadChampions.save()}" update="@(form)" value="Speichern"
-                                         styleClass="p-mr-2"/>
-                    </div>
-                </div>
-
-
-                <div style="text-align: center">
-                    <h:outputText styleClass="p-text-bold" value="#{loadChampions.selected.name}"/>
-                    <h:outputText styleClass="p-text-light" value="#{loadChampions.title}"/>
-                </div>
-
-                <div class="p-col-12 p-mb-2" style="text-align: center">
-                    <h:outputText styleClass="p-text-bold" value="#{loadChampions.className}"/>
-                    <h:outputText styleClass="p-text-light" value="#{loadChampions.subclassName}"/>
-                </div>
-
-
-                <h5>Stats</h5>
-                <div class="p-grid nested-grid">
-                    <div class="p-col-5 ui-card">
-                        <div class="p-grid">
-                            <div class="p-col-4 p-text-bold compact">Resource:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.resource.name}</div>
-                            <div class="p-col-4 p-text-bold compact">Attack:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.attack}</div>
-                            <div class="p-col-4 p-text-bold compact">Defense:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.defense}</div>
-                            <div class="p-col-4 p-text-bold compact">Spell:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.spell}</div>
-                            <div class="p-col-4 p-text-bold compact">Health:</div>
-                            <div class="p-col-8 compact">#{loadChampions.health}</div>
-                            <div class="p-col-4 p-text-bold compact">Secondary Bar:</div>
-                            <div class="p-col-8 compact">#{loadChampions.resource}</div>
-                        </div>
-                    </div>
-
-                    <div class="p-col-6 ui-card">
-                        <div class="p-grid">
-                            <div class="p-col-4 p-text-bold compact">Movement Speed:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.moveSpeed}</div>
-                            <div class="p-col-4 p-text-bold compact">Resistances:</div>
-                            <div class="p-col-8 compact">#{loadChampions.resist}</div>
-                            <div class="p-col-4 p-text-bold compact">Attack Range:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.attackRange}</div>
-                            <div class="p-col-4 p-text-bold compact">Champion Range:</div>
-                            <div class="p-col-8 compact">#{loadChampions.range}</div>
-                            <div class="p-col-4 p-text-bold compact">Damage:</div>
-                            <div class="p-col-8 compact">#{loadChampions.selected.damage}</div>
-                            <div class="p-col-4 p-text-bold compact">Attack Speed:</div>
-                            <div class="p-col-8 compact">#{loadChampions.attackSpeed}</div>
-                        </div>
-                    </div>
-                </div>
-                <h5>Style</h5>
-                <div class="p-grid nested-grid">
-                    <div class="p-col-5 ui-card">
-                        <div class="p-grid">
-                            <div class="p-col-12 text-sectiontitle compact">Winconditions</div>
-                            <div class="p-col-4 text-undertitle compact">Allin</div>
-                            <div class="p-col-4 text-undertitle compact">Sustain</div>
-                            <div class="p-col-4 text-undertitle compact">Trade</div>
-                            <div class="p-col-4 text-input compact">#{loadChampions.selected.allin}</div>
-                            <div class="p-col-4 text-input compact">#{loadChampions.selected.sustain}</div>
-                            <div class="p-col-4 text-input compact">#{loadChampions.selected.trade}</div>
-                        </div>
-                    </div>
-
-                    <div class="p-col-4 ui-card">
-                        <div class="p-grid">
-                            <div class="p-col-12 text-sectiontitle compact">Fighting</div>
-                            <div class="p-col-6 text-undertitle compact">Type</div>
-                            <div class="p-col-6 text-undertitle compact">Style</div>
-                            <div class="p-col-6 text-input compact">
-                                <p:inplace label="#{loadChampions.fightType}" effectSpeed="fast">
-                                    <p:selectOneMenu>
-                                        <f:selectItem itemLabel="#{loadChampions.fightType}" itemValue=""/>
-                                        <f:selectItems value="#{loadChampions.fightTypes}" var="type"
-                                                       itemLabel="#{type}"
-                                                       itemValue="#{type}"/>
-                                    </p:selectOneMenu>
-                                </p:inplace>
-                            </div>
-                            <div class="p-col-6 text-input compact">
-                                <p:inplace label="#{loadChampions.fightStyle}" effectSpeed="fast">
-                                    <p:selectOneMenu>
-                                        <f:selectItem itemLabel="#{loadChampions.fightStyle}" itemValue=""/>
-                                        <f:selectItems value="#{loadChampions.fightStyles}" var="style"
-                                                       itemLabel="#{style}"
-                                                       itemValue="#{style}"/>
-                                    </p:selectOneMenu>
-                                </p:inplace>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-col-2 ui-card">
-                        <div class="p-grid">
-                            <div class="p-col-12 text-sectiontitle compact">Waveclear</div>
-                            <div class="p-col-12 text-input compact">#{loadChampions.waveclear}</div>
-                        </div>
-                    </div>
-                </div>
-
+    <h:form>
+        <div class="ui-fluid p-formgrid p-grid nested-grid">
+            <div class="p-col-6">
                 <div class="ui-card">
+                    <h4> Champion laden </h4>
+
                     <div class="p-grid">
-                        <div class="p-col-12 text-sectiontitle compact">Playstyle</div>
-                        <div class="p-col-4 text-undertitle compact">Overall</div>
-                        <div class="p-col-4 text-undertitle compact">Earlygame</div>
-                        <div class="p-col-4 text-undertitle compact">Pre6</div>
-                        <div class="p-col-4 text-input compact">
-                            <p:inplace label="#{loadChampions.playstyleOverall}" effectSpeed="fast">
-                                <p:selectOneMenu>
-                                    <f:selectItem itemLabel="#{loadChampions.overall}" itemValue=""/>
-                                    <f:selectItems value="#{loadChampions.playStyles}" var="type" itemLabel="#{type}"
-                                                   itemValue="#{type}"/>
-                                </p:selectOneMenu>
-                            </p:inplace>
+                        <div class="p-field p-col-8">
+                            <p:selectOneMenu id="advanced" value="#{loadChampions.champion}" dynamic="true"
+                                             effect="fade"
+                                             filter="true" filterMatchMode="startsWith" required="true">
+                                <f:selectItem itemLabel="Wähle einen Champion..."/>
+                                <f:selectItems value="#{loadChampions.champions}"/>
+
+                                <f:facet name="footer">
+                                    <h:outputText value="#{loadChampions.champions.size()} Champions"
+                                                  style="font-weight:bold;"
+                                                  styleClass="p-py-1 p-d-block"/>
+                                </f:facet>
+                            </p:selectOneMenu>
                         </div>
-                        <div class="p-col-4 text-input compact">
-                            <p:inplace label="#{loadChampions.playstyleEarly}" effectSpeed="fast">
-                                <p:selectOneMenu>
-                                    <f:selectItem itemLabel="#{loadChampions.earlygame}" itemValue=""/>
-                                    <f:selectItems value="#{loadChampions.playStyles}" var="type" itemLabel="#{type}"
-                                                   itemValue="#{type}"/>
-                                </p:selectOneMenu>
-                            </p:inplace>
+                        <div class="p-field p-col-2">
+                            <p:commandButton action="#{loadChampions.update()}" update="@(form)" value="Laden"
+                                             styleClass="p-mr-2"/>
                         </div>
-                        <div class="p-col-4 text-input compact">
-                            <p:inplace label="#{loadChampions.playstylePre6}" effectSpeed="fast">
-                                <p:selectOneMenu>
-                                    <f:selectItem itemLabel="#{loadChampions.pre6}" itemValue=""/>
-                                    <f:selectItems value="#{loadChampions.playStyles}" var="type" itemLabel="#{type}"
-                                                   itemValue="#{type}"/>
-                                </p:selectOneMenu>
-                            </p:inplace>
+                        <div class="p-field p-col-2">
+                            <p:commandButton action="#{loadChampions.save()}" update="@(form)" value="Speichern"
+                                             styleClass="p-mr-2"/>
                         </div>
-                        <div class="p-col-4 p-mt-1 text-undertitle compact">Post6</div>
-                        <div class="p-col-4 p-mt-1 text-undertitle compact">Midgame</div>
-                        <div class="p-col-4 p-mt-1 text-undertitle compact">Lategame</div>
-                        <div class="p-col-4 p-mt-1 text-input compact">
-                            <p:inplace label="#{loadChampions.playstylePost6}" effectSpeed="fast">
-                                <p:selectOneMenu>
-                                    <f:selectItem itemLabel="#{loadChampions.post6}" itemValue=""/>
-                                    <f:selectItems value="#{loadChampions.playStyles}" var="type" itemLabel="#{type}"
-                                                   itemValue="#{type}"/>
-                                </p:selectOneMenu>
-                            </p:inplace>
+                    </div>
+
+
+                    <div style="text-align: center">
+                        <h:outputText styleClass="p-text-bold" value="#{loadChampions.selected.name}"/>
+                        <h:outputText styleClass="p-text-light" value="#{loadChampions.title}"/>
+                    </div>
+
+                    <div class="p-col-12 p-mb-2" style="text-align: center">
+                        <p:inplace label="#{loadChampions.championClass}" effectSpeed="fast">
+                            <p:selectOneMenu value="#{loadChampions.championClass}">
+                                <f:selectItem itemLabel="#{loadChampions.championClass}"/>
+                                <f:selectItems value="#{loadChampions.championClasses}"/>
+                            </p:selectOneMenu>
+                        </p:inplace>
+                    </div>
+
+
+                    <h5>Stats</h5>
+                    <div class="p-grid nested-grid">
+                        <div class="p-col-6">
+                            <div class="p-grid ui-card">
+                                <div class="p-col-4 p-text-bold compact">Resource:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.resource.name}</div>
+                                <div class="p-col-4 p-text-bold compact">Attack:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.attack}</div>
+                                <div class="p-col-4 p-text-bold compact">Defense:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.defense}</div>
+                                <div class="p-col-4 p-text-bold compact">Spell:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.spell}</div>
+                                <div class="p-col-4 p-text-bold compact">Health:</div>
+                                <div class="p-col-8 compact">#{loadChampions.health}</div>
+                                <div class="p-col-4 p-text-bold compact">Secondary Bar:</div>
+                                <div class="p-col-8 compact">#{loadChampions.resource}</div>
+                            </div>
                         </div>
-                        <div class="p-col-4 p-mt-1 text-input compact">
-                            <p:inplace label="#{loadChampions.playstyleMid}" effectSpeed="fast">
-                                <p:selectOneMenu>
-                                    <f:selectItem itemLabel="#{loadChampions.midgame}" itemValue=""/>
-                                    <f:selectItems value="#{loadChampions.playStyles}" var="type" itemLabel="#{type}"
-                                                   itemValue="#{type}"/>
-                                </p:selectOneMenu>
-                            </p:inplace>
+
+                        <div class="p-col-6">
+                            <div class="p-grid ui-card">
+                                <div class="p-col-4 p-text-bold compact">Move Speed:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.moveSpeed}</div>
+                                <div class="p-col-4 p-text-bold compact">Resistances:</div>
+                                <div class="p-col-8 compact">#{loadChampions.resist}</div>
+                                <div class="p-col-4 p-text-bold compact">Attack Range:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.attackRange}</div>
+                                <div class="p-col-4 p-text-bold compact">Champion Range:</div>
+                                <div class="p-col-8 compact">#{loadChampions.range}</div>
+                                <div class="p-col-4 p-text-bold compact">Damage:</div>
+                                <div class="p-col-8 compact">#{loadChampions.selected.damage}</div>
+                                <div class="p-col-4 p-text-bold compact">Attack Speed:</div>
+                                <div class="p-col-8 compact">#{loadChampions.attackSpeed}</div>
+                            </div>
                         </div>
-                        <div class="p-col-4 p-mt-1 text-input compact">
-                            <p:inplace label="#{loadChampions.playstyleLate}" effectSpeed="fast" >
-                                <p:selectOneMenu>
-                                    <f:selectItem itemLabel="#{loadChampions.lategame}" itemValue=""/>
-                                    <f:selectItems value="#{loadChampions.playStyles}" var="type" itemLabel="#{type}"
-                                                   itemValue="#{type}"/>
-                                </p:selectOneMenu>
-                            </p:inplace>
+                    </div>
+                    <h5>Style</h5>
+                    <div class="p-grid nested-grid">
+                        <div class="p-col-5">
+                            <div class="p-grid ui-card">
+                                <div class="p-col-12 text-sectiontitle compact">Winconditions</div>
+                                <div class="p-col-4 text-undertitle compact">Allin</div>
+                                <div class="p-col-4 text-undertitle compact">Sustain</div>
+                                <div class="p-col-4 text-undertitle compact">Trade</div>
+                                <div class="p-col-4 text-undertitle compact">
+                                    <p:spinner id="v-allin" value="#{loadChampions.allin}" buttons="vertical"
+                                               upButtonStyleClass="ui-button-secondary"
+                                               downButtonStyleClass="ui-button-secondary" min="0" max="10"/>
+                                </div>
+                                <div class="p-col-4 text-undertitle compact">
+                                    <p:spinner id="v-sustain" value="#{loadChampions.sustain}" buttons="vertical"
+                                               upButtonStyleClass="ui-button-secondary"
+                                               downButtonStyleClass="ui-button-secondary" min="0" max="10"/>
+                                </div>
+                                <div class="p-col-4 text-undertitle compact">
+                                    <p:spinner id="v-trade" value="#{loadChampions.trade}" buttons="vertical"
+                                               upButtonStyleClass="ui-button-secondary"
+                                               downButtonStyleClass="ui-button-secondary" min="0" max="10"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-col-5">
+                            <div class="p-grid ui-card">
+                                <div class="p-col-12 text-sectiontitle compact">Fighting</div>
+                                <div class="p-col-6 text-undertitle compact">Type</div>
+                                <div class="p-col-6 text-undertitle compact">Style</div>
+                                <div class="p-col-6 text-input compact">
+                                    <p:inplace label="#{loadChampions.fightType}" effectSpeed="fast">
+                                        <p:selectOneMenu value="#{loadChampions.fightType}">
+                                            <f:selectItem itemLabel="#{loadChampions.fightType}"/>
+                                            <f:selectItems value="#{loadChampions.fightTypes}"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
+                                </div>
+                                <div class="p-col-6 text-input compact">
+                                    <p:inplace label="#{loadChampions.fightStyle}" effectSpeed="fast">
+                                        <p:selectOneMenu value="#{loadChampions.fightStyle}">
+                                            <f:selectItem itemLabel="#{loadChampions.fightStyle}"/>
+                                            <f:selectItems value="#{loadChampions.fightStyles}"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-col-2">
+                            <div class="p-grid ui-card">
+                                <div class="p-col-12 text-sectiontitle compact">Waveclear</div>
+                                <div class="p-col-12">
+                                    <p:spinner id="v-waveclear" value="#{loadChampions.waveclear}" buttons="vertical"
+                                               upButtonStyleClass="ui-button-secondary"
+                                               downButtonStyleClass="ui-button-secondary" min="0" max="10"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ui-card">
+                        <div class="p-grid">
+                            <div class="p-col-12 text-sectiontitle compact">Playstyle</div>
+                            <div class="p-col-4 text-undertitle compact">Overall</div>
+                            <div class="p-col-4 text-undertitle compact">Earlygame</div>
+                            <div class="p-col-4 text-undertitle compact">Pre6</div>
+                            <div class="p-col-4 text-input compact">
+                                <p:inplace label="#{loadChampions.playstyleOverall}" effectSpeed="fast">
+                                    <p:selectOneMenu value="#{loadChampions.overall}">
+                                        <f:selectItem itemLabel="#{loadChampions.overall}"/>
+                                        <f:selectItems value="#{loadChampions.playStyles}"/>
+                                    </p:selectOneMenu>
+                                </p:inplace>
+                            </div>
+                            <div class="p-col-4 text-input compact">
+                                <p:inplace label="#{loadChampions.playstyleEarly}" effectSpeed="fast">
+                                    <p:selectOneMenu value="#{loadChampions.earlygame}">
+                                        <f:selectItem itemLabel="#{loadChampions.earlygame}"/>
+                                        <f:selectItems value="#{loadChampions.playStyles}"/>
+                                    </p:selectOneMenu>
+                                </p:inplace>
+                            </div>
+                            <div class="p-col-4 text-input compact">
+                                <p:inplace label="#{loadChampions.playstylePre6}" effectSpeed="fast">
+                                    <p:selectOneMenu value="#{loadChampions.pre6}">
+                                        <f:selectItem itemLabel="#{loadChampions.pre6}"/>
+                                        <f:selectItems value="#{loadChampions.playStyles}"/>
+                                    </p:selectOneMenu>
+                                </p:inplace>
+                            </div>
+                            <div class="p-col-4 p-mt-1 text-undertitle compact">Post6</div>
+                            <div class="p-col-4 p-mt-1 text-undertitle compact">Midgame</div>
+                            <div class="p-col-4 p-mt-1 text-undertitle compact">Lategame</div>
+                            <div class="p-col-4 p-mt-1 text-input compact">
+                                <p:inplace label="#{loadChampions.playstylePost6}" effectSpeed="fast">
+                                    <p:selectOneMenu value="#{loadChampions.post6}">
+                                        <f:selectItem itemLabel="#{loadChampions.post6}"/>
+                                        <f:selectItems value="#{loadChampions.playStyles}"/>
+                                    </p:selectOneMenu>
+                                </p:inplace>
+                            </div>
+                            <div class="p-col-4 p-mt-1 text-input compact">
+                                <p:inplace label="#{loadChampions.playstyleMid}" effectSpeed="fast">
+                                    <p:selectOneMenu value="#{loadChampions.midgame}">
+                                        <f:selectItem itemLabel="#{loadChampions.midgame}"/>
+                                        <f:selectItems value="#{loadChampions.playStyles}"/>
+                                    </p:selectOneMenu>
+                                </p:inplace>
+                            </div>
+                            <div class="p-col-4 p-mt-1 text-input compact">
+                                <p:inplace label="#{loadChampions.playstyleLate}" effectSpeed="fast">
+                                    <p:selectOneMenu value="#{loadChampions.lategame}">
+                                        <f:selectItem itemLabel="#{loadChampions.lategame}"/>
+                                        <f:selectItems value="#{loadChampions.playStyles}"/>
+                                    </p:selectOneMenu>
+                                </p:inplace>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5>Synergien und Counter</h5>
+                    <div class="p-grid ui-card">
+                        <div class="p-col-6">
+                            <div class="p-col-12 text-sectiontitle compact">Synergie</div>
+                            <p:pickList id="pick-synergy" value="#{loadChampions.synergies}" var="synergy"
+                                        itemLabel="#{synergy}" itemValue="#{synergy}"/>
+                        </div>
+                        <div class="p-col-6">
+                            <div class="p-col-12 text-sectiontitle compact">Counter</div>
+                            <p:pickList id="pick-counters" value="#{loadChampions.counters}" var="counter"
+                                        itemLabel="#{counter}" itemValue="#{counter}" style="width: 33%"/>
                         </div>
                     </div>
                 </div>
-            </h:form>
+            </div>
+
+            <div class="p-col-6">
+                <p:dataTable lazy="false" var="performance" value="#{loadChampions.playerperformances}" size="small"
+                             rowKey="#{performance.id}" style="font-size: 14px">
+                    <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
+                    <p:column width="11%" headerText="Typ">#{performance.gameType.name}</p:column>
+                    <p:column width="17%" headerText="Teams">#{performance.teamperformance.teamDuel}</p:column>
+                    <p:column width="16%" headerText="Spieler">#{performance.account.name}</p:column>
+                    <p:column width="5%" headerText="Ergeb.">#{performance.teamperformance.resultString}</p:column>
+                    <p:column width="11%" headerText="Score">#{performance.KDAString}</p:column>
+                    <p:column width="26%" style="padding: 0" headerText="Build">
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(0)}"/>
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(1)}"/>
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(2)}"/>
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(3)}"/>
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(4)}"/>
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(5)}"/>
+                        <h:graphicImage height="30px" url="#{performance.itemsEnded.get(6)}"/>
+                    </p:column>
+                    <p:column width="4%" headerText="Dauer">#{performance.teamperformance.game.durationString}</p:column>
+                    <p:column width="10%" headerText="Datum">#{performance.teamperformance.game.startString}</p:column>
+                </p:dataTable>
+            </div>
         </div>
-
-        <div class="p-col-6">
-
-        </div>
-
-    </div>
-
+    </h:form>
 
 </h:body>
 </html>

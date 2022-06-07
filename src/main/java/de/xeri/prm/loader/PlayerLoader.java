@@ -6,7 +6,7 @@ import java.util.Set;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Team;
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.io.riot.RiotAccountRequester;
 import de.xeri.prm.util.logger.Logger;
 
@@ -17,7 +17,7 @@ public final class PlayerLoader {
   static {
     Logger logger = Logger.getLogger("Spieler laden");
 
-    Set<Team> teamList = new LinkedHashSet<>(Data.getInstance().getCurrentGroup().getTeams());
+    Set<Team> teamList = new LinkedHashSet<>(PrimeData.getInstance().getCurrentGroup().getTeams());
     teamList.addAll(Team.findScrim());
 
     for (Team team : teamList) {
@@ -44,7 +44,7 @@ public final class PlayerLoader {
   }
 
   public static void load() {
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
   }
 
 }

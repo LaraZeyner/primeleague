@@ -33,7 +33,6 @@
                 <p:growl id="navigation"/>
                 <p:menubar styleClass="true-topbar">
                     <p:menuitem value="Das Team" url="team.xhtml"/>
-                    <p:menuitem value="Livespiel" url="live.xhtml"/>
                     <p:menuitem value="Liga: #{loadLeague.league.name}" url="table.xhtml"/>
                     <p:menuitem value="Scouting" url="scouting.xhtml"/>
                     <p:menuitem value="Champions" url="champions.xhtml"/>
@@ -45,52 +44,55 @@
 
 
         <div class="p-mr-auto">
-            Nächstes Spiel am So, den 12. Juni 15:00 <br/>
-            in 12 Tagen und 1 Stunde <br/>
-            gegen Krefelder Kloster Knaben
+            Nächstes Spiel am #{allEventsTimelineView.nextOrLast.startStringLong}<br/>
+            in #{allEventsTimelineView.nextOrLast.startString} <br/>
+            gegen #{allEventsTimelineView.nextOrLast.enemyTeam.teamName}
         </div>
 
         <p:sidebar widgetVar="sidebar1">
-            <div class="card">
-                <h5 class="p-mt-0">Wähle deine Kategorie</h5>
-                <p:tabView>
-                    <p:tab title="Spielplan" icon="pi pi-fw pi-calendar">
-                        <p class="p-m-0">
-                            Dies ist der Spielplan.
-                        </p>
-                    </p:tab>
-                    <p:tab title="Tabelle">
-                        <p class="p-m-0">
-                            <h:form>
-                                <div class="card">
-                                    <h5>Tabelle: #{loadLeague.leagueTeams}</h5>
-                                    <p:dataTable lazy="false" var="team" value="#{loadLeague.leagueTeams}" size="small"
-                                                 rowIndexVar="rowIndex" showGridlines="false"
-                                                 style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
+            <h5 class="p-mt-0">Wähle deine Kategorie</h5>
+            <p:tabView>
+                <p:tab title="Spielplan" icon="pi pi-fw pi-calendar">
+                    <p class="p-m-0">
+                        <p:dataTable lazy="false" var="schedule" value="#{allEventsTimelineView.upcomingSchedules}"
+                                     size="small" rowKey="#{performance.id}" style="font-size: 14px">
+                            <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
+                            <p:column width="35%" headerText="Typ">#{schedule.type.displayname}</p:column>
+                            <p:column width="45%" headerText="Zeit">#{schedule.startString}</p:column>
+                            <p:column width="20%" headerText="vs">#{schedule.enemyTeam.teamAbbr}</p:column>
+                        </p:dataTable>
+                    </p>
+                </p:tab>
+                <p:tab title="Tabelle">
+                    <p class="p-m-0">
+                        <h:form>
+                            <h5>Tabelle: #{loadLeague.league.name}</h5>
+
+                            <p:dataTable lazy="false" var="team" value="#{loadLeague.leagueTeams}" size="small"
+                                         rowIndexVar="rowIndex" showGridlines="false"
+                                         style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
                                                  'row-down' : (rowIndex lt 2 ? 'row-up' : (rowIndex eq 2 ?
                                                  'row-limit-upper' : (rowIndex eq 5 ? 'row-limit-bottiom' :
                                                  'row-stay')))}">
-                                        <p:column width="4%" headerText="Pl">#{team.place}</p:column>
-                                        <p:column width="15%">
-                                            <h:graphicImage style="width: 100%" value="#{team.logoUrl}"/>
-                                        </p:column>
-                                        <p:column width="31%" headerText="Team"
-                                                  style="font-weight: bold">#{team.abbreviation}</p:column>
-                                        <p:column width="14%" headerText="Win">#{team.winsPerMatch}</p:column>
-                                        <p:column width="14%" headerText="Pkt.">#{team.teamScore}</p:column>
-                                        <p:column width="22%" headerText="SUN">#{team.bilance}</p:column>
-                                    </p:dataTable>
-                                </div>
-                            </h:form>
-                        </p>
-                    </p:tab>
-                    <p:tab title="Online">
-                        <p class="p-m-0">
-                            Dies ist die Onlineliste.
-                        </p>
-                    </p:tab>
-                </p:tabView>
-            </div>
+                                <p:column width="4%" headerText="Pl">#{team.place}</p:column>
+                                <p:column width="15%">
+                                    <h:graphicImage style="width: 80%" value="#{team.logoUrl}"/>
+                                </p:column>
+                                <p:column width="31%" style="font-weight: bold"
+                                          headerText="Team">#{team.abbreviation}</p:column>
+                                <p:column width="14%" headerText="Win">#{team.winsPerMatch}</p:column>
+                                <p:column width="14%" headerText="Pkt.">#{team.teamScore}</p:column>
+                                <p:column width="22%" headerText="SUN">#{team.bilance}</p:column>
+                            </p:dataTable>
+                        </h:form>
+                    </p>
+                </p:tab>
+                <p:tab title="Online">
+                    <p class="p-m-0">
+                        Dies ist die Onlineliste.
+                    </p>
+                </p:tab>
+            </p:tabView>
         </p:sidebar>
     </div>
 

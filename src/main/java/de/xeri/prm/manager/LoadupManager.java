@@ -28,8 +28,8 @@ public class LoadupManager {
   public static Date init() {
     if (Const.check()) {
       final Date date = new Date();
-      final Data data = Data.getInstance();
-      data.init();
+      final PrimeData primeData = PrimeData.getInstance();
+      primeData.init();
       return date;
     }
     System.exit(1);
@@ -58,29 +58,29 @@ public class LoadupManager {
     StatCatLoader.load();
     logger.info("Statkategorien geladen");
 
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
     return true;
   }
 
   public static boolean loadPrimeLeague() {
     val logger = Logger.getLogger("Prime-League");
     SeasonLoader.load();
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
     logger.info("Season geladen");
 
     PlayerLoader.load();
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
     logger.info("Spielerdaten & Spiele geladen");
     // Search for players of Team without account
     AccountLoader.load();
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
     // Search for valueable Teams
     AccountLoader.updateTeams();
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
 
     TeamLoader.handleTeam(Const.TEAMID);
     ScheduleLoader.load();
-    Data.getInstance().commit();
+    PrimeData.getInstance().commit();
     return true;
   }
 

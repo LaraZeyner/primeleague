@@ -263,6 +263,39 @@ body .ui-card-title {
     color: darkgreen;
 }
 
+.status-ACTIVE {
+    text-align: center;
+    border-color: darkgreen;
+    color: darkgreen;
+}
+
+.status-INACTIVE {
+    text-align: center;
+    border-color: yellow;
+    color: yellow;
+}
+
+.status-DELETED {
+    text-align: center;
+    border-color: darkred;
+    color: darkred;
+}
+
+.product-name {
+    text-align: center;
+    font-weight: 700;
+}
+
+.product-description {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 300;
+}
+
+.product-price {
+    font-size: 0.9rem;
+}
+
 .column-small .ui-datatable .ui-datatable-data tr {
     height: 15px;
     max-height: 15px;

@@ -68,6 +68,10 @@ public class Logger {
     doLog();
   }
 
+  public void log(String msg, Object... values) {
+    log(Level.LOG, msg, values);
+  }
+
   public void log(String msg, Throwable thrown, Object... values) {
     this.level = Level.OFF;
     this.msg = msg;

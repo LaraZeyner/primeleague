@@ -11,12 +11,13 @@ import lombok.ToString;
 @RequiredArgsConstructor
 @ToString
 public enum StageType {
-  PRESEASON(482, "group"),
-  KALIBRIERUNGSPHASE(506, "group"),
-  GRUPPENPHASE(509, "group"),
-  PLAYOFFS(512, "playoff");
+  PRESEASON(482, "group", "Pre"),
+  KALIBRIERUNGSPHASE(506, "group", "Kali"),
+  GRUPPENPHASE(509, "group", "Gruppe"),
+  PLAYOFFS(512, "playoff", "Playoffs");
 
   private final int value;
   private final String typeName;
+  private final String name;
 
 }

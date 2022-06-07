@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import javax.persistence.NoResultException;
 import javax.persistence.metamodel.EntityType;
 
-import de.xeri.prm.manager.Data;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.dynamic.Ability;
 import de.xeri.prm.models.dynamic.Abilitystyle;
 import de.xeri.prm.models.dynamic.Champion;
@@ -33,6 +33,7 @@ import de.xeri.prm.models.dynamic.Summonerspell;
 import de.xeri.prm.models.enums.ChampionPlaystyle;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.io.Input;
+import de.xeri.prm.models.league.Absence;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.League;
 import de.xeri.prm.models.league.Matchday;
@@ -87,6 +88,7 @@ public final class HibernateUtil {
     final Configuration configuration = addClasses(Arrays.asList(
         Ability.class,
         Abilitystyle.class,
+        Absence.class,
         Account.class,
         Champion.class,
         ChampionRelationship.class,
@@ -138,7 +140,7 @@ public final class HibernateUtil {
   }
 
   public static <T> List<T> findList(Class<T> entityClass) {
-    final Session session = Data.getInstance().getSession();
+    final Session session = PrimeData.getInstance().getSession();
     final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
     final String entityClassName = storedEntity.getName();
 
@@ -153,7 +155,7 @@ public final class HibernateUtil {
 
   public static <T> List<T> findList(Class<T> entityClass, String identifier, boolean bool) {
     if (bool) {
-      final Session session = Data.getInstance().getSession();
+      final Session session = PrimeData.getInstance().getSession();
       final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
       final String entityClassName = storedEntity.getName();
 
@@ -241,17 +243,17 @@ public final class HibernateUtil {
   }
 
   private static <T> T performSingle(Class<T> entityClass, String primaryKey) {
-    final Query<T> query = perform(entityClass, primaryKey);
+    val query = perform(entityClass, primaryKey);
     return query.setMaxResults(1).getSingleResult();
   }
 
   private static <T> Query<T> perform(Class<T> entityClass, String primaryKey) {
-    final Session session = Data.getInstance().getSession();
-    final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
-    final String entityClassName = storedEntity.getName();
+    val session = PrimeData.getInstance().getSession();
+    val storedEntity = session.getMetamodel().entity(entityClass);
+    val entityClassName = storedEntity.getName();
 
-    final Query<T> query = session.getNamedQuery(entityClassName + ".findById");
-    final Map<Class<?>, Number> ret = new HashMap<>();
+    val query = session.getNamedQuery(entityClassName + ".findById");
+    val ret = new HashMap<Class<?>, Number>();
 
     try {
       ret.put(Long.class, Long.parseLong(primaryKey));
@@ -270,7 +272,7 @@ public final class HibernateUtil {
 
   private static <T> T performSingle(Class<T> entityClass, String[] params, Object[] values, String subquery) {
     try {
-      final Query<T> query = performWithSubquery(entityClass, params, values, subquery);
+      val query = performWithSubquery(entityClass, params, values, subquery);
       return query.setMaxResults(1).getSingleResult();
     } catch (ClassCastException ex) {
       ex.printStackTrace();
@@ -279,11 +281,11 @@ public final class HibernateUtil {
   }
 
   private static <T> Query<T> performWithSubquery(Class<T> entityClass, String[] params, Object[] values, String subquery) {
-    final Session session = Data.getInstance().getSession();
-    final EntityType<T> storedEntity = session.getMetamodel().entity(entityClass);
-    final String entityClassName = storedEntity.getName();
+    val session = PrimeData.getInstance().getSession();
+    val storedEntity = session.getMetamodel().entity(entityClass);
+    val entityClassName = storedEntity.getName();
 
-    final Query<T> query = session.getNamedQuery(entityClassName + "." + subquery);
+    val query = session.getNamedQuery(entityClassName + "." + subquery);
 
     for (int i = 0; i < params.length; i++) {
       final String param = params[i];
@@ -294,7 +296,7 @@ public final class HibernateUtil {
   }
 
   public static Object[] gamesOnAllLanes(Account account) {
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("Playerperformance.gamesOnLane");
     query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
     query.setParameter("account", account);
@@ -302,8 +304,8 @@ public final class HibernateUtil {
   }
 
   public static int gamesOnLaneRecently(Account account, Lane lane) {
-    final Session session = Data.getInstance().getSession();
-    final Query<Object> query = session.getNamedQuery("Playerperformance.gamesOnLaneRecently");
+    val session = PrimeData.getInstance().getSession();
+    val query = session.getNamedQuery("Playerperformance.gamesOnLaneRecently");
     query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
     query.setParameter("account", account);
     query.setParameter("lane", lane);
@@ -311,14 +313,14 @@ public final class HibernateUtil {
   }
 
   public static LinkedHashMap<Short, Integer> getChampionIdsPickedOn(Account account, Lane lane, StatScope scope) {
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Short> query = session.getNamedQuery(scope.equals(StatScope.COMPETITIVELIKE) ? "Playerperformance.championsPickedCompetitive" :
         (scope.equals(StatScope.COMPETITIVE) ? "Playerperformance.championsPickedCompet" : "Playerperformance.championsPickedOther"));
     return determineChampionIdsSorted(account, lane, scope, query);
   }
 
   public static LinkedHashMap<Short, Integer> getChampionIdsPresentOn(Account account, Lane lane, StatScope scope) {
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Short> query = session.getNamedQuery(scope.equals(StatScope.COMPETITIVELIKE) ?
         "ChampionSelection.championsPresenceCompetitive" : "ChampionSelection.championsPresenceOther");
     return determineChampionIdsSorted(account, lane, scope, query);
@@ -326,10 +328,10 @@ public final class HibernateUtil {
 
   public static Map<CompositionAttribute, Double> getAverageChampionStats() {
     if (averageChampionData == null) {
-      final Session session = Data.getInstance().getSession();
+      val session = PrimeData.getInstance().getSession();
       final Query<Object[]> query = session.getNamedQuery("Playerperformance.averageChampionValues");
 
-      Object[] objects = query.getSingleResult();
+      final Object[] objects = query.getSingleResult();
       final Map<CompositionAttribute, Double> championMap = new HashMap<>();
       championMap.put(CompositionAttribute.WINCONDITION_TRADE, getChampionStats().keySet().stream()
           .mapToDouble(champion -> getChampionStats().get(champion).get(CompositionAttribute.WINCONDITION_TRADE)).average().orElse(0));
@@ -382,11 +384,11 @@ public final class HibernateUtil {
   public static Map<Champion, Map<CompositionAttribute, Double>> getChampionStats() {
     if (championData == null) {
       Map<Champion, Map<CompositionAttribute, Double>> map = new HashMap<>();
-      final Session session = Data.getInstance().getSession();
+      val session = PrimeData.getInstance().getSession();
       final Query<Object[]> query = session.getNamedQuery("Playerperformance.championValues");
-      final List<Object[]> list = query.list();
+      val list = query.list();
 
-      final Map<Champion, List<Double>> wins = getWins();
+      val wins = getWins();
 
       for (Object[] objects : list) {
         final Champion champion = (Champion) objects[0];
@@ -436,26 +438,26 @@ public final class HibernateUtil {
   }
 
   public static List<Integer> getWins(Account account, Lane lane, short championId) {
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("Playerperformance.championWins");
     query.setParameter("since", new Date(System.currentTimeMillis() - 180 * Const.MILLIS_PER_DAY));
     query.setParameter("account", account);
     query.setParameter("lane", lane);
     query.setParameter("championId", championId);
-    final Object[] singleResult = query.getSingleResult();
+    val singleResult = query.getSingleResult();
     return Arrays.asList((int) (((Long) singleResult[0]).longValue()), (int) (((Long) singleResult[1]).longValue()));
   }
 
   private static Map<Champion, List<Double>> getWins() {
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("ChampionSelection.championStrongPhase");
-    final List<Object[]> list = query.list();
-    Map<Champion, List<Double>> map = new HashMap<>();
+    val list = query.list();
+    val map = new HashMap<Champion, List<Double>>();
     for (Object[] objects : list) {
-      Champion champion = (Champion) objects[0];
-      Double early = (Double) objects[1];
-      Double mid = (Double) objects[2];
-      Double late = (Double) objects[3];
+      val champion = (Champion) objects[0];
+      val early = (Double) objects[1];
+      val mid = (Double) objects[2];
+      val late = (Double) objects[3];
       map.put(champion, Arrays.asList(early, mid, late));
     }
 
@@ -463,12 +465,11 @@ public final class HibernateUtil {
   }
 
   @NotNull
-  private static LinkedHashMap<Short, Integer> determineChampionIdsSorted(Account account, Lane lane, StatScope
-      scope, Query<Short> query) {
+  private static LinkedHashMap<Short, Integer> determineChampionIdsSorted(Account account, Lane lane, StatScope scope, Query<Short> query) {
     query.setParameter("since", new Date(System.currentTimeMillis() - (scope.equals(StatScope.RECENT) ? 30 : 180) * Const.MILLIS_PER_DAY));
     query.setParameter("account", account);
     query.setParameter("lane", lane);
-    final List<Short> list = query.list();
+    val list = query.list();
 
     val map = new HashMap<Short, Integer>();
     list.forEach(id -> map.put(id, map.containsKey(id) ? map.get(id) + 1 : 1));
@@ -477,9 +478,9 @@ public final class HibernateUtil {
   }
 
   public static Object[] stats(String queryName, Lane lane) {
-    List<Lane> lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
+    val lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
         Collections.singletonList(lane);
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery(queryName);
     query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
     query.setParameter("lanes", lanes);
@@ -487,9 +488,9 @@ public final class HibernateUtil {
   }
 
   public static Object[] stats(Lane lane, Account account) {
-    List<Lane> lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
+    val lanes = lane.equals(Lane.UNKNOWN) ? Arrays.asList(Lane.TOP, Lane.JUNGLE, Lane.MIDDLE, Lane.BOTTOM, Lane.UTILITY) :
         Collections.singletonList(lane);
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("Playerperformance.findStatAvg");
     query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
     query.setParameter("lanes", lanes);
@@ -498,7 +499,7 @@ public final class HibernateUtil {
   }
 
   public static List<Matchup> determineMatchups(Champion champion) {
-    final Session session = Data.getInstance().getSession();
+    val session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("Playerperformance.matchup");
     query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
     query.setParameter("picked", champion);
@@ -512,7 +513,7 @@ public final class HibernateUtil {
   }
 
   public static List<Matchup> determineMatchups(Player player, Champion champion) {
-    final Session session = Data.getInstance().getSession();
+    final Session session = PrimeData.getInstance().getSession();
     final Query<Object[]> query = session.getNamedQuery("Playerperformance.matchupPlayer");
     query.setParameter("since", new Date(System.currentTimeMillis() - 15_552_000_000L));
     query.setParameter("picked", champion);
