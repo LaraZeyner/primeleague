@@ -40,40 +40,52 @@ public class LoadLeague implements Serializable {
   public void init() {
     try {
       this.league = PrimeData.getInstance().getCurrentGroup();
-      this.leagueTeams = new ArrayList<>();
-      league.getTeams().forEach(team -> leagueTeams.add(team.getLeagueTeam()));
-      Collections.sort(leagueTeams);
-      double winrate = -1;
-      for (int i = 0; i < leagueTeams.size(); i++) {
-        final LeagueTeam leagueTeam = leagueTeams.get(i);
-        leagueTeam.setPlace(winrate != leagueTeam.getWinrate() ? String.valueOf(i + 1) : "");
-        winrate = leagueTeam.getWinrate();
-      }
+      reload();
 
-      this.matchdays = league.getMatchdays().keySet().stream()
-          .map(matchday -> new MatchdayMatches(matchday, league))
-          .collect(Collectors.toList());
-      Collections.sort(matchdays);
-
-
-      // league.getMatches().forEach(TurnamentMatch::update);
+      updateAll();
 
     } catch (Exception exception) {
       FacesUtil.sendException("Ligatabelle wurde nicht geladen", exception);
     }
   }
 
+  public void updateAll() {
+    try {
+      boolean changed = false;
+      for (TurnamentMatch match : league.getMatches()) {
+        if (match.isRecently()) {
+          changed = MatchLoader.analyseMatchPage(match);
+          if (match.isOpen()) {
+            changed = changed || match.update();
+          }
+        }
 
-  public void update() {
-    for (TurnamentMatch match : league.getMatches()) {
-      MatchLoader.analyseMatchPage(match);
+      }
+      if (changed) {
+        reload();
+      }
+      FacesUtil.sendMessage("Ligatabelle geladen",changed + "");
+      PrimeData.getInstance().commit();
+    } catch (Exception exception) {
+      FacesUtil.sendException("Ligatabelle wurde nicht geladen", exception);
+    }
+  }
+
+  private void reload() {
+    this.leagueTeams = new ArrayList<>();
+    league.getTeams().forEach(team -> leagueTeams.add(team.getLeagueTeam()));
+    Collections.sort(leagueTeams);
+    double winrate = -1;
+    for (int i = 0; i < leagueTeams.size(); i++) {
+      final LeagueTeam leagueTeam = leagueTeams.get(i);
+      leagueTeam.setPlace(winrate != leagueTeam.getWinrate() ? String.valueOf(i + 1) : "");
+      winrate = leagueTeam.getWinrate();
     }
 
-    /*boolean updated = lookForUpdates();
-    if (updated) {
-      init();
-    }*/
-    FacesUtil.sendMessage("Matches aktualisiert", "");
+    this.matchdays = league.getMatchdays().keySet().stream()
+        .map(matchday -> new MatchdayMatches(matchday, league))
+        .collect(Collectors.toList());
+    Collections.sort(matchdays);
   }
 
   public List<TurnamentMatch> getMatches() {
@@ -104,11 +116,5 @@ public class LoadLeague implements Serializable {
         .collect(Collectors.toList());
   }
 
-
-  private boolean lookForUpdates() {
-    return league.getMatches().stream()
-        .filter(turnamentMatch -> turnamentMatch.isRunning() || turnamentMatch.isRecently())
-        .findFirst().filter(TurnamentMatch::update).isPresent();
-  }
 
 }

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
+<h:head>
+    <title>Scrim hinzufügen</title>
+    <h:outputStylesheet library="css" name="styles.css"/>
+    <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
+</h:head>
+
+<h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
+    <ui:insert name="topbar">
+        <ui:include src="/templates/topbar.xhtml"/>
+    </ui:insert>
+
+    <div class="ui-fluid p-formgrid p-grid nested-grid ui-card">
+        <h:form class="p-col-3">
+            <p:growl id="msg"/>
+            <div class="p-grid ui-card">
+                <div class="p-col-12">
+                    <p:graphicImage width="75%" url="#{loadGame.team.logoUrl}"/>
+                </div>
+                <div class="p-col-12 p-text-bold compact">#{loadGame.team.teamName} (#{loadGame.team.teamAbbr})</div>
+                <div class="p-col-12 compact">#{loadGame.team.lastLeague.name}}</div>
+                <div class="p-col-12 compact">#{loadGame.team.teamResult}}</div>
+                <p:toggleSwitch value="#{loadGame.team.scrims}">
+                    <p:ajax listener="#{loadGame.setScrimmages()}" update="msg"/>
+                </p:toggleSwitch>
+                <div class="p-col-12 compact">#{loadGame.scrims}}</div>
+            </div>
+        </h:form>
+        <h:form class="p-col-9">
+            <p:dataView var="game" value="#{loadGame.gameViews}" rows="12" paginator="true"
+                        rowsPerPageTemplate="6,12,16"
+                        paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                        gridIcon="pi pi-th-large" listIcon="pi pi-bars">
+                <p:dataViewListItem>
+                    <div class="ui-fluid p-formgrid p-grid nested-grid ui-card">
+                        <div class="p-col-1">
+                            <div class="p-grid">
+                                <div class="p-col-12">#{game.mode}</div>
+                                <div class="p-col-12">#{game.date}</div>
+                            </div>
+                            <div class="p-grid">
+                                <div class="p-col-12">#{game.result}</div>
+                                <div class="p-col-12">#{game.duration}</div>
+                            </div>
+                        </div>
+                        <c:forEach items="#{game.performanceViews}" var="player">
+                            <div class="p-col">
+                                <div class="p-grid">
+                                    <div class="p-col-1">
+                                        <p:graphicImage width="75%" url="#{player.playerperformance.championOwn.image}"/>
+                                    </div>
+                                    <div class="p-col-5">
+                                        #{player.playerperformance.getKDAStringLong()} <br/>
+                                        #{player.playerperformance.getKDAStringShort()}
+                                    </div>
+                                    <div class="p-col-5">
+                                        #{player.playerperformance.getKillParticipation()} <br/>
+                                        #{player.playerperformance.visionScore} <br/>
+                                        #{player.playerperformance.getCSPerMinute()}
+                                    </div>
+                                    <div class="p-col-1">
+                                        <p:graphicImage width="75%" url="#{player.playerperformance.championEnemy.image}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </p:dataViewListItem>
+
+                <p:dataViewGridItem>
+                    <div class="ui-fluid p-formgrid p-grid nested-grid ui-card">
+                        <div class="p-col-1">
+                            <div class="p-grid">
+                                <div class="p-col-12">#{game.mode}</div>
+                                <div class="p-col-12">#{game.date}</div>
+                            </div>
+                            <div class="p-grid">
+                                <div class="p-col-12">#{game.result}</div>
+                                <div class="p-col-12">#{game.duration}</div>
+                            </div>
+                        </div>
+                        <c:forEach items="#{game.performanceViews}" var="player">
+                            <div class="p-col">
+                                <div class="p-grid">
+                                    <div class="p-col-1">
+                                        <p:graphicImage width="75%" url="#{player.playerperformance.championOwn.image}"/>
+                                    </div>
+                                    <div class="p-col-2">#{player.playerperformance.getKDAString()}</div>
+                                    <div class="p-col-2">#{player.playerperformance.getKillParticipation()} </div>
+                                    <div class="p-col-2">#{player.playerperformance.visionScore} </div>
+                                    <div class="p-col-2">#{player.playerperformance.getCSPerMinute()} </div>
+                                    <div class="p-col-2">#{player.playerperformance.getKillParticipation()} </div>
+                                    <div class="p-col-1">
+                                        <p:graphicImage width="75%" url="#{player.playerperformance.championEnemy.image}"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </p:dataViewGridItem>
+            </p:dataView>
+        </h:form>
+
+
+        <div class="p-col-12">
+            <h:form>
+                <c:forEach items="#{loadGame.laneViews}" var="lane">
+                    <div class="p-col ui-card-title">
+                        <p:inplace>
+                            <p:selectOneMenu id="advanced" value="#{lane.selected}" dynamic="true"
+                                             effect="fade" filter="true" filterMatchMode="startsWith"
+                                             valueChangeListener="#{lane.PresetGroupChangeEvent}">>
+                                <f:selectItem itemLabel="#{lane.selected}"/>
+                                <f:selectItems value="#{lane.playersList}"/>
+                                <p:ajax update="@form"/>
+                            </p:selectOneMenu>
+                        </p:inplace>
+                    </div>
+
+                    <p:dataTable lazy="false" var="perform" value="#{lane.playerperformances}" size="small"
+                                 rowKey="#{perform.lane}" style="font-size: 14px">
+                        <p:column width="10%" headerText=""><p:graphicImage width="100%" url="#{perform.championOwn.image}"/></p:column>
+                        <p:column width="20%" headerText="">#{perform.getKDAString()}</p:column>
+                        <p:column width="20%" headerText="">#{perform.getKillParticipation()}</p:column>
+                        <p:column width="20%" headerText="">#{perform.visionScore}</p:column>
+                        <p:column width="20%" headerText="">#{perform.getCSPerMinute()}</p:column>
+                        <p:column width="10%" headerText=""><p:graphicImage width="100%" url="#{perform.championEnemy.image}"/></p:column>
+                    </p:dataTable>
+                </c:forEach>
+
+            </h:form>
+        </div>
+    </div>
+
+</h:body>
+</html>

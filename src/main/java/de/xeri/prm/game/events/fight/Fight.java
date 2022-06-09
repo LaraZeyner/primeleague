@@ -88,7 +88,7 @@ public class Fight {
       return Fighttype.SKIRMISH;
 
     }
-    throw new IllegalArgumentException("Geht gar nicht");
+    return null;
   }
 
   /**

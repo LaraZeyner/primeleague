@@ -1,7 +1,9 @@
 package de.xeri.prm.models.match;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.persistence.Column;
@@ -12,12 +14,16 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.manager.PrimeData;
+import de.xeri.prm.models.enums.QueueType;
+import de.xeri.prm.models.league.Team;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.logger.Logger;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 
 @Entity(name = "ScheduledGame")
@@ -26,29 +32,34 @@ import org.hibernate.annotations.NamedQuery;
 @NamedQuery(name = "ScheduledGame.findById", query = "FROM ScheduledGame s WHERE id = :pk")
 @NamedQuery(name = "ScheduledGame.findByMode", query = "FROM ScheduledGame s WHERE queueType = :queue")
 @Getter
-@NoArgsConstructor
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class ScheduledGame implements Serializable {
 
   @Transient
   private static final long serialVersionUID = 9033305101470944563L;
 
-  public static ScheduledGame get(ScheduledGame neu) {
+  public static ScheduledGame get(ScheduledGame neu, Short teamId) {
     final ScheduledGame game = find(neu.getId());
-    if (game != null) {
+    if (game != null && teamId != null) {
+      game.setTeams(game.getTeams() == null ? teamId + "" : game.getTeams() + "," + teamId);
+      PrimeData.getInstance().save(game);
       return game;
     }
     if (!Game.has(neu.getId())) {
       if (neu.getId().startsWith("EUW")) {
+        if (teamId != null) {
+          neu.setTeams(teamId + "");
+        }
         Logger.getLogger("Scheduled-Game-Creation").info("Spiel erstellt", neu.getId());
         PrimeData.getInstance().save(neu);
         return neu;
       } else {
         Logger.getLogger("Scheduled-Game-Creation").attention("Spiel auf anderem Server", neu.getId());
-        return null;
       }
-
     }
-    return null;
+    return game;
   }
 
   public static boolean has(String id) {
@@ -71,43 +82,36 @@ public class ScheduledGame implements Serializable {
   @Column(name = "queuetype")
   private QueueType queueType;
 
-  @Column(name = "prioritized", nullable = false)
-  private boolean prioritized;
+  @Column(name = "prioritized")
+  private String teams;
 
-  public ScheduledGame(String id, QueueType queueType, boolean prioritized) {
+  public ScheduledGame(String id, QueueType queueType) {
     this.id = id;
     this.queueType = queueType;
-    this.prioritized = prioritized;
   }
 
-  //<editor-fold desc="getter and setter">
-  public void setQueueType(QueueType queueType) {
-    this.queueType = queueType;
-  }
-
-  public void setPrioritized(boolean prioritized) {
-    this.prioritized = prioritized;
+  public Map<Team, Integer> getTeamsMap() {
+    Map<Team, Integer> map = new HashMap<>();
+    if (teams.contains(",")) {
+      for (String s : teams.split(",")) {
+        short id = Short.parseShort(s);
+        final Team team = Team.find(id);
+        map.put(team, map.containsKey(team) ? map.get(team) + 1 : 1);
+      }
+    }
+    return map;
   }
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof ScheduledGame)) return false;
-    final ScheduledGame scheduledGame = (ScheduledGame) o;
-    return getId().equals(scheduledGame.getId()) && getQueueType() == scheduledGame.getQueueType();
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final ScheduledGame that = (ScheduledGame) o;
+    return id != null && Objects.equals(id, that.id);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getId(), getQueueType());
+    return getClass().hashCode();
   }
-
-  @Override
-  public String toString() {
-    return "ScheduledGame{" +
-        "id='" + id + '\'' +
-        ", queueType=" + queueType +
-        '}';
-  }
-  //</editor-fold>
 }

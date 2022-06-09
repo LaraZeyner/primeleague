@@ -19,6 +19,14 @@ import lombok.val;
  */
 public final class GameIdLoader {
 
+  /**
+   * Bekannte Informationen
+   * <br>
+   * Queue-Types: TOURNEY, CLASH, OTHER
+   * Team: 6x10 = 60
+   *
+   * @param account
+   */
   public static void loadGameIds(Account account) {
     load(QueueType.TOURNEY, account);
     if (account.isValueable()) {
@@ -57,7 +65,7 @@ public final class GameIdLoader {
             .map(String::valueOf)
             .collect(Collectors.toList());
         return gameIds.stream()
-            .map(gameId -> ScheduledGame.get(new ScheduledGame(gameId, queueType, account.isValueable())))
+            .map(gameId -> ScheduledGame.get(new ScheduledGame(gameId, queueType), account.getOfficialTeam() != null ? account.getOfficialTeam().getId() : null))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
       }

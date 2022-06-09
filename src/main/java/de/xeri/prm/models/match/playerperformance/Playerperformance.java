@@ -146,6 +146,7 @@ import org.hibernate.annotations.NamedQuery;
         "WHERE teamperformance.game.gameStart >= :since " +
         "AND (championOwn = :picked OR championEnemy <> NULL AND championEnemy = :picked) " +
         "GROUP BY (CASE WHEN championEnemy IS :picked THEN championOwn ELSE championEnemy END)")
+@NamedQuery(name = "Playerperformance.forPlayer", query = "FROM Playerperformance  p WHERE account = :account AND teamperformance.game.gameStart >= :since ORDER BY id DESC")
 @NamedQuery(name = "Playerperformance.forChampion", query = "FROM Playerperformance p WHERE championOwn = :champion AND teamperformance.team <> NULL ORDER BY id DESC")
 @Getter
 @Setter
@@ -699,8 +700,12 @@ public class Playerperformance implements Serializable {
     return runes.stream().filter(rune -> rune.getSlot() == 0).findFirst().orElse(null);
   }
 
-  public double getKillParticipation() {
-    return (kills + assists) * 1d / teamperformance.getTotalKills();
+  public String getKillParticipation() {
+    return Math.round((kills + assists) * 100.0 / teamperformance.getTotalKills()) + "%";
+  }
+
+  public String getCSPerMinute() {
+    return Math.round(stats.getCsPerMinute() * 10) / 10 + "";
   }
 
   public byte largestMultiKill() {
@@ -794,6 +799,14 @@ public class Playerperformance implements Serializable {
 
   public String getKDAString() {
     return kills + "/" + deaths + "/" + assists + " (" + Math.round(stats.getTrueKdaValue() * 10 ) / 10d + ")";
+  }
+
+  public String getKDAStringLong() {
+    return kills + "/" + deaths + "/" + assists;
+  }
+
+  public String getKDAStringShort() {
+    return Math.round(stats.getTrueKdaValue() * 10 ) / 10d + "";
   }
 
   @Override

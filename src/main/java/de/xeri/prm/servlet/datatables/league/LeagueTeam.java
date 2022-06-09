@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
+import de.xeri.prm.servlet.datatables.match.GameView;
 import de.xeri.prm.util.Util;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
@@ -65,6 +66,8 @@ public class LeagueTeam implements Serializable, Comparable<LeagueTeam> {
   private String matchTime;
   private String matchTimeWins;
   private String matchTimeLosses;
+
+  private List<GameView> gameViews;
 
   public void add(List<Double> objects) {
     add(objects.get(0).longValue(), objects.get(1).longValue(), objects.get(2), objects.get(3), objects.get(4), objects.get(5),

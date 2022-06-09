@@ -48,6 +48,7 @@
         <class>de.xeri.prm.models.match.TeamperformanceBounty</class>
         <class>de.xeri.prm.models.match.GamePause</class>
         <class>de.xeri.prm.models.match.ratings.Rating</class>
+        <class>de.xeri.prm.models.league.TeamMember</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver" />
             <property name="javax.persistence.jdbc.url" value="jdbc:mysql://45.85.219.163:3306/trues?serverTimezone=UTC"/>

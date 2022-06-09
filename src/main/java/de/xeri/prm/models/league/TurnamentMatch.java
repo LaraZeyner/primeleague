@@ -193,8 +193,7 @@ public class TurnamentMatch implements Serializable {
   public boolean update() {
     final boolean b = MatchLoader.analyseMatchPage(this);
 
-    getPlayers().stream().map(Player::getActiveAccount).forEach(account -> GameIdLoader.load(QueueType.TOURNEY, account));
-    ScheduledGame.findMode(QueueType.TOURNEY).forEach(RiotGameRequester::loadCompetitive);
+    getPlayers().stream().map(Player::getActiveAccount).forEach(GameIdLoader::loadGameIds);
     return b;
   }
 

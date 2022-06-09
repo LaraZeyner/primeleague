@@ -832,7 +832,16 @@ CREATE TABLE `absence`
     player             INTEGER(7) UNSIGNED NOT NULL,
     absence_start_time TIMESTAMP           NOT NULL,
     absence_end_time   TIMESTAMP           NULL,
-    absence_type       VARCHAR(12)         NOT NULL,
+    absence_type       VARCHAR(12)         NOT NULL
+);
+
+CREATE TABLE team_member
+(
+    member_id     TINYINT(3) PRIMARY KEY AUTO_INCREMENT,
+    member_name   VARCHAR(25)         NOT NULL,
+    member_status VARCHAR(8)          NOT NULL,
+    player        INTEGER(7) UNSIGNED NULL,
     FOREIGN KEY (player) REFERENCES `player` (player_id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE SET NULL ON UPDATE SET NULL,
+    UNIQUE INDEX idx_teammember_name (member_name ASC)
 );

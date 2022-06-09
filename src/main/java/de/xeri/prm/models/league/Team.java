@@ -33,6 +33,7 @@ import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.servlet.datatables.league.LeagueTeam;
+import de.xeri.prm.servlet.datatables.match.GameView;
 import de.xeri.prm.servlet.datatables.scheduling.InventoryStatus;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
@@ -311,6 +312,12 @@ public class Team implements Serializable {
             teamperformance.getGame().getTurnamentmatch().getLeague().equals(PrimeData.getInstance().getCurrentGroup()))
         .collect(Collectors.toList());
   }
+  public List<Teamperformance> getPrimePerformances() {
+    return teamperformances.stream()
+        .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch() != null)
+        .collect(Collectors.toList());
+  }
+
 
   public List<Account> getLaner(Lane lane) {
     return getCompetitivePerformances().stream()
@@ -391,9 +398,9 @@ public class Team implements Serializable {
   }
 
   public String getBilanceFor(Team team) {
-    final Query<Object[]> query = PrimeData.getInstance().getSession().getNamedQuery("Teamperformance.gamesOfTeam");
+    final Query<String> query = PrimeData.getInstance().getSession().getNamedQuery("Teamperformance.gamesOfTeam");
     query.setParameter("team", team);
-    List<String> gameIds = query.list().stream().map(object -> String.valueOf(object[0])).collect(Collectors.toList());
+    List<String> gameIds = query.list();
     final Query<Object[]> query2 = PrimeData.getInstance().getSession().getNamedQuery("Teamperformance.bilanceOfTeamMatchup");
     query2.setParameter("gameids", gameIds);
     query2.setParameter("teamId", id);
@@ -423,6 +430,9 @@ public class Team implements Serializable {
         Util.longToInt((long) list[0]) + Util.longToInt((long) list[1]) + Util.longToInt((long) list[2]),
         Util.longToInt((long) list[0]), Util.longToInt((long) list[1]), Util.longToInt((long) list[2]));
 
+    team.setGameViews(getPrimePerformances().stream()
+        .map(leaguePerformance -> new GameView(leaguePerformance.getGame(), this))
+        .collect(Collectors.toList()));
     team.add(doubles);
 
     return team;

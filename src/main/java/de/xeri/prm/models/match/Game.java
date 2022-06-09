@@ -157,7 +157,7 @@ public class Game implements Serializable {
   }
 
   public Teamperformance getPerformanceOf(Team team) {
-    return teamperformances.stream().filter(teamperformance -> teamperformance.getTeam().equals(team)).findFirst().orElse(null);
+    return teamperformances.stream().filter(teamperformance -> teamperformance.getTeam() != null && teamperformance.getTeam().equals(team)).findFirst().orElse(null);
   }
 
   public Playerperformance getPerformanceOf(Account account) {

@@ -1,6 +1,9 @@
 package de.xeri.prm.manager;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import de.xeri.prm.game.RiotGameRequester;
 import de.xeri.prm.loader.AccountLoader;
@@ -15,6 +18,8 @@ import de.xeri.prm.loader.SpellLoader;
 import de.xeri.prm.loader.StatCatLoader;
 import de.xeri.prm.loader.TeamLoader;
 import de.xeri.prm.models.enums.QueueType;
+import de.xeri.prm.models.league.Schedule;
+import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.logger.Logger;
@@ -84,10 +89,59 @@ public class LoadupManager {
     return true;
   }
 
+  /**
+   * CompGames der Ligateams
+   * Games der nächsten Gegner + TRUES mit 3
+   * Clash der nächsten Gegner + TRUES
+   * Games der nächsten Gegner + TRUES
+   * Alle Tourney
+   * Alle Games mit 3
+   * Alle Clash
+   * Alle Games
+   */
   public static boolean loadGames() {
-    ScheduledGame.findMode(QueueType.TOURNEY).forEach(RiotGameRequester::loadCompetitive);
+    val logger = Logger.getLogger("Spielanalyse");
+    final Set<Team> teams = PrimeData.getInstance().getCurrentGroup().getTeams();
+    final List<ScheduledGame> tourneys = ScheduledGame.findMode(QueueType.TOURNEY);
+    // CompGames der Ligateams
+    tourneys.stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream().anyMatch(teams::contains)).forEach(RiotGameRequester::loadCompetitive);
+    logger.info("CompGames der Ligateams geladen");
 
+
+    // Games der nächsten Gegner + TRUES mit 3
+    List<Team> teams1 = Arrays.asList(Team.findTid(Const.TEAMID), Schedule.nextOrLast().getEnemyTeam());
+    ScheduledGame.findMode(QueueType.CLASH).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
+        .anyMatch(team -> teams1.contains(team) && scheduledGame.getTeamsMap().get(team) > 2)).forEach(RiotGameRequester::loadClashGame);
+    ScheduledGame.findMode(QueueType.OTHER).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
+        .anyMatch(team -> teams1.contains(team) && scheduledGame.getTeamsMap().get(team) > 2)).forEach(RiotGameRequester::loadMatchmade);
+    logger.info("Games der nächsten Gegner + TRUES mit 3 geladen");
+
+    // Clash der nächsten Gegner + TRUES
+    ScheduledGame.findMode(QueueType.CLASH).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
+        .anyMatch(teams1::contains)).forEach(RiotGameRequester::loadClashGame);
+    logger.info("Clash der nächsten Gegner + TRUES geladen");
+
+    // Games der nächsten Gegner + TRUES
+    ScheduledGame.findMode(QueueType.OTHER).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
+            .anyMatch(teams1::contains)).forEach(RiotGameRequester::loadMatchmade);
+    logger.info("Games der nächsten Gegner + TRUES geladen");
+
+    // Alle Tourney
+    ScheduledGame.findMode(QueueType.TOURNEY).forEach(RiotGameRequester::loadCompetitive);
+    logger.info("Tourney geladen");
+
+    // Alle Games mit 3
+    ScheduledGame.findMode(QueueType.CLASH).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
+        .anyMatch(team -> scheduledGame.getTeamsMap().get(team) > 2)).forEach(RiotGameRequester::loadClashGame);
+    ScheduledGame.findMode(QueueType.OTHER).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
+        .anyMatch(team -> scheduledGame.getTeamsMap().get(team) > 2)).forEach(RiotGameRequester::loadMatchmade);
+    logger.info("Games mit 3 geladen");
+
+    // Alle Clash
     ScheduledGame.findMode(QueueType.CLASH).forEach(RiotGameRequester::loadClashGame);
+    logger.info("Clash geladen");
+
+    // Alle Games
     ScheduledGame.findMode(QueueType.OTHER).forEach(RiotGameRequester::loadMatchmade);
 
     return true;

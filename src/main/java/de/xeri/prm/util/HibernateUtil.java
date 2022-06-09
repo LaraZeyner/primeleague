@@ -44,6 +44,7 @@ import de.xeri.prm.models.league.Season;
 import de.xeri.prm.models.league.SeasonElo;
 import de.xeri.prm.models.league.Stage;
 import de.xeri.prm.models.league.Team;
+import de.xeri.prm.models.league.TeamMember;
 import de.xeri.prm.models.league.TurnamentMatch;
 import de.xeri.prm.models.match.ChampionSelection;
 import de.xeri.prm.models.match.Game;
@@ -125,6 +126,7 @@ public final class HibernateUtil {
         Stage.class,
         Summonerspell.class,
         Team.class,
+        TeamMember.class,
         Teamperformance.class,
         TeamperformanceBounty.class,
         TurnamentMatch.class));

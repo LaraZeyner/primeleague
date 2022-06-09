@@ -2,6 +2,8 @@ package de.xeri.prm.models.league;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -90,6 +92,14 @@ public class Schedule implements Serializable {
         .filter(schedule -> schedule.getEndTime().getTime() > System.currentTimeMillis() + 900_000L)
         .filter(schedule -> schedule.getEnemyTeam() != null)
         .collect(Collectors.toList());
+  }
+
+  public static Schedule nextOrLast() {
+    final List<Schedule> allSchedules = Schedule.get().stream().filter(schedule -> schedule.getEnemyTeam() != null).collect(Collectors.toList());
+    return allSchedules.stream()
+        .filter(schedule -> schedule.getEndTime().after(new Date()))
+        .sorted(Comparator.comparing(Schedule::getStartTime))
+        .findFirst().orElse(allSchedules.get(allSchedules.size() - 1));
   }
 
   @Id

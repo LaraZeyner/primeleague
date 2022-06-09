@@ -294,29 +294,36 @@ public final class GameAnalyser {
   private void handlePlayer(JSONPlayer player, Teamperformance teamperformance, List<Fight> fights) {
     val enemyPlayer = player.getEnemy();
     val performance = handlePerformance(player, enemyPlayer);
-    val account = (player.isListed()) ? player.getAccount() : Account.get(RiotAccountURLGenerator.fromPuuid(player.get(StoredStat.PUUID)));
-    if (account != null) {
-      handleChampionsPicked(player, enemyPlayer, performance);
-      val playerperformance = teamperformance.addPlayerperformance(performance, account);
-      handleSummonerspells(player, performance);
-      val styles = player.object(StoredStat.RUNES).getJSONArray("styles");
-      for (int i = 0; i < styles.length(); i++) {
-        val substyle = styles.getJSONObject(i);
-        val runes = substyle.getJSONArray("selections");
-        for (int j = 0; j < runes.length(); j++) {
-          val runeObject = runes.getJSONObject(j);
-          final short perkId = (short) runeObject.getInt("perk");
-          if (Rune.has(perkId)) {
-            val perk = Rune.find(perkId);
-            playerperformance.addRune(perk);
+
+    if (performance.getKills() < performance.getSoloKills()) {
+      performance.setKills((byte) (performance.getKills() + performance.getSoloKills()));
+    }
+
+    if (!player.get(StoredStat.PUUID).equals("BOT")) {
+      val account = (player.isListed()) ? player.getAccount() : Account.get(RiotAccountURLGenerator.fromPuuid(player.get(StoredStat.PUUID)));
+      if (account != null) {
+        handleChampionsPicked(player, enemyPlayer, performance);
+        val playerperformance = teamperformance.addPlayerperformance(performance, account);
+        handleSummonerspells(player, performance);
+        val styles = player.object(StoredStat.RUNES).getJSONArray("styles");
+        for (int i = 0; i < styles.length(); i++) {
+          val substyle = styles.getJSONObject(i);
+          val runes = substyle.getJSONArray("selections");
+          for (int j = 0; j < runes.length(); j++) {
+            val runeObject = runes.getJSONObject(j);
+            final short perkId = (short) runeObject.getInt("perk");
+            if (Rune.has(perkId)) {
+              val perk = Rune.find(perkId);
+              playerperformance.addRune(perk);
+            }
           }
         }
+
+        handlePlayerEvents(player, playerperformance);
+        handlePlayerInfo(player, playerperformance);
+
+        new StatAnalyser(this).handlePlayerStats(playerperformance, teamperformance, jsonTeams, player, fights);
       }
-
-      handlePlayerEvents(player, playerperformance);
-      handlePlayerInfo(player, playerperformance);
-
-      new StatAnalyser(this).handlePlayerStats(playerperformance, teamperformance, jsonTeams, player, fights);
     }
   }
 
@@ -843,14 +850,16 @@ public final class GameAnalyser {
 
     val returnFights = new ArrayList<Fight>();
     for (Fight fight : fights) {
-      if (fight.getFighttype().equals(Fighttype.DUEL)) {
-        returnFights.add(fight.getDuel());
-      } else if (fight.getFighttype().equals(Fighttype.PICK)) {
-        returnFights.add(fight.getPick());
-      } else if (fight.getFighttype().equals(Fighttype.SKIRMISH)) {
-        returnFights.add(fight.getSkirmish());
-      } else if (fight.getFighttype().equals(Fighttype.TEAMFIGHT)) {
-        returnFights.add(fight.getTeamfight());
+      if (fight.getFighttype() != null) {
+        if (fight.getFighttype().equals(Fighttype.DUEL)) {
+          returnFights.add(fight.getDuel());
+        } else if (fight.getFighttype().equals(Fighttype.PICK)) {
+          returnFights.add(fight.getPick());
+        } else if (fight.getFighttype().equals(Fighttype.SKIRMISH)) {
+          returnFights.add(fight.getSkirmish());
+        } else if (fight.getFighttype().equals(Fighttype.TEAMFIGHT)) {
+          returnFights.add(fight.getTeamfight());
+        }
       }
     }
 

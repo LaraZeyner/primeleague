@@ -115,7 +115,7 @@ public final class MatchLoader {
 
   public static boolean updateScoreAndTeams(Document doc, TurnamentMatch match) {
     boolean changed = false;
-    final String scoreText = doc.select("span#league-match-result").text();
+    final String scoreText = doc.select("span.league-match-result").text();
     if (scoreText.contains(":") && !match.getScore().equals(scoreText)) {
       changed = true;
       match.setScore(scoreText);

@@ -53,8 +53,19 @@
                         <p:column headerText="Wins" style="font-weight: lighter">#{team.matchTimeWins}</p:column>
                         <p:column headerText="Losses" style="font-weight: lighter">#{team.matchTimeLosses}</p:column>
                         <p:rowExpansion>
-                            <div class="product">
-                            </div>
+                            <p:dataTable lazy="false" var="game" value="#{team.gameViews}" size="small"
+                                         rowIndexVar="rowIndex" showGridlines="false" rowKey="#{game.id}">
+                                <c:forEach items="#{game.performanceViews}" var="player">
+                                    <p:column headerText="">
+                                        <p:graphicImage url="#{player.playerperformance.championOwn.image}"/>
+                                    </p:column>
+                                    <p:column headerText="">#{player.playerperformance.getKDAString()}</p:column>
+                                    <p:column headerText="">#{player.playerperformance.getKillParticipation()}</p:column>
+                                    <p:column headerText="">
+                                        <p:graphicImage url="#{player.playerperformance.championEnemy.image}"/>
+                                    </p:column>
+                                </c:forEach>
+                            </p:dataTable>
                         </p:rowExpansion>
                     </p:dataTable>
                 </div>
@@ -62,7 +73,8 @@
             <div class="p-grid">
                 <c:forEach items="#{loadLeague.matchdays}" var="matchday">
                     <div class="p-col-3">
-                        <p:dataTable lazy="false" var="match" value="#{matchday.matches}" size="small" style="font-size: 14px">
+                        <p:dataTable lazy="false" var="match" value="#{matchday.matches}" size="small"
+                                     style="font-size: 14px">
                             <p:column headerText="#{matchday.matchday.type}">#{match.startShort}</p:column>
                             <p:column headerText="Home">#{match.homeTeam.teamAbbr}</p:column>
                             <p:column headerText="Score">#{match.score}</p:column>

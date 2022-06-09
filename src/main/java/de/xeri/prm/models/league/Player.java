@@ -128,6 +128,10 @@ public class Player implements Serializable {
   @ToString.Exclude
   private final Set<Matchlog> logEntries = new LinkedHashSet<>();
 
+  @OneToMany(mappedBy = "player")
+  @ToString.Exclude
+  private final Set<TeamMember> teamMembers = new LinkedHashSet<>();
+
   public Player(int id, String name, Teamrole role) {
     this.id = id;
     this.name = name;
@@ -138,6 +142,11 @@ public class Player implements Serializable {
   public void addAccount(Account account) {
     accounts.add(account);
     account.setPlayer(this);
+  }
+
+  public void addMember(TeamMember member) {
+    teamMembers.add(member);
+    member.setPlayer(this);
   }
 
   public void addLogEntry(Matchlog entry) {

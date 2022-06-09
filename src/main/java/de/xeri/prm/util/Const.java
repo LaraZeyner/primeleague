@@ -1,5 +1,8 @@
 package de.xeri.prm.util;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Created by Lara on 04.04.2022 for web
  */
@@ -63,6 +66,8 @@ public final class Const {
   public static final String STASIS_ITEM_NAME = "Stopwatch";
   public static final String TIMEOUT_MESSAGE = "SLEEPY TIME";
   public static final String TRUESIGHT_WARD_NAME = "Control Ward";
+
+  public static final List<String> TEAMMEMBERS = Arrays.asList("SYSTEM", "Whitelizard", "Seven", "Alex", "Xahrie", "Nuklas", "Admiral", "Diluc", "C3L3TI3", "Suders", "Rebone", "empty");
 
 
   public static boolean check() {

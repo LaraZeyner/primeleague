@@ -119,4 +119,10 @@ public class LoadPlayers implements Serializable {
   private List<String> determineFirstItem(TeamView team) {
     return IntStream.range(0, 5).mapToObj(i -> team.getViews().get(i).getView().getFirstItem()).collect(Collectors.toList());
   }
+
+  public String redirectOPgg() {
+    return enemyTeam.getViews().stream()
+        .map(view -> view.getSelectedPlayer().getActiveAccount().getName())
+        .collect(Collectors.joining("%2C", "https://euw.op.gg/multisearch/euw?summoners=", ""));
+  }
 }

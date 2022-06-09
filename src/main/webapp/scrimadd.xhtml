@@ -17,6 +17,10 @@
         <ui:include src="/templates/topbar.xhtml"/>
     </ui:insert>
 
+    <ui:insert name="topbar">
+        <ui:include src="/templates/matchsmall.xhtml"/>
+    </ui:insert>
+
     <div class="p-grid">
         <div class="p-col-9">
             <h:form>
@@ -61,22 +65,11 @@
                         <f:selectItems value="#{loadSchedule.valueableTeams}"/>
                     </p:selectOneMenu>
                 </div>
-
-                <div id="title" class="p-field p-col-12">
-                    <div class="ui-inputgroup">
-                        <div class="ui-inputgroup-addon"><i class="pi pi-user"/></div>
-                        <p:inputText placeholder="Titel" value="#{loadSchedule.title}"/>
-                    </div>
+                <div class="p-field p-col-6">
+                    <p:commandButton value="Speichern" action="#{loadSchedule.save}"/>
                 </div>
-
-                <div id="participants" class="p-field p-col-12">
-                    <div class="text-sectiontitle compact">Counter</div>
-                    <p:pickList id="pick-counters" value="#{loadChampions.counters}" var="counter"
-                                itemLabel="#{counter}" itemValue="#{counter}" style="width: 33%"/>
-                </div>
-
-                <div class="p-field p-col-12">
-                    <p:commandButton value="Speichern"/>
+                <div class="p-field p-col-6">
+                    <p:commandButton value="Zurück" action="team.xhtml?faces-redirect=true"/>
                 </div>
             </h:form>
 
