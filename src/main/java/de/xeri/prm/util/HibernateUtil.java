@@ -64,7 +64,7 @@ import de.xeri.prm.models.match.playerperformance.PlayerperformanceSummonerspell
 import de.xeri.prm.models.match.ratings.Rating;
 import de.xeri.prm.models.match.ratings.StatScope;
 import de.xeri.prm.models.others.ChampionRelationship;
-import de.xeri.prm.servlet.datatables.draft.CompositionAttribute;
+import de.xeri.prm.servlet.loader.scouting.composition.CompositionAttribute;
 import de.xeri.prm.util.logger.Logger;
 import lombok.val;
 import org.hibernate.Session;

@@ -240,7 +240,9 @@
 
                 <div class="p-grid">
                     <p:commandButton styleClass="p-col" value="Refresh" action="#{loadPlayers.init()}"/>
-                    <p:commandButton styleClass="p-col" value="Zum Team" />
+                    <p:linkButton styleClass="p-col" outcome="teaminfo" value="Zum Team" icon="pi pi-star" style="margin-right:20px;">
+                        <f:param name="teamId" value="#{loadPlayers.enemyTeam.leagueTeam.tourneyId}"/>
+                    </p:linkButton>
                     <p:linkButton styleClass="p-col" value="OP.gg" href="#{loadPlayers.redirectOPgg()}" target="_blank"/>
                 </div>
             </h:form>

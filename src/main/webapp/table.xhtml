@@ -32,8 +32,11 @@
                         <p:column width="1%"><p:rowToggler/></p:column>
                         <p:column width="1%" headerText="Pl">#{team.place}</p:column>
                         <p:column width="3%"><h:graphicImage style="width: 80%" value="#{team.logoUrl}"/></p:column>
-                        <p:column width="10%" style="font-weight: bold"
-                                  headerText="#{loadLeague.league.name}">#{team.name}</p:column>
+                        <p:column width="10%" style="font-weight: bold" headerText="#{loadLeague.league.name}">
+                            <p:link outcome="teaminfo" value="#{team.name}" style="margin-right:20px;">
+                                <f:param name="teamId" value="#{team.tourneyId}"/>
+                            </p:link>
+                        </p:column>
                         <p:column headerText="Win">#{team.winsPerMatch}</p:column>
                         <p:column headerText="Pkt.">#{team.teamScore}</p:column>
                         <p:column headerText="SUN">#{team.bilance}</p:column>
@@ -53,19 +56,79 @@
                         <p:column headerText="Wins" style="font-weight: lighter">#{team.matchTimeWins}</p:column>
                         <p:column headerText="Losses" style="font-weight: lighter">#{team.matchTimeLosses}</p:column>
                         <p:rowExpansion>
-                            <p:dataTable lazy="false" var="game" value="#{team.gameViews}" size="small"
-                                         rowIndexVar="rowIndex" showGridlines="false" rowKey="#{game.id}">
-                                <c:forEach items="#{game.performanceViews}" var="player">
-                                    <p:column headerText="">
-                                        <p:graphicImage url="#{player.playerperformance.championOwn.image}"/>
-                                    </p:column>
-                                    <p:column headerText="">#{player.playerperformance.getKDAString()}</p:column>
-                                    <p:column headerText="">#{player.playerperformance.getKillParticipation()}</p:column>
-                                    <p:column headerText="">
-                                        <p:graphicImage url="#{player.playerperformance.championEnemy.image}"/>
-                                    </p:column>
-                                </c:forEach>
-                            </p:dataTable>
+                            <p:outputPanel id="teamPanel2">
+                                #{team.name}
+                                <p:panelGrid>
+                                    <f:facet name="header">
+                                        <p:row>
+                                            <p:column>Spieldaten</p:column>
+                                            <p:column>Spieler</p:column>
+                                            <p:column>KDA</p:column>
+                                            <p:column>Kill Part.</p:column>
+                                            <p:column>Farm</p:column>
+                                            <p:column>Vision</p:column>
+                                            <p:column>Champs</p:column>
+                                        </p:row>
+                                    </f:facet>
+                                    <p:repeat value="#{team.gameViews}" var="game">
+                                        <p:row>
+                                            <p:column styleClass="nospace">
+                                                <h:outputText style="font-size: 12px" value="#{game.date}"/> <br/>
+                                                <h:outputText style="font-size: 12px" value="#{game.mode}"/> <br/>
+                                                <h:outputText style="font-size: 12px" value="#{game.result}"/>
+                                            </p:column>
+                                            <p:column styleClass="nospace">
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <h:outputText style="font-size: 12px"
+                                                                  value="#{player.playerperformance.account.player.shortName}"/>
+                                                    <br/>
+                                                </p:repeat>
+                                            </p:column>
+                                            <p:column styleClass="nospace">
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <h:outputText style="font-size: 12px"
+                                                                  value="#{player.playerperformance.getKDAString()}"/>
+                                                    <br/>
+                                                </p:repeat>
+                                            </p:column>
+                                            <p:column styleClass="nospace">
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <h:outputText style="font-size: 12px"
+                                                                  value="#{player.playerperformance.getKillParticipation()}"/>
+                                                    <br/>
+                                                </p:repeat>
+                                            </p:column>
+                                            <p:column styleClass="nospace">
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <h:outputText style="font-size: 12px"
+                                                                  value="#{player.playerperformance.totalCreeps} (#{player.playerperformance.creepScoreAdvantage})"/>
+                                                    <br/>
+                                                </p:repeat>
+                                            </p:column>
+                                            <p:column styleClass="nospace">
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <h:outputText style="font-size: 12px"
+                                                                  value="#{player.playerperformance.visionScore} (#{player.playerperformance.visionscoreAdvantage})"/>
+                                                    <br/>
+                                                </p:repeat>
+                                            </p:column>
+                                            <p:column styleClass="nospace">
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <p:graphicImage rendered="#{not empty player.playerperformance}"
+                                                                    width="15%"
+                                                                    url="#{player.playerperformance.championOwn.image}"/>
+                                                </p:repeat>
+                                                <br/>
+                                                <p:repeat value="#{game.performanceViews}" var="player">
+                                                    <p:graphicImage rendered="#{not empty player.playerperformance}"
+                                                                    width="15%"
+                                                                    url="#{player.playerperformance.championEnemy.image}"/>
+                                                </p:repeat>
+                                            </p:column>
+                                        </p:row>
+                                    </p:repeat>
+                                </p:panelGrid>
+                            </p:outputPanel>
                         </p:rowExpansion>
                     </p:dataTable>
                 </div>
@@ -95,7 +158,7 @@
         </div>
 
         <h:form>
-            <p:commandButton value="Update" action="#{allEventsTimelineView.updateMatches()}"/>
+            <p:commandButton value="Update" action="#{loadWe.updateMatches()}"/>
         </h:form>
 
     </div>

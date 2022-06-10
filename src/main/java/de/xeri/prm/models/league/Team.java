@@ -32,8 +32,8 @@ import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
-import de.xeri.prm.servlet.datatables.league.LeagueTeam;
-import de.xeri.prm.servlet.datatables.match.GameView;
+import de.xeri.prm.servlet.loader.league.LeagueTeam;
+import de.xeri.prm.servlet.loader.match.GameView;
 import de.xeri.prm.servlet.datatables.scheduling.InventoryStatus;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
@@ -426,11 +426,12 @@ public class Team implements Serializable {
     final List<Object[]> list2 = query3.list();
     List<Double> doubles = Arrays.stream(list2.get(0)).map(o -> o != null ? Double.parseDouble(String.valueOf(o)) : 0).collect(Collectors.toList());
 
-    LeagueTeam team = new LeagueTeam(turneyId, teamName, teamAbbr, getLogoUrl(),
+    LeagueTeam team = new LeagueTeam(this, turneyId, teamName, teamAbbr, getLogoUrl(),
         Util.longToInt((long) list[0]) + Util.longToInt((long) list[1]) + Util.longToInt((long) list[2]),
         Util.longToInt((long) list[0]), Util.longToInt((long) list[1]), Util.longToInt((long) list[2]));
 
     team.setGameViews(getPrimePerformances().stream()
+        .sorted((lP1, lP2) -> lP2.getGame().getGameStart().compareTo(lP1.getGame().getGameStart()))
         .map(leaguePerformance -> new GameView(leaguePerformance.getGame(), this))
         .collect(Collectors.toList()));
     team.add(doubles);

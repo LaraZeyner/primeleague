@@ -22,7 +22,11 @@ public final class FacesUtil {
 
   public static void sendMessage(String msg, String detail) {
     FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, msg, detail);
-    FacesContext.getCurrentInstance().addMessage(null, message);
+    if (FacesContext.getCurrentInstance() != null) {
+      FacesContext.getCurrentInstance().addMessage(null, message);
+    } else {
+      System.out.println(msg + " - " + detail);
+    }
   }
 
   public static void sendFatal(String msg, String detail) {

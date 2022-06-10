@@ -106,7 +106,7 @@
                             <h5>Kommende Spiele</h5>
                         </div>
                         <div class="p-col-2">
-                            <p:commandButton value="Update" action="#{allEventsTimelineView.updateMatches()}"/>
+                            <p:commandButton value="Update" action="#{loadWe.updateMatches()}"/>
                         </div>
                         <div class="p-col-2">
                             <p:commandButton value="Scrim/Clash +" action="scrimadd.xhtml?faces-redirect=true"/>
@@ -123,7 +123,7 @@
                 <h:form>
                     <div class="p-grid">
                         <div class="p-col-12">
-                            <p:dataTable lazy="false" var="schedule" value="#{allEventsTimelineView.upcomingSchedules}"
+                            <p:dataTable lazy="false" var="schedule" value="#{loadWe.upcomingSchedules}"
                                          size="small" rowKey="#{performance.id}" style="font-size: 14px">
                                 <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
                                 <p:column width="15%" headerText="Typ">#{schedule.type.displayname}</p:column>
@@ -149,7 +149,7 @@
                         </div>
 
 
-                        <p:carousel var="team" value="#{allEventsTimelineView.scrimpartners}" circular="true"
+                        <p:carousel var="team" value="#{loadWe.scrimpartners}" circular="true"
                                     autoplayInterval="15000" numVisible="5" numScroll="1">
                             <div class="product-grid-item ui-card">
                                 <div class="p-grid nested-grid">
@@ -181,7 +181,7 @@
                         <div class="ui-card">
                             <h5>Spieler und Profile</h5>
                             <h:form>
-                                <p:dataTable lazy="false" var="player" value="#{allEventsTimelineView.players}"
+                                <p:dataTable lazy="false" var="player" value="#{loadWe.players}"
                                              size="small"
                                              rowKey="#{player.id}" style="font-size: 14px">
                                     <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
@@ -222,18 +222,18 @@
                             </p:growl>
 
                             <div class="card">
-                                <p:timeline id="timeline" value="#{allEventsTimelineView.model}" editable="true"
+                                <p:timeline id="timeline" value="#{loadWe.model}" editable="true"
                                             eventMargin="10" eventMarginAxis="0" stackEvents="false" var="absent"
-                                            start="#{allEventsTimelineView.start}" end="#{allEventsTimelineView.end}">
+                                            start="#{loadWe.start}" end="#{loadWe.end}">
 
-                                    <p:ajax event="changed" update="@none" listener="#{allEventsTimelineView.onChange}"/>
+                                    <p:ajax event="changed" update="@none" listener="#{loadWe.onChange}"/>
                                     <p:ajax event="edit" update="detailsBookingInner"
-                                            listener="#{allEventsTimelineView.onEdit}"
+                                            listener="#{loadWe.onEdit}"
                                             oncomplete="PF('detailsBookingWdgt').show()"/>
                                     <p:ajax event="add" update="detailsBookingInner"
-                                            listener="#{allEventsTimelineView.onAdd}"
+                                            listener="#{loadWe.onAdd}"
                                             oncomplete="PF('detailsBookingWdgt').show()"/>
-                                    <p:ajax event="delete" listener="#{allEventsTimelineView.onDelete}"/>
+                                    <p:ajax event="delete" listener="#{loadWe.onDelete}"/>
                                     <f:facet name="loading">
                                         <h1>Loading please wait...</h1>
                                     </f:facet>
@@ -248,21 +248,21 @@
                                     <h:panelGroup id="detailsBookingInner" layout="block">
                                         <h:panelGrid columns="2" columnClasses="bookingDetails1,bookingDetails2">
                                             <h:outputText value="Typ"/>
-                                            <p:selectOneMenu value="#{allEventsTimelineView.event.data.type}"
-                                                             rendered="#{not empty allEventsTimelineView.event}">
+                                            <p:selectOneMenu value="#{loadWe.event.data.type}"
+                                                             rendered="#{not empty loadWe.event}">
                                                 <f:selectItem itemLabel="Abwesend" itemValue="ABSENT"/>
                                                 <f:selectItem itemLabel="Normalerweise abwesend" itemValue="MAYBE"/>
                                                 <f:selectItem itemLabel="Anwesend" itemValue="AVAILABLE"/>
                                             </p:selectOneMenu>
 
                                             <h:outputText value="Von"/>
-                                            <p:calendar value="#{allEventsTimelineView.event.startDate}"
-                                                        rendered="#{not empty allEventsTimelineView.event}"
+                                            <p:calendar value="#{loadWe.event.startDate}"
+                                                        rendered="#{not empty loadWe.event}"
                                                         pattern="dd.MM.yyyy HH:mm" required="true" label="From"/>
 
                                             <h:outputText value="Bis"/>
-                                            <p:calendar value="#{allEventsTimelineView.event.endDate}"
-                                                        rendered="#{not empty allEventsTimelineView.event}"
+                                            <p:calendar value="#{loadWe.event.endDate}"
+                                                        rendered="#{not empty loadWe.event}"
                                                         pattern="dd.MM.yyyy HH:mm" label="Until"/>
                                         </h:panelGrid>
                                     </h:panelGroup>
@@ -270,7 +270,7 @@
                                     <f:facet name="footer">
                                         <h:panelGroup layout="block" style="text-align:right; padding:2px; white-space:nowrap;">
                                             <p:commandButton value="Save" process="detailsBookingDlg" update="@none"
-                                                             action="#{allEventsTimelineView.saveDetails}"
+                                                             action="#{loadWe.saveDetails}"
                                                              oncomplete="if(!args.validationFailed){PF('detailsBookingWdgt').hide();}"/>
                                             <p:commandButton type="button" value="Close" onclick="PF('detailsBookingWdgt').hide()"/>
                                         </h:panelGroup>

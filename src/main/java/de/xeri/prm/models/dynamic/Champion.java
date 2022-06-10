@@ -38,7 +38,7 @@ import de.xeri.prm.models.enums.Subclass;
 import de.xeri.prm.models.match.ChampionSelection;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.others.ChampionRelationship;
-import de.xeri.prm.servlet.datatables.draft.CompositionAttribute;
+import de.xeri.prm.servlet.loader.scouting.composition.CompositionAttribute;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

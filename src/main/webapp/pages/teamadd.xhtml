@@ -63,7 +63,7 @@
 
         <div class="p-col-3">
             <h:form>
-                <p:dataTable lazy="false" var="team" value="#{allEventsTimelineView.scrimpartners}" size="small"
+                <p:dataTable lazy="false" var="team" value="#{loadWe.scrimpartners}" size="small"
                              rowKey="#{team.id}" style="font-size: 14px">
                     <p:column width="10%" headerText=""><p:graphicImage width="100%" url="#{team.logoUrl}"/></p:column>
                     <p:column width="15%" headerText="">#{team.teamAbbr}</p:column>

@@ -44,9 +44,9 @@
 
 
         <div class="p-mr-auto">
-            Nächstes Spiel am #{allEventsTimelineView.nextOrLast.startStringLong}<br/>
-            in #{allEventsTimelineView.nextOrLast.startString} <br/>
-            gegen #{allEventsTimelineView.nextOrLast.enemyTeam.teamName}
+            Nächstes Spiel am #{loadWe.nextOrLast.startStringLong}<br/>
+            in #{loadWe.nextOrLast.startString} <br/>
+            gegen #{loadWe.nextOrLast.enemyTeam.teamName}
         </div>
 
         <p:sidebar widgetVar="sidebar1">
@@ -54,7 +54,7 @@
             <p:tabView>
                 <p:tab title="Spielplan" icon="pi pi-fw pi-calendar">
                     <p class="p-m-0">
-                        <p:dataTable lazy="false" var="schedule" value="#{allEventsTimelineView.upcomingSchedules}"
+                        <p:dataTable lazy="false" var="schedule" value="#{loadWe.upcomingSchedules}"
                                      size="small" rowKey="#{performance.id}" style="font-size: 14px">
                             <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
                             <p:column width="35%" headerText="Typ">#{schedule.type.displayname}</p:column>
