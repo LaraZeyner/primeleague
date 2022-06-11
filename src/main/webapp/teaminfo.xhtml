@@ -35,9 +35,8 @@
                 <p:toggleSwitch value="#{loadTeam.requestedTeam.team.scrims}">
                     <p:ajax listener="#{loadTeam.setScrimmages()}" update="msg"/>
                 </p:toggleSwitch>
-                <div class="p-col-12 compact">#{loadTeam.scrims}}</div>
                 <div class="p-col-12">
-                    <p:dataTable lazy="false" var="player" value="#{loadTeam.playerViews}" size="small">
+                    <p:dataTable lazy="false" var="p" value="#{loadTeam.playerViews}" size="small">
                         <p:columnGroup type="header">
                             <p:row>
                                 <p:column rowspan="2" headerText="Spieler"/>
@@ -55,24 +54,22 @@
                                 <p:column headerText="#{loadTeam.totalSupport}"/>
                             </p:row>
                         </p:columnGroup>
-                        <p:column>#{player.player.shortName}</p:column>
-                        <p:column>#{player.top}</p:column>
-                        <p:column>#{player.jungle}</p:column>
-                        <p:column>#{player.middle}</p:column>
-                        <p:column>#{player.bottom}</p:column>
-                        <p:column>#{player.support}</p:column>
+                        <p:column width="25%">#{p.player.shortName}</p:column>
+                        <p:column width="15%">#{p.top}</p:column>
+                        <p:column width="15%">#{p.jungle}</p:column>
+                        <p:column width="15%">#{p.middle}</p:column>
+                        <p:column width="15%">#{p.bottom}</p:column>
+                        <p:column width="15%">#{p.support}</p:column>
                     </p:dataTable>
                 </div>
             </div>
         </h:form>
         <h:form class="p-col-9">
-            <p:dataView var="game" value="#{loadTeam.requestedTeam.gameViews}" rows="12" paginator="true"
-                        rowsPerPageTemplate="6,12,16"
-                        paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                        gridIcon="pi pi-th-large" listIcon="pi pi-bars">
-                <p:dataViewListItem>
+            <p:dataView var="game" value="#{loadTeam.requestedTeam.gameViews}" rows="16" paginator="false"
+                        layout="grid" gridIcon="pi pi-th-large">
+                <p:dataViewGridItem columns="4">
                     <div class="ui-fluid p-formgrid p-grid nested-grid ui-card">
-                        <div class="p-col-1">
+                        <div class="p-col-3">
                             <div class="p-grid">
                                 <div class="p-col-12">#{game.mode}</div>
                                 <div class="p-col-12">#{game.date}</div>
@@ -82,63 +79,32 @@
                                 <div class="p-col-12">#{game.duration}</div>
                             </div>
                         </div>
-                        <c:forEach items="#{game.performanceViews}" var="player">
-                            <div class="p-col">
-                                <div class="p-grid">
-                                    <div class="p-col-1">
-                                        <p:graphicImage width="75%"
-                                                        url="#{player.playerperformance.championOwn.image}"/>
-                                    </div>
-                                    <div class="p-col-5">
-                                        #{player.playerperformance.getKDAStringLong()} <br/>
-                                        #{player.playerperformance.getKDAStringShort()}
-                                    </div>
-                                    <div class="p-col-5">
-                                        #{player.playerperformance.getKillParticipation()} <br/>
-                                        #{player.playerperformance.visionScore} <br/>
-                                        #{player.playerperformance.getCSPerMinute()}
-                                    </div>
-                                    <div class="p-col-1">
-                                        <p:graphicImage width="75%"
-                                                        url="#{player.playerperformance.championEnemy.image}"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:forEach>
-                    </div>
-                </p:dataViewListItem>
 
-                <p:dataViewGridItem>
-                    <div class="ui-fluid p-formgrid p-grid nested-grid ui-card">
-                        <div class="p-col-1">
-                            <div class="p-grid">
-                                <div class="p-col-12">#{game.mode}</div>
-                                <div class="p-col-12">#{game.date}</div>
-                            </div>
-                            <div class="p-grid">
-                                <div class="p-col-12">#{game.result}</div>
-                                <div class="p-col-12">#{game.duration}</div>
-                            </div>
+                        <div class="p-col-3">
+                            <p:repeat value="#{game.performanceViews}" var="player">
+                                <h:outputText style="font-size: 12px"
+                                              value="#{player.playerperformance.account.player.shortName}"/>
+                                <br/>
+                            </p:repeat>
                         </div>
-                        <c:forEach items="#{game.performanceViews}" var="player">
-                            <div class="p-col">
-                                <div class="p-grid">
-                                    <div class="p-col-1">
-                                        <p:graphicImage width="75%"
-                                                        url="#{player.playerperformance.championOwn.image}"/>
-                                    </div>
-                                    <div class="p-col-2">#{player.playerperformance.getKDAString()}</div>
-                                    <div class="p-col-2">#{player.playerperformance.getKillParticipation()} </div>
-                                    <div class="p-col-2">#{player.playerperformance.visionScore} </div>
-                                    <div class="p-col-2">#{player.playerperformance.getCSPerMinute()} </div>
-                                    <div class="p-col-2">#{player.playerperformance.getKillParticipation()} </div>
-                                    <div class="p-col-1">
-                                        <p:graphicImage width="75%"
-                                                        url="#{player.playerperformance.championEnemy.image}"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </c:forEach>
+
+                        <div class="p-col-2" style="padding: 0; margin: 0;">
+                            <p:repeat value="#{game.performanceViews}" var="player">
+                                <p:graphicImage rendered="#{not empty player.playerperformance}" width="40%"
+                                                url="#{player.playerperformance.championOwn.image}"/>
+                                <p:graphicImage rendered="#{not empty player.playerperformance}" width="40%"
+                                                url="#{player.playerperformance.championEnemy.image}"/>
+                                <br/>
+                            </p:repeat>
+                        </div>
+
+                        <div class="p-col-4">
+                            <p:repeat value="#{game.performanceViews}" var="player">
+                                <h:outputText style="font-size: 12px" value="#{player.playerperformance.getKDAString()}"/>
+                                <br/>
+                            </p:repeat>
+                        </div>
+
                     </div>
                 </p:dataViewGridItem>
             </p:dataView>
@@ -146,13 +112,15 @@
             <div class="p-grid">
                 <c:forEach items="#{loadTeam.laneViews}" var="view">
                     <div class="p-col">
-                        <p:dataTable lazy="false" var="performance" value="#{view.playerperformances}" size="small">
-                            <p:column>#{performance.account.player.shortName}</p:column>
-                            <p:column><p:graphicImage width="100%" url="#{performance.championOwn.image}"/></p:column>
-                            <p:column><p:graphicImage width="100%" url="#{performance.championEnemy.image}"/></p:column>
-                            <p:column width="20%" headerText="">#{performance.getKillParticipation()}</p:column>
-                            <p:column width="20%" headerText="">#{performance.visionScore}</p:column>
-                            <p:column width="20%" headerText="">#{performance.getCSPerMinute()}</p:column>
+                        <p:dataTable lazy="false" var="performance" value="#{view.playerperformances}" size="small" style="font-size: 12px">
+                            <p:column width="15%" headerText="vor" style="font-size: 12px">#{performance.teamperformance.game.startStringShort}</p:column>
+                            <p:column width="35%" headerText="Name" style="font-size: 12px">#{performance.account.player.shortName}</p:column>
+                            <p:column width="10%"><p:graphicImage width="100%" url="#{performance.championOwn.image}"/></p:column>
+                            <p:column width="10%"><p:graphicImage width="100%"
+                                                                  url="#{performance.championEnemy.image}"/></p:column>
+                            <p:column width="10%" headerText="KDA" style="font-size: 12px">#{performance.getKDAStringShort()}</p:column>
+                            <p:column width="10%" headerText="VS" style="font-size: 12px">#{performance.visionScore}</p:column>
+                            <p:column width="10%" headerText="CS" style="font-size: 12px">#{performance.getCSPerMinute()}</p:column>
                         </p:dataTable>
                     </div>
                 </c:forEach>

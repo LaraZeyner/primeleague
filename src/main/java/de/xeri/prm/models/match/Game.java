@@ -172,6 +172,19 @@ public class Game implements Serializable {
     return new SimpleDateFormat("dd.MM. HH:mm").format(gameStart);
   }
 
+  public String getStartStringShort() {
+    final long l = System.currentTimeMillis() - gameStart.getTime();
+    if (l < 100_000) {
+      return l / 1000 + "s";
+    } else if (l < 6_000_000) {
+      return l / 60_000 + "m";
+    } else if (l < 360_000_000) {
+      return l / 3_600_000 + "h";
+    } else {
+      return l / Const.MILLIS_PER_DAY + "d";
+    }
+  }
+
   public String getDurationString() {
     return duration / 60 + ":" + (duration % 60 < 10 ? "0" + duration % 60 : duration % 60);
   }

@@ -53,7 +53,6 @@ public class LoadPlayers implements Serializable {
           .min(Comparator.comparing(Schedule::getStartTime))
           .orElse(allSchedules.get(allSchedules.size() - 1))
           .getEnemyTeam());
-      //this.enemyTeam = new TeamView(Team.find("Leipzig Esport eV Salty Badgers"));
       this.draft = new Draft(ourTeam, enemyTeam);
 
       this.timings = Arrays.asList(
@@ -124,8 +123,12 @@ public class LoadPlayers implements Serializable {
   }
 
   public String redirectOPgg() {
-    return enemyTeam.getViews().stream()
-        .map(view -> view.getSelectedPlayer().getActiveAccount().getName())
-        .collect(Collectors.joining("%2C", "https://euw.op.gg/multisearch/euw?summoners=", ""));
+    if (enemyTeam.getViews() != null) {
+      return enemyTeam.getViews().stream()
+          .map(view -> view.getSelectedPlayer().getActiveAccount().getName())
+          .collect(Collectors.joining("%2C", "https://euw.op.gg/multisearch/euw?summoners=", ""));
+    }
+    init();
+    return redirectOPgg();
   }
 }

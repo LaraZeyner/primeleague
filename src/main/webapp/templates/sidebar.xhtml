@@ -2,9 +2,11 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:c="http://java.sun.com/jsp/jstl/core"
+      xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
-      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:c="http://java.sun.com/jsp/jstl/core">
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 <h:head>
     <title>Technical Really Unique Esports</title>
     <h:outputStylesheet library="css" name="styles.css"/>
@@ -20,13 +22,56 @@
     <ui:composition>
         <ui:fragment>
             <div class="card">
-                <p:dataTable id="pickBans" lazy="true" value="#{loadPlayers.draft.picks}" var="pick"
-                             style="font-size: 14px;" size="small">
-                    <p:column headerText="Picks">#{pick.pickWe}</p:column>
-                    <p:column headerText="Banns">#{pick.banWe}</p:column>
-                    <p:column headerText="Picks">#{pick.pickEnemy}</p:column>
-                </p:dataTable>
+                <h:form>
+                    <p:panelGrid>
+                        <p:row>
+                            <p:column style="padding: 0; margin: 0;">Picks</p:column>
+                            <p:column style="padding: 0; margin: 0;" colspan="2">Banns</p:column>
+                            <p:column style="padding: 0; margin: 0;">Picks</p:column>
+                        </p:row>
 
+                        <p:repeat value="#{loadPlayers.draft.picks}" var="pick">
+                            <p:row>
+                                <p:column style="padding: 0; margin: 0;">
+                                    <p:inplace>
+                                        <p:selectOneMenu id="pickWe" value="#{pick.pickWe}" dynamic="true" effect="fade"
+                                                         filter="true" filterMatchMode="startsWith">
+                                            <f:selectItem itemLabel="#{pick.pickWe}"/>
+                                            <f:selectItems value="#{loadChampions.champions}"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
+                                </p:column>
+                                <p:column style="padding: 0; margin: 0;">
+                                    <p:inplace>
+                                        <p:selectOneMenu id="bann" value="#{pick.banWe}" dynamic="true" effect="fade"
+                                                         filter="true" filterMatchMode="startsWith">
+                                            <f:selectItem itemLabel="#{pick.banWe}"/>
+                                            <f:selectItems value="#{loadChampions.champions}"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
+                                </p:column>
+                                <p:column style="padding: 0; margin: 0;">
+                                    <p:inplace>
+                                        <p:selectOneMenu id="bann2" value="#{pick.banEnemy}" dynamic="true"
+                                                         effect="fade" filter="true" filterMatchMode="startsWith">
+                                            <f:selectItem itemLabel="#{pick.banEnemy}"/>
+                                            <f:selectItems value="#{loadChampions.champions}"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
+                                </p:column>
+                                <p:column style="padding: 0; margin: 0;">
+                                    <p:inplace>
+                                        <p:selectOneMenu id="pickEnemy" value="#{pick.pickEnemy}" dynamic="true"
+                                                         effect="fade" filter="true" filterMatchMode="startsWith">
+                                            <f:selectItem itemLabel="#{pick.pickEnemy}"/>
+                                            <f:selectItems value="#{loadChampions.champions}"/>
+                                        </p:selectOneMenu>
+                                    </p:inplace>
+                                </p:column>
+                            </p:row>
+                        </p:repeat>
+                    </p:panelGrid>
+                </h:form>
                 <div class="p-grid">
                     <c:forEach items="#{loadPlayers.draft.our.badAttributesDisplay}" var="bad">
                         <div class="p-col-4 attributes attributes-bad">#{bad.name}</div>
