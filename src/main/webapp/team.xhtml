@@ -115,7 +115,9 @@
                             <p:commandButton value="Team +"/>
                         </div>
                         <div class="p-col-3">
-                            <p:commandButton value="Zur Teamübersicht"/>
+                            <p:linkButton styleClass="p-col" outcome="teaminfo" value="Zum Team" icon="pi pi-star" style="margin-right:20px;">
+                                <f:param name="teamId" value="#{loadPlayers.enemyTeam.leagueTeam.tourneyId}"/>
+                            </p:linkButton>
                         </div>
                     </div>
                 </h:form>
@@ -125,7 +127,6 @@
                         <div class="p-col-12">
                             <p:dataTable lazy="false" var="schedule" value="#{loadWe.upcomingSchedules}"
                                          size="small" rowKey="#{performance.id}" style="font-size: 14px">
-                                <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
                                 <p:column width="15%" headerText="Typ">#{schedule.type.displayname}</p:column>
                                 <p:column width="15%" headerText="Zeit">#{schedule.startString}</p:column>
                                 <p:column width="5%" headerText="">#{schedule.enemyTeam.teamAbbr}</p:column>
@@ -142,8 +143,12 @@
                 <div class="ui-card">
                     <h:form>
                         <div class="p-grid">
-                            <div class="p-col-9"><h5>Scrimpartner</h5></div>
-                            <div class="p-col-3">
+                            <div class="p-col-8"><h5>Scrimpartner</h5></div>
+                            <div class="p-col-2">
+                                <p:commandButton type="button" icon="pi pi-star" value="Spielplan"
+                                                 action="scrimteamsgames.xhtml?faces-redirect=true"/>
+                            </div>
+                            <div class="p-col-2">
                                 <p:commandButton type="button" icon="pi pi-star" value="Hinzufügen"/>
                             </div>
                         </div>

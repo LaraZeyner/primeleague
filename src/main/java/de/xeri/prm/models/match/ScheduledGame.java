@@ -82,7 +82,7 @@ public class ScheduledGame implements Serializable {
   @Column(name = "queuetype")
   private QueueType queueType;
 
-  @Column(name = "prioritized")
+  @Column(name = "prioritized", length = 120)
   private String teams;
 
   public ScheduledGame(String id, QueueType queueType) {

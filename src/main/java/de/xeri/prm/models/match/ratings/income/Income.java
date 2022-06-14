@@ -1,14 +1,13 @@
 package de.xeri.prm.models.match.ratings.income;
 
 import java.util.List;
-
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
-import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 
 /**
@@ -50,6 +49,15 @@ public class Income {
 
   public double sum() {
     return teamfights.get() + skirmishes.get() + earlyIncome.get() + generalIncome.get() + itemization.get();
+  }
+
+  public List<String> subKeys() {
+    return Util.subkeys(StatSubcategory.TEAMFIGHTING, StatSubcategory.SKIRMISHING, StatSubcategory.EARLY_INCOME, StatSubcategory.INCOME,
+        StatSubcategory.ITEMIZATION);
+  }
+
+  public List<String> subValues() {
+    return Util.subvalues(teamfights, skirmishes, earlyIncome, generalIncome, itemization);
   }
 
 }

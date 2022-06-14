@@ -12,6 +12,7 @@ import javax.annotation.PostConstruct;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
+import de.xeri.prm.loader.GameIdLoader;
 import de.xeri.prm.loader.MatchLoader;
 import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.StageType;
@@ -52,6 +53,7 @@ public class LoadLeague implements Serializable {
   }
 
   public void updateAll() {
+    //TODO (Abgie) 12.06.2022: Für Scrimpartner - Nächstes Match
     try {
       boolean changed = false;
       for (TurnamentMatch match : league.getMatches()) {
@@ -71,6 +73,11 @@ public class LoadLeague implements Serializable {
     } catch (Exception exception) {
       FacesUtil.sendException("Ligatabelle wurde nicht geladen", exception);
     }
+  }
+
+  public void updateGames() {
+    league.getTeams().forEach(team -> team.getPlayers().forEach(player -> player.getAccounts().forEach(GameIdLoader::loadGameIds)));
+    PrimeData.getInstance().commit();
   }
 
   private void reload() {

@@ -1,14 +1,13 @@
 package de.xeri.prm.models.match.ratings.laning;
 
 import java.util.List;
-
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
-import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 
 /**
@@ -50,6 +49,15 @@ public class Laning {
 
   public double sum() {
   return resets.get() + preReset.get() + postReset.get() + laneBilance.get() + playstyle.get();
+  }
+
+  public List<String> subKeys() {
+    return Util.subkeys(StatSubcategory.RESETS, StatSubcategory.PRE_FIRST_BASE, StatSubcategory.POST_FIRST_BASE,
+        StatSubcategory.LANE_BILANCE, StatSubcategory.PLAYSTYLE);
+  }
+
+  public List<String> subValues() {
+    return Util.subvalues(resets, preReset, postReset, laneBilance, playstyle);
   }
 
 }

@@ -34,10 +34,10 @@ public final class ChampionLoader {
       final JSONObject championObject = championsData.getJSONObject(id);
       final short cId = Short.parseShort(championObject.getString("key"));
       final String name = championObject.getString("name");
-      final Champion champion = Champion.get(new Champion(cId, name));
+      Champion c = new Champion(cId, name);
 
       final String title = championObject.getString("title");
-      champion.setTitle(title);
+      c.setTitle(title);
 
       final JSONObject info = championObject.getJSONObject("info");
       final byte attack = (byte) info.getInt("attack");
@@ -53,18 +53,22 @@ public final class ChampionLoader {
       final short range = (short) stats.getInt("attackrange");
       final short damage = (short) calculateSubStat(stats.getDouble("attackdamage"), stats.getDouble("attackdamageperlevel"));
       final double attackSpeed = calculateSubStat(stats.getDouble("attackspeed"), stats.getDouble("attackspeedperlevel") / 100);
-      champion.setStats(attack, defense, magic, health, secondary, moveSpeed, resist, range, healthRegeneration, secondaryRegeneration, damage,
+      c.setStats(attack, defense, magic, health, secondary, moveSpeed, resist, range, healthRegeneration, secondaryRegeneration, damage,
           attackSpeed);
 
       final String resourceString = String.valueOf(parser.getSubParameter(DataType.STRING, id + ".partype"));
       final Resource resource = Resource.get(new Resource(resourceString));
-      champion.setResource(resource);
-      resource.addChampion(champion);
+      c.setResource(resource);
+      resource.addChampion(c);
+
+      final Champion champion = Champion.get(c);
 
       // Class
-      championObject.getJSONArray("tags").forEach(clazz -> Arrays.stream(Championclass.values())
-          .filter(championclazz -> championclazz.getDisplayName().equalsIgnoreCase(String.valueOf(clazz)))
-          .findFirst().ifPresent(championclazz -> champion.getClasses().add(championclazz)));
+      for (Object clazz : championObject.getJSONArray("tags")) {
+        Arrays.stream(Championclass.values())
+            .filter(championclazz -> championclazz.getDisplayName().equalsIgnoreCase(String.valueOf(clazz)))
+            .findFirst().ifPresent(championclazz -> champion.getClasses().add(championclazz));
+      }
 
       // Passive
       final JSONObject passiveObject = championObject.getJSONObject("passive");

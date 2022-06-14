@@ -5,12 +5,16 @@ import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import de.xeri.prm.game.events.location.Position;
 import de.xeri.prm.manager.PrimeData;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
+import de.xeri.prm.models.match.ratings.StatSubcategory;
 import org.hibernate.Session;
 
 /**
@@ -108,6 +112,19 @@ public final class Util {
 
   public static LocalDateTime getLocalDate(Date dateToConvert) {
     return dateToConvert.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+  }
+
+  public static List<String> subvalues(RatingSubcategory... doubles) {
+    return Arrays.stream(doubles)
+        .mapToInt(aDouble -> (int) Math.round(aDouble.get() * 25))
+        .mapToObj(round -> round + "")
+        .collect(Collectors.toList());
+  }
+
+  public static List<String> subkeys(StatSubcategory... subcategories) {
+    return Arrays.stream(subcategories)
+        .map(StatSubcategory::getName)
+        .collect(Collectors.toList());
   }
 
 }

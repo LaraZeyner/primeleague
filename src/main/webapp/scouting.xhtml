@@ -23,7 +23,7 @@
             <h:form id="scoutingForm">
                 <p:growl id="msgs" showDetail="true"/>
                 <div class="p-grid">
-                    <c:forEach items="#{loadPlayers.ourTeam.views}" var="homes">
+                    <p:repeat value="#{loadPlayers.ourTeam.views}" var="homes">
                         <div class="p-col">
                             <div id="homeScoutingHead" class="p-grid">
                                 <div class="p-col-fixed ui-card-sidetitle games-amount">
@@ -57,39 +57,81 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.objectives}</div>
+                                        <h:outputText id="objectivesWe" class="p-col-12 substat-value" value="#{homes.view.objectives}"/>
                                         <div class="p-col-12 substat-tag">Wards</div>
                                     </div>
+                                    <p:tooltip for="objectivesWe" position="bottom" >
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onObjectives}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.roaming}</div>
+                                        <h:outputText id="roamingWe" class="p-col-12 substat-value" value="#{homes.view.roaming}"/>
                                         <div class="p-col-12 substat-tag">Roams</div>
                                     </div>
+                                    <p:tooltip for="roamingWe" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onRoaming}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.fighting}</div>
+                                        <h:outputText id="fightingWe" class="p-col-12 substat-value" value="#{homes.view.fighting}"/>
                                         <div class="p-col-12 substat-tag">Fight</div>
                                     </div>
+                                    <p:tooltip for="fightingWe" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onFighting}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.income}</div>
+                                        <h:outputText id="incomeWe" class="p-col-12 substat-value" value="#{homes.view.income}"/>
                                         <div class="p-col-12 substat-tag">Gold</div>
                                     </div>
+                                    <p:tooltip for="incomeWe" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onIncome}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.survival}</div>
+                                        <h:outputText id="survivalWe" class="p-col-12 substat-value" value="#{homes.view.survival}"/>
                                         <div class="p-col-12 substat-tag">Alive</div>
                                     </div>
+                                    <p:tooltip for="survivalWe" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onSurvival}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.laning}</div>
+                                        <h:outputText id="laningWe" class="p-col-12 substat-value" value="#{homes.view.laning}"/>
                                         <div class="p-col-12 substat-tag">Lane</div>
                                     </div>
+                                    <p:tooltip for="laningWe" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onLaning}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                             </div>
 
@@ -127,10 +169,10 @@
                             </p:dataTable>
                         </div>
 
-                    </c:forEach>
+                    </p:repeat>
                 </div>
                 <div class="p-grid">
-                    <c:forEach items="#{loadPlayers.enemyTeam.views}" var="homes">
+                    <p:repeat value="#{loadPlayers.enemyTeam.views}" var="homes">
                         <div class="p-col">
                             <div id="enemyScoutingHead" class="p-grid">
                                 <div class="p-col-fixed ui-card-sidetitle games-amount">
@@ -164,39 +206,81 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.objectives}</div>
+                                        <h:outputText id="objectivesEnemy" class="p-col-12 substat-value" value="#{homes.view.objectives}"/>
                                         <div class="p-col-12 substat-tag">Wards</div>
                                     </div>
+                                    <p:tooltip for="objectivesEnemy" position="bottom" >
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onObjectives}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.roaming}</div>
+                                        <h:outputText id="roamingEnemy" class="p-col-12 substat-value" value="#{homes.view.roaming}"/>
                                         <div class="p-col-12 substat-tag">Roams</div>
                                     </div>
+                                    <p:tooltip for="roamingEnemy" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onRoaming}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.fighting}</div>
+                                        <h:outputText id="fightingEnemy" class="p-col-12 substat-value" value="#{homes.view.fighting}"/>
                                         <div class="p-col-12 substat-tag">Fight</div>
                                     </div>
+                                    <p:tooltip for="fightingEnemy" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onFighting}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.income}</div>
+                                        <h:outputText id="incomeEnemy" class="p-col-12 substat-value" value="#{homes.view.income}"/>
                                         <div class="p-col-12 substat-tag">Gold</div>
                                     </div>
+                                    <p:tooltip for="incomeEnemy" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onIncome}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.survival}</div>
+                                        <h:outputText id="survivalEnemy" class="p-col-12 substat-value" value="#{homes.view.survival}"/>
                                         <div class="p-col-12 substat-tag">Alive</div>
                                     </div>
+                                    <p:tooltip for="survivalEnemy" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onSurvival}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <div class="p-col-12 substat-value">#{homes.view.laning}</div>
+                                        <h:outputText id="laningEnemy" class="p-col-12 substat-value" value="#{homes.view.laning}"/>
                                         <div class="p-col-12 substat-tag">Lane</div>
                                     </div>
+                                    <p:tooltip for="laningEnemy" position="bottom">
+                                        <div class="p-grid" style="width: 300px">
+                                            <p:repeat value="#{homes.view.onLaning}" var="value">
+                                                <div class="p-col-6">#{value}</div>
+                                            </p:repeat>
+                                        </div>
+                                    </p:tooltip>
                                 </div>
                             </div>
 
@@ -234,7 +318,7 @@
                             </p:dataTable>
                         </div>
 
-                    </c:forEach>
+                    </p:repeat>
                 </div>
 
 

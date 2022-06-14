@@ -1,11 +1,13 @@
 package de.xeri.prm.models.match.ratings.objectives;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 
 /**
@@ -48,5 +50,15 @@ public class Objectives {
   public double sum() {
     return objectivePressure.get() + topsideObjectives.get() + botsideObjectives.get() + wards.get() + controlwards.get();
   }
+
+  public List<String> subKeys() {
+    return Util.subkeys(StatSubcategory.OBJECTIVE_PRESSURE, StatSubcategory.TOPSIDE_OBJECTIVES, StatSubcategory.BOTSIDE_OBJECTIVES,
+        StatSubcategory.WARDING, StatSubcategory.CONTROLWARDS);
+  }
+
+  public List<String> subValues() {
+    return Util.subvalues(objectivePressure, topsideObjectives, botsideObjectives, wards, controlwards);
+  }
+
 
 }

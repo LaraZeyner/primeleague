@@ -1,11 +1,13 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 
 /**
@@ -47,6 +49,15 @@ public class Roaming {
 
   public double sum() {
     return turretPressure.get() + macro.get() + roams.get() + ganks.get() + dives.get();
+  }
+
+  public List<String> subKeys() {
+    return Util.subkeys(StatSubcategory.TURRET_PRESSURE, StatSubcategory.MACRO, StatSubcategory.ROAMING, StatSubcategory.GANKING,
+        StatSubcategory.DIVING);
+  }
+
+  public List<String> subValues() {
+    return Util.subvalues(turretPressure, macro, roams, ganks, dives);
   }
 
 }

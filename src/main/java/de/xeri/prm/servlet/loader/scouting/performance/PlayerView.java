@@ -1,12 +1,19 @@
 package de.xeri.prm.servlet.loader.scouting.performance;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.SeasonElo;
 import de.xeri.prm.models.match.ratings.Ratings;
+import de.xeri.prm.models.match.ratings.fighting.Fighting;
+import de.xeri.prm.models.match.ratings.income.Income;
+import de.xeri.prm.models.match.ratings.laning.Laning;
+import de.xeri.prm.models.match.ratings.objectives.Objectives;
+import de.xeri.prm.models.match.ratings.roaming.Roaming;
+import de.xeri.prm.models.match.ratings.survival.Survival;
 import de.xeri.prm.util.HibernateUtil;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,11 +37,17 @@ public class PlayerView implements Serializable {
   private List<ChampionView> champions;
   private String kda;
   private String objectives;
+  private List<String> onObjectives;
   private String roaming;
+  private List<String> onRoaming;
   private String fighting;
+  private List<String> onFighting;
   private String income;
+  private List<String> onIncome;
   private String survival;
+  private List<String> onSurvival;
   private String laning;
+  private List<String> onLaning;
   private String lead;
   private String firstWard;
   private String firstObjective;
@@ -69,18 +82,59 @@ public class PlayerView implements Serializable {
     this.firstKill = ratings.getSurvival().getEarlySurvival().getFirstKillDeath().display();
     this.firstRecall = ratings.getLaning().getPostReset().getResetTime().display();
     this.firstItem = ratings.getIncome().getEarlyIncome().getFirstFullItem().display();
-  }
 
-  /*public void onCellEdit(CellEditEvent event) {
-    Object oldValue = event.getOldValue();
-    Object newValue = event.getNewValue();
-
-    if (newValue != null && !newValue.equals(oldValue)) {
-      String neww = String.valueOf(newValue);
-      final PerformanceObject newPerf = allPerformances.stream().filter(pO -> pO.getChampionName().equals(neww)).findFirst().orElse(null);
-      IntStream.range(0, performances.size()).filter(i -> performances.get(i).getChampionName().equals(neww)).forEach(i -> performances.set(i, newPerf));
-      FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Champion geändert", "");
-      FacesContext.getCurrentInstance().addMessage(null, msg);
+    final Objectives objectives = ratings.getObjectives();
+    final List<String> objectiveKeys = objectives.subKeys();
+    final List<String> objectiveOut = new ArrayList<>();
+    for (int i = 0; i < objectiveKeys.size(); i++) {
+      objectiveOut.add(objectiveKeys.get(i));
+      objectiveOut.add(objectives.subValues().get(i));
     }
-  }*/
+    this.onObjectives = objectiveOut;
+
+    final Roaming roaming = ratings.getRoaming();
+    final List<String> roamingKeys = roaming.subKeys();
+    final List<String> roamingOut = new ArrayList<>();
+    for (int i = 0; i < roamingKeys.size(); i++) {
+      roamingOut.add(roamingKeys.get(i));
+      roamingOut.add(roaming.subValues().get(i));
+    }
+    this.onRoaming = roamingOut;
+
+    final Fighting fighting = ratings.getFighting();
+    final List<String> fightingKeys = fighting.subKeys();
+    final List<String> fightingOut = new ArrayList<>();
+    for (int i = 0; i < fightingKeys.size(); i++) {
+      fightingOut.add(fightingKeys.get(i));
+      fightingOut.add(fighting.subValues().get(i));
+    }
+    this.onFighting = fightingOut;
+
+    final Income income = ratings.getIncome();
+    final List<String> incomeKeys = income.subKeys();
+    final List<String> incomeOut = new ArrayList<>();
+    for (int i = 0; i < incomeKeys.size(); i++) {
+      incomeOut.add(incomeKeys.get(i));
+      incomeOut.add(income.subValues().get(i));
+    }
+    this.onIncome = incomeOut;
+
+    final Survival survival = ratings.getSurvival();
+    final List<String> survivalKeys = survival.subKeys();
+    final List<String> survivalOut = new ArrayList<>();
+    for (int i = 0; i < survivalKeys.size(); i++) {
+      survivalOut.add(survivalKeys.get(i));
+      survivalOut.add(survival.subValues().get(i));
+    }
+    this.onSurvival = survivalOut;
+
+    final Laning laning = ratings.getLaning();
+    final List<String> laningKeys = laning.subKeys();
+    final List<String> laningOut = new ArrayList<>();
+    for (int i = 0; i < laningKeys.size(); i++) {
+      laningOut.add(laningKeys.get(i));
+      laningOut.add(laning.subValues().get(i));
+    }
+    this.onLaning = laningOut;
+  }
 }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -56,6 +57,8 @@ public class LoadWe implements Serializable {
 
   private boolean editableTime = true;
 
+  private List<TurnamentMatch> scrimteamMatches;
+
   @PostConstruct
   public void init() {
     updateMatches();
@@ -87,31 +90,12 @@ public class LoadWe implements Serializable {
       model.add(e);
     }
 
-
-
-
-    /*for (String name : schedulingPlayers) {
-      LocalDateTime end = LocalDateTime.now().minusHours(12).withMinute(0).withSecond(0).withNano(0);
-
-      for (int i = 0; i < 5; i++) {
-        LocalDateTime start = end.plusHours(Math.round(Math.random() * 5));
-        end = start.plusHours(4 + Math.round(Math.random() * 5));
-
-        long r = Math.round(Math.random() * 2);
-        String availability = (r == 0 ? "Unavailable" : (r == 1 ? "Available" : "Maybe"));
-
-        create an event with content, start / end dates, editable flag, group name and custom style class
-        TimelineEvent event = TimelineEvent.builder()
-            .data(availability)
-            .startDate(start)
-            .endDate(end)
-            .editable(true)
-            .group(name)
-            .styleClass(availability.toLowerCase())
-            .build();
-        model.add(event);
-      }
-    }*/
+    this.scrimteamMatches = scrimpartners.stream()
+        .filter(t -> !PrimeData.getInstance().getCurrentGroup().getTeams().contains(t))
+        .map(Team::getCurrentTurnamentMatches)
+        .flatMap(Collection::stream)
+        .sorted(Comparator.comparing(TurnamentMatch::getStart))
+        .distinct().collect(Collectors.toList());
   }
 
   public void updateMatches() {
@@ -204,7 +188,4 @@ public class LoadWe implements Serializable {
     System.out.println(event.getData().toString());
   }
 
-  public String getDeleteMessage() {
-    return "Bist du dir sicher, dass du den Eintrag löschen möchtest?";
-  }
 }

@@ -32,9 +32,9 @@ import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.servlet.datatables.scheduling.InventoryStatus;
 import de.xeri.prm.servlet.loader.league.LeagueTeam;
 import de.xeri.prm.servlet.loader.match.GameView;
-import de.xeri.prm.servlet.datatables.scheduling.InventoryStatus;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
@@ -437,6 +437,12 @@ public class Team implements Serializable {
     team.add(doubles);
 
     return team;
+  }
+
+  public List<TurnamentMatch> getCurrentTurnamentMatches() {
+    return getTurnamentMatches().stream()
+        .filter(turnamentMatch -> turnamentMatch.getStart().after(new Date(System.currentTimeMillis() - 7 * Const.MILLIS_PER_DAY)))
+        .collect(Collectors.toList());
   }
 
   @Override

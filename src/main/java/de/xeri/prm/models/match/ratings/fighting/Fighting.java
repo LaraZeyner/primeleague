@@ -1,11 +1,13 @@
 package de.xeri.prm.models.match.ratings.fighting;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 
 /**
@@ -49,7 +51,14 @@ public class Fighting {
     return damage.get() + plays.get() + catches.get() + snowball.get() + strongPhase.get();
   }
 
+  public List<String> subKeys() {
+    return Util.subkeys(StatSubcategory.DAMAGE, StatSubcategory.PLAYMAKING, StatSubcategory.CATCHING, StatSubcategory.SNOWBALLING,
+        StatSubcategory.STRONG_PHASE);
+  }
 
+  public List<String> subValues() {
+    return Util.subvalues(damage, plays, catches, snowball, strongPhase);
+  }
 
 
 }

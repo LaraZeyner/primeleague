@@ -162,7 +162,7 @@ public class LoadChampions implements Serializable {
   private DualListModel<String> getRelationship(List<Champion> source) {
     final List<String> current = source.stream().map(Champion::getName).collect(Collectors.toList());
     final List<String> other = new ArrayList<>(champions);
-    other.remove(selected);
+    other.remove(selected.getName());
     other.removeIf(current::contains);
     return new DualListModel<>(other, current);
   }
@@ -188,7 +188,7 @@ public class LoadChampions implements Serializable {
     }
 
     for (String championName : target) {
-      val other = Champion.find(championName);
+      val other = Champion.find(championName.replace("&#39;", "'"));
       if (champs.stream().noneMatch(champion -> champion.equals(other))) {
         new ChampionRelationship(type, selected, other).create();
       }

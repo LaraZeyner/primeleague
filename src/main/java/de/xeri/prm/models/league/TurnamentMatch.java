@@ -38,6 +38,7 @@ import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -294,6 +295,10 @@ public class TurnamentMatch implements Serializable {
 
   public String getStartShort() {
     return new SimpleDateFormat("E HH:mm").format(start);
+  }
+
+  public String getStartString() {
+    return Util.until(start, "in ");
   }
 
   public boolean hasTeam(Team team) {
