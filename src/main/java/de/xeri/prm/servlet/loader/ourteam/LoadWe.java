@@ -17,7 +17,6 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
 import de.xeri.prm.loader.MatchLoader;
-import de.xeri.prm.loader.ScheduleLoader;
 import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.league.Absence;
 import de.xeri.prm.models.league.Player;
@@ -44,6 +43,7 @@ import org.primefaces.model.timeline.TimelineModel;
 public class LoadWe implements Serializable {
 
   private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+  private static final long serialVersionUID = 7301096097113313751L;
 
   private List<Player> players;
   private List<Team> scrimpartners;
@@ -74,7 +74,7 @@ public class LoadWe implements Serializable {
     this.model = new TimelineModel<>();
 
     List<String> schedulingPlayers =
-        Arrays.asList("SYSTEM", "Whitelizard", "Seven", "Alex", "Xahrie", "Nuklas", "Admiral", "Diluc", "C3L3TI3", "Suders", "Rebone", "empty");
+        Arrays.asList("SYSTEM", "Whitelizard", "Seven", "Alex", "Xahrie", "Nuklas", "Grakala", "Diluc", "Suders", "C3L3TI3", "Rebone", "KiKi");
     IntStream.range(0, schedulingPlayers.size()).forEach(i -> model.addGroup(new TimelineGroup<>("idx_" + i, schedulingPlayers.get(i))));
 
 
@@ -108,7 +108,6 @@ public class LoadWe implements Serializable {
       }
     }
 
-    ScheduleLoader.load();
     final List<Schedule> allSchedules = new ArrayList<>(Schedule.get());
     this.upcomingSchedules = allSchedules.stream()
         .filter(schedule -> schedule.getEndTime().after(new Date()))

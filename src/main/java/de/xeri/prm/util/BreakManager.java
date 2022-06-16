@@ -13,7 +13,7 @@ public class BreakManager {
   public static void loop(long l) {
     long start = System.currentTimeMillis();
     int count = 0;
-    l = l / 2;
+    l = l / 4;
     final Set<TurnamentMatch> turnamentMatches = TurnamentMatch.get();
     for (TurnamentMatch turnamentMatch : turnamentMatches) {
       if (l == 0) break;

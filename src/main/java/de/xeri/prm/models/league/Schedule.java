@@ -2,7 +2,6 @@ package de.xeri.prm.models.league;
 
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -150,6 +149,11 @@ public class Schedule implements Serializable {
   }
 
   @Override
+  public String toString() {
+    return type.getDisplayname() + " vs. " + enemyTeam + " - " + smallTitle;
+  }
+
+  @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
@@ -160,10 +164,5 @@ public class Schedule implements Serializable {
   @Override
   public int hashCode() {
     return getClass().hashCode();
-  }
-
-  @Override
-  public String toString() {
-    return type.getDisplayname() + " vs. " + enemyTeam + " - " + smallTitle;
   }
 }

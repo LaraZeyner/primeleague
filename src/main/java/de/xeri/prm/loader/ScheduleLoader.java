@@ -1,13 +1,9 @@
 package de.xeri.prm.loader;
 
-import java.util.Date;
-import java.util.Set;
-
-import de.xeri.prm.models.league.Schedule;
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.league.TurnamentMatch;
 import de.xeri.prm.util.Const;
-import de.xeri.prm.manager.PrimeData;
 
 /**
  * Created by Lara on 06.04.2022 for web
@@ -15,20 +11,13 @@ import de.xeri.prm.manager.PrimeData;
 public final class ScheduleLoader {
 
   static {
-    final Set<Schedule> schedules = Schedule.get();
-    schedules.stream().filter(schedule -> !schedule.getType().getDisplayname().equals("Clash") && !schedule.getType().getDisplayname().startsWith("Best of")).forEach(schedule -> schedule.getEnemyTeam().getSchedules().remove(schedule));
-
     final Team team = Team.findTid(Const.TEAMID);
-    for (TurnamentMatch match : team.getTurnamentMatches()) {
-      final Team enemy = match.getHomeTeam().equals(team) ? match.getGuestTeam() : match.getHomeTeam();
-      if (match.getLeague().getStage().isInSeason(new Date())) {
+    for (TurnamentMatch match : PrimeData.getInstance().getCurrentGroup().getMatches()) {
+      MatchLoader.analyseMatchPage(match);
+      final Team enemy = match.getOtherTeam(team);
+      if (enemy != null) {
         enemy.setScrims(true);
       }
-
-      final Schedule schedule = Schedule.get(new Schedule(match.getScheduleType(), match.getStart(),
-          match.getMatchday().getStage().getStageType().name() + " - " + match.getScheduleType().name() + " gegen " +
-              enemy.getTeamAbbr(), "Match vs. " + enemy.getTeamAbbr()));
-      enemy.addSchedule(schedule);
     }
   }
 

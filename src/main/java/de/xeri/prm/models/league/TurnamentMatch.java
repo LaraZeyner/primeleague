@@ -24,25 +24,24 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
-import de.xeri.prm.game.RiotGameRequester;
 import de.xeri.prm.loader.GameIdLoader;
 import de.xeri.prm.loader.MatchLoader;
 import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.LogAction;
 import de.xeri.prm.models.enums.Matchstate;
-import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.enums.Result;
 import de.xeri.prm.models.enums.ScheduleType;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.match.Game;
-import de.xeri.prm.models.match.ScheduledGame;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.HibernateUtil;
 import de.xeri.prm.util.Util;
+import de.xeri.prm.util.logger.Logger;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.extern.java.Log;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 import org.jetbrains.annotations.Nullable;
@@ -88,8 +87,58 @@ public class TurnamentMatch implements Serializable {
     }
     league.addMatch(neu);
     matchday.addMatch(neu);
+
     PrimeData.getInstance().save(neu);
     return neu;
+  }
+
+  public void createSchedule() {
+    final Team team = Team.findTid(Const.TEAMID);
+    if (hasTeam(team)) {
+      final Team enemy = getOtherTeam(team);
+      if (enemy != null) {
+        if (league.getStage().isInSeason(new Date())) {
+          enemy.setScrims(true);
+        }
+        final Schedule schedule = Schedule.get(new Schedule(getScheduleType(), start,
+            matchday.getStage().getStageType().name() + " - " + getScheduleType().name() + " gegen " + enemy.getTeamAbbr(),
+            "Match vs. " + enemy.getTeamAbbr()));
+        enemy.addSchedule(schedule);
+      }
+    }
+  }
+
+  public void updateScheduleTime(Date oldDate, Date newDate) {
+    final Team team = Team.findTid(Const.TEAMID);
+    if (hasTeam(team)) {
+      final Team enemy = getOtherTeam(team);
+      if (enemy != null) {
+        final Schedule schedule = Schedule.find(matchday.getStage().getStageType().name() + " - " +
+            getScheduleType().name() + " gegen " + enemy.getTeamAbbr(), oldDate);
+        if (schedule != null) {
+          schedule.setStartTime(newDate);
+          PrimeData.getInstance().save(schedule);
+        }
+      } else {
+        Logger.getLogger("Turnament Match").severe("enemy kann nicht NULL sein!");
+      }
+    }
+  }
+
+  public void updateTeams() {
+    final Team team = Team.findTid(Const.TEAMID);
+    if (hasTeam(team)) {
+      for (Schedule schedule : Schedule.get()) {
+        if (schedule.getStartTime().equals(start) && (schedule.getType().getDisplayname().startsWith("Spieltag") ||
+            schedule.getType().equals(ScheduleType.TIEBREAKER) || schedule.getType().getDisplayname().startsWith("Playoff"))) {
+          final Team enemyTeam = schedule.getEnemyTeam();
+          if (enemyTeam != null) {
+            enemyTeam.removeSchedule(schedule);
+            createSchedule();
+          }
+        }
+      }
+    }
   }
 
   public static boolean has(int id) {

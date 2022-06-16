@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.LogAction;
 import de.xeri.prm.models.enums.Matchstate;
 import de.xeri.prm.models.league.League;
@@ -19,14 +20,12 @@ import de.xeri.prm.models.league.Matchlog;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.league.TurnamentMatch;
-import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.logger.Logger;
 import lombok.val;
 import lombok.var;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 /**
  * Created by Lara on 11.04.2022 for web
@@ -35,34 +34,35 @@ public final class MatchLoader {
   private static int amount = 0;
   private final static List<Integer> matchesLoaded = new ArrayList<>();
 
-  public static void handleMatch(League league, Elements days, int i, Matchday matchday) {
-    days.get(i).select("tr").forEach(match -> loadMatch(league, matchday, match));
-  }
-
   public static void loadMatch(League league, Matchday matchday, Element match) {
-    val logger = Logger.getLogger("Match-Erstellung");
-    val millisString = match.select("span").attr("data-time");
     val matchElement = match.selectFirst("tr");
     val matchData = matchElement.select("td").get(1).select("a");
     val matchIdString = matchData.attr("href").split("/matches/")[1].split("-")[0];
     final int matchId = Integer.parseInt(matchIdString);
 
-    if (!matchesLoaded.contains(matchId) || !TurnamentMatch.has(matchId)) {
-      val score = matchData.text().contains(":") ? matchData.text() : "-:-";
-      val turnamentMatch = TurnamentMatch.get(new TurnamentMatch(matchId, score, new Date(Long.parseLong(millisString))), league, matchday);
+    var turnamentMatch = TurnamentMatch.find(matchId);
+    if (!matchesLoaded.contains(matchId)) {
+      if (turnamentMatch == null) {
+        val score = matchData.text().contains(":") ? matchData.text() : "-:-";
+        val millisString = match.select("span").attr("data-time");
+        turnamentMatch = TurnamentMatch.get(new TurnamentMatch(matchId, score, new Date(Long.parseLong(millisString))), league, matchday);
 
-      val teamPlaceholder1 = match.select("td").get(0);
-      handleTeam(teamPlaceholder1, turnamentMatch, true, league);
+        val teamPlaceholder1 = match.select("td").get(0);
+        handleTeam(teamPlaceholder1, turnamentMatch, true, league);
 
-      val teamPlaceholder2 = match.select("td").get(2);
-      handleTeam(teamPlaceholder2, turnamentMatch, false, league);
+        val teamPlaceholder2 = match.select("td").get(2);
+        handleTeam(teamPlaceholder2, turnamentMatch, false, league);
 
-      analyseMatchPage(turnamentMatch);
-
-      matchesLoaded.add(matchId);
-      amount++;
-      if (amount % 10 == 0) {
-        logger.info(amount + " Matches hinzugefügt");
+        turnamentMatch.createSchedule();
+        analyseMatchPage(turnamentMatch);
+        matchesLoaded.add(matchId);
+        amount++;
+        if (amount % 10 == 0) {
+          val logger = Logger.getLogger("Match-Erstellung");
+          logger.info(amount + " Matches hinzugefügt");
+        }
+      } else {
+        analyseMatchPage(turnamentMatch);
       }
     }
   }
@@ -97,9 +97,12 @@ public final class MatchLoader {
       val doc = Jsoup.parse(html.toString());
 
       val timeString = doc.select("div#league-match-time").select("span").attr("data-time");
-      boolean changed;
       final Date start = new Date(Long.parseLong(timeString) * 1000L);
-      changed = !start.equals(match.getStart());
+      boolean changed = !start.equals(match.getStart());
+      if (changed) {
+        match.updateScheduleTime(match.getStart(), start);
+      }
+
       match.setStart(start);
 
       final boolean changedScore = updateScoreAndTeams(doc, match);
@@ -113,7 +116,7 @@ public final class MatchLoader {
     return false;
   }
 
-  public static boolean updateScoreAndTeams(Document doc, TurnamentMatch match) {
+  private static boolean updateScoreAndTeams(Document doc, TurnamentMatch match) {
     boolean changed = false;
     final String scoreText = doc.select("span.league-match-result").text();
     if (scoreText.contains(":") && !match.getScore().equals(scoreText)) {
@@ -126,6 +129,10 @@ public final class MatchLoader {
 
     val teamPlaceholder2 = doc.select(".content-match-head-team-top").get(1);
     boolean changedTeam2 = handleTeam(teamPlaceholder2, match, false, match.getLeague());
+
+    if (changedTeam1 || changedTeam2) {
+      match.updateTeams();
+    }
 
     return changed || changedTeam1 || changedTeam2;
   }
