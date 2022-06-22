@@ -30,6 +30,7 @@ public class PrimeData {
   private League currentGroup;
   private Season currentSeason;
   private String currentVersion;
+  private Team trueTeam;
 
   public PrimeData() {
     this.requester = new RequestManager();
@@ -46,6 +47,7 @@ public class PrimeData {
 
       val season = Season.current();
       PrimeData.setCurrentSeason(season);
+      PrimeData.setTrueTeam(team);
       logger.info("Season geladen");
       logger.info("Datenbank geladen");
     }
@@ -74,6 +76,13 @@ public class PrimeData {
     return currentSeason;
   }
 
+  public Team getTrueTeam() {
+    if (trueTeam == null) {
+      PrimeData.init();
+    }
+    return trueTeam;
+  }
+
   public String getCurrentVersion() {
     if (currentVersion == null) {
       final JSON json = PrimeData.getInstance().getRequester().requestJSON("https://ddragon.leagueoflegends.com/api/versions.json");
@@ -85,6 +94,10 @@ public class PrimeData {
 
   public void setCurrentSeason(Season currentSeason) {
     this.currentSeason = currentSeason;
+  }
+
+  public void setTrueTeam(Team trueTeam) {
+    this.trueTeam = trueTeam;
   }
 
   public RequestManager getRequester() {

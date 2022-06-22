@@ -12,6 +12,9 @@
         <property name="connection.password">Trueszugriff1!</property>
         <property name="connection.pool_size">100</property>
         <property name="current_session_context_class">thread</property>
+        <property name="connection.autoReconnect">true</property>
+        <property name="connection.autoReconnectForPools">true</property>
+        <property name="connection.is-connection-validation-required">true</property>
 
         <property name="dialect">org.hibernate.dialect.MySQL5Dialect</property>
         <property name="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</property>
@@ -20,9 +23,11 @@
         <property name="hbm2ddl.auto">validate</property>
         <property name="show_sql">false</property>
 
+        <!--
         <property name="hibernate.cache.use_second_level_cache">true</property>
         <property name="hibernate.cache.ehcache.missing_cache_strategy">create</property>
         <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.internal.EhcacheRegionFactory</property>
         <property name="hibernate.cache.use_query_cache">true</property>
+        -->
     </session-factory>
 </hibernate-configuration>

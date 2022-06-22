@@ -24,4 +24,19 @@ public class ChampionView implements Serializable {
   private int gamesCompetitive;
   private int gamesOther;
   private String wins;
+  private boolean selected;
+  private boolean recommended;
+  private boolean flexpick;
+
+  public void setRecommended(boolean recommended) {
+    this.recommended = recommended;
+  }
+
+  public void setSelected(boolean selected) {
+    this.selected = selected;
+  }
+
+  public void setFlexpick(boolean flexpick) {
+    this.flexpick = flexpick;
+  }
 }

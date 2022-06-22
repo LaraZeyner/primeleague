@@ -41,7 +41,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.extern.java.Log;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NamedQuery;
 import org.jetbrains.annotations.Nullable;
@@ -340,6 +339,39 @@ public class TurnamentMatch implements Serializable {
     }
 
     return null;
+  }
+
+  public int getExpectedResult(double score1, double score2) {
+    if (score.equals("-:-")) {
+      return start.after(new Date()) ? -1 : (int) Math.round(getWinChance(score1, score2) * 2);
+    }
+    return Integer.parseInt(score.split(":")[0]);
+  }
+
+  public double getWinChance(double score1, double score2) {
+    final double absolute = score1 / (score1 + score2);
+    return absolute < .46 ? absolute / 1.84 : absolute > .54 ? 1 - ((1 - absolute) / 1.84) : (absolute - .46) / .16 + .25;
+  }
+
+  public double getPercentageWin(double score1, double score2) {
+    if (score.equals("-:-")) {
+      return start.after(new Date()) ? -1 : Math.pow(getWinChance(score1, score2), 2);
+    }
+    return Integer.parseInt(score.split(":")[0]) > Integer.parseInt(score.split(":")[1]) ? 1 : 0;
+  }
+
+  public double getPercentageTie(double score1, double score2) {
+    if (score.equals("-:-")) {
+      return start.after(new Date()) ? -1 : 1 - Math.pow(1 - getWinChance(score1, score2), 2) - Math.pow(getWinChance(score1, score2), 2);
+    }
+    return Integer.parseInt(score.split(":")[0]) == Integer.parseInt(score.split(":")[1]) ? 1 : 0;
+  }
+
+  public double getPercentageLose(double score1, double score2) {
+    if (score.equals("-:-")) {
+      return start.after(new Date()) ? -1 : Math.pow(1 - getWinChance(score1, score2), 2);
+    }
+    return Integer.parseInt(score.split(":")[0]) < Integer.parseInt(score.split(":")[1]) ? 1 : 0;
   }
 
   public String getStartShort() {

@@ -4,6 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
+import sun.misc.SharedSecrets;
+
 /**
  * Created by Lara on 11.04.2022 for web
  */
@@ -22,12 +24,12 @@ public class Logger {
   public Logger(String name, String method) {
     this.name = name;
     this.method = method;
-
   }
 
   public Logger(String name) {
     this.name = name;
-    this.method = name + " ";
+    final StackTraceElement elem = SharedSecrets.getJavaLangAccess().getStackTraceElement(new Exception(), 2);
+    this.method = elem.getClassName() + "." + elem.getMethodName();
   }
 
   public static Logger getLogger() {
@@ -214,7 +216,6 @@ public class Logger {
     log(Level.FINEST, msg);
     this.values = values;
   }
-
 
   private void doLog() {
     if (level.isVisible()) {

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Team;
@@ -21,6 +22,8 @@ import lombok.Data;
  */
 @Data
 public class TeamView implements Serializable {
+  private static final transient long serialVersionUID = 3812424700080526246L;
+
   private Team homeTeam;
   private List<LaneView> views;
   private List<String> teamStyle;
@@ -66,5 +69,9 @@ public class TeamView implements Serializable {
 
   public LeagueTeam getLeagueTeam() {
     return homeTeam.getLeagueTeam();
+  }
+
+  public List<Champion> getSelected() {
+    return views.stream().map(laneView -> laneView.getView().getSelectedChampion().getChampion()).collect(Collectors.toList());
   }
 }

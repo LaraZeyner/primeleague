@@ -35,6 +35,8 @@ public class PlayerView implements Serializable {
   private Ratings ratings;
   private String totalGames;
   private List<ChampionView> champions;
+  private List<ChampionView> recommended;
+  private ChampionView selectedChampion;
   private String kda;
   private String objectives;
   private List<String> onObjectives;
@@ -68,7 +70,8 @@ public class PlayerView implements Serializable {
     this.games = (int) (double) this.ratings.getPlayerRatings().get("count");
 
     this.totalGames = "" + player.getAccounts().stream().mapToInt(account -> HibernateUtil.gamesOnLaneRecently(account, lane)).sum();
-    this.champions = player.getChampionsPresence(lane);
+    final List<ChampionView> championsPresence = player.getChampionsPresence(lane);
+    this.champions = championsPresence;
     this.kda = ratings.getAdaption().getStats().getKDA().display();
     this.objectives = ratings.getObjectives().format();
     this.roaming = ratings.getRoaming().format();
@@ -82,6 +85,8 @@ public class PlayerView implements Serializable {
     this.firstKill = ratings.getSurvival().getEarlySurvival().getFirstKillDeath().display();
     this.firstRecall = ratings.getLaning().getPostReset().getResetTime().display();
     this.firstItem = ratings.getIncome().getEarlyIncome().getFirstFullItem().display();
+    this.selectedChampion = championsPresence.get(0);
+    this.recommended = new ArrayList<>();
 
     final Objectives objectives = ratings.getObjectives();
     final List<String> objectiveKeys = objectives.subKeys();
@@ -137,4 +142,10 @@ public class PlayerView implements Serializable {
     }
     this.onLaning = laningOut;
   }
+
+  public void setSelectedChampion(ChampionView selectedChampion) {
+    this.selectedChampion = selectedChampion;
+    selectedChampion.setSelected(true);
+  }
+
 }

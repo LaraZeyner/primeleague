@@ -173,7 +173,7 @@ public class Account implements Serializable {
 
   public Account(String name) {
     this.name = name;
-    this.active = false;
+    this.active = true;
   }
 
   public Account(String puuid, String summonerId, String name, short icon, short level) {

@@ -8,6 +8,7 @@ import de.xeri.prm.models.league.Team;
 import de.xeri.prm.servlet.loader.match.GameView;
 import de.xeri.prm.util.Util;
 import lombok.Data;
+import org.hibernate.Hibernate;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -71,11 +72,18 @@ public class LeagueTeam implements Serializable, Comparable<LeagueTeam> {
 
   private List<GameView> gameViews;
 
+  private double teamMMR;
+  private int expectedPlace;
+  private double downProbability;
+  private double upProbability;
+
   public void add(List<Double> objects) {
     add(objects.get(0).longValue(), objects.get(1).longValue(), objects.get(2), objects.get(3), objects.get(4), objects.get(5),
         objects.get(6), objects.get(7), objects.get(8).longValue(), objects.get(9), objects.get(10).longValue(), objects.get(11),
         objects.get(12).longValue(), objects.get(13), objects.get(14).longValue(), objects.get(15), objects.get(16).longValue(), objects.get(17),
         objects.get(18), objects.get(19), objects.get(20));
+
+    this.teamMMR = team.determineTeamScore();
   }
 
   public void add(Long games, Long wins, Double kills, Double killDiff, Double gold, Double goldDiff, Double creeps, Double creepsDiff,
@@ -87,11 +95,11 @@ public class LeagueTeam implements Serializable, Comparable<LeagueTeam> {
     this.lossGames = Math.max(Util.longToInt(games - wins), lossesPoints);
     this.games = winsGames + lossGames;
     this.killsPerMatch = display(2 * kills, 2);
-    this.killsDiff = display(killDiff, 3);
+    this.killsDiff = display(2 * killDiff / games, 3);
     this.goldPerMatch = display(2 * gold, 4);
-    this.goldDiff = display(goldDiff, 4);
+    this.goldDiff = display(2 * goldDiff / games, 4);
     this.creepsPerMatch = display(2 * creeps, 4); // x.x
-    this.creepsDiff = display(creepsDiff, 4);
+    this.creepsDiff = display(2 * creepsDiff / games, 4);
     this.towers = towers != null ? Util.longToInt(towers) : 0;
     this.towersPerMatch = display(2 * towersPerGame, 2); // x.x
     this.drakes = drakes != null ? Util.longToInt(drakes) : 0;
@@ -107,7 +115,7 @@ public class LeagueTeam implements Serializable, Comparable<LeagueTeam> {
     this.matchTimeLosses = timeFromSeconds(loseDuration);
     this.objectives = (towers != null ? Util.longToInt(towers) : 0) + (drakes != null ? Util.longToInt(drakes) : 0) +
         (inhibs != null ? Util.longToInt(inhibs) : 0) + (heralds != null ? Util.longToInt(heralds) : 0) + (barons != null ? Util.longToInt(barons) : 0);
-    this.objectivesPerMatch = display(objectives * 1d / games, 2);
+    this.objectivesPerMatch = display(objectives * 2d / games, 2);
   }
 
   private String timeFromSeconds(Double value) {
@@ -187,4 +195,18 @@ public class LeagueTeam implements Serializable, Comparable<LeagueTeam> {
     }
     return 0;
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+    final LeagueTeam that = (LeagueTeam) o;
+    return team.equals(that.getTeam());
+  }
+
+  @Override
+  public int hashCode() {
+    return getClass().hashCode();
+  }
+
 }

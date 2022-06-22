@@ -9,8 +9,8 @@ import de.xeri.prm.models.match.playerperformance.Playerperformance;
 import de.xeri.prm.models.match.playerperformance.Value;
 import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
 import de.xeri.prm.models.match.ratings.Ratings;
-import de.xeri.prm.servlet.loader.scouting.LoadPlayers;
 import de.xeri.prm.servlet.loader.league.LoadLeague;
+import de.xeri.prm.servlet.loader.scouting.LoadPlayers;
 
 /**
  * Created by Lara on 09.05.2022 for web

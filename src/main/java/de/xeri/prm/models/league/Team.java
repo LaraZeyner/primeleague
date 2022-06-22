@@ -26,12 +26,15 @@ import javax.persistence.Transient;
 import de.xeri.prm.game.Clash;
 import de.xeri.prm.loader.TeamLoader;
 import de.xeri.prm.manager.PrimeData;
+import de.xeri.prm.models.enums.Elo;
 import de.xeri.prm.models.enums.Lane;
 import de.xeri.prm.models.enums.QueueType;
 import de.xeri.prm.models.enums.StageType;
 import de.xeri.prm.models.match.Game;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.models.match.playerperformance.Playerperformance;
+import de.xeri.prm.models.match.ratings.DisplaystatSubtype;
+import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.servlet.datatables.scheduling.InventoryStatus;
 import de.xeri.prm.servlet.loader.league.LeagueTeam;
 import de.xeri.prm.servlet.loader.match.GameView;
@@ -310,11 +313,14 @@ public class Team implements Serializable {
     return teamperformances.stream()
         .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch() != null &&
             teamperformance.getGame().getTurnamentmatch().getLeague().equals(PrimeData.getInstance().getCurrentGroup()))
+        .sorted(Comparator.comparing(teamperformance -> teamperformance.getGame().getGameStart()))
         .collect(Collectors.toList());
   }
+
   public List<Teamperformance> getPrimePerformances() {
     return teamperformances.stream()
         .filter(teamperformance -> teamperformance.getGame().getTurnamentmatch() != null)
+        .sorted(Comparator.comparing(teamperformance -> teamperformance.getGame().getGameStart()))
         .collect(Collectors.toList());
   }
 
@@ -443,6 +449,22 @@ public class Team implements Serializable {
     return getTurnamentMatches().stream()
         .filter(turnamentMatch -> turnamentMatch.getStart().after(new Date(System.currentTimeMillis() - 7 * Const.MILLIS_PER_DAY)))
         .collect(Collectors.toList());
+  }
+
+  public double determineTeamScore() {
+    int sum = 0;
+    int score = 0; // max 30_000_000
+    for (Player player : players) {
+      for (Account account : player.getAccounts()) {
+        final Ratings ratings = Ratings.getRatings(player.getActiveAccount(), DisplaystatSubtype.ALLGEMEIN);
+        final int games = (int) (double) ratings.getPlayerRatings().get("count");
+        sum++;
+        final SeasonElo mostRecentElo = account.getMostRecentElo();
+        int mmr = mostRecentElo == null ? Elo.UNRANKED.getMmr() : mostRecentElo.getMmr();
+        score += (games + 10) * mmr;
+      }
+    }
+    return Util.div(score, sum);
   }
 
   @Override

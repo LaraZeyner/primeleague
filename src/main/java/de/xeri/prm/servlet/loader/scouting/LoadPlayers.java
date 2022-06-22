@@ -1,29 +1,31 @@
 package de.xeri.prm.servlet.loader.scouting;
 
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.annotation.PostConstruct;
-import javax.faces.application.FacesMessage;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
-import javax.faces.context.FacesContext;
 
 import de.xeri.prm.loader.ScheduleLoader;
+import de.xeri.prm.models.dynamic.Champion;
 import de.xeri.prm.models.dynamic.Matchup;
 import de.xeri.prm.models.league.Schedule;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.servlet.loader.scouting.composition.Draft;
 import de.xeri.prm.servlet.loader.scouting.composition.Timing;
+import de.xeri.prm.servlet.loader.scouting.performance.ChampionView;
 import de.xeri.prm.servlet.loader.scouting.performance.TeamView;
+import de.xeri.prm.util.FacesUtil;
 import de.xeri.prm.util.Util;
 import lombok.Getter;
 //TODO (Abgie) 18.05.2022: Wenn Spieler ausgewählt wird - Spiele suchen
@@ -40,6 +42,7 @@ public class LoadPlayers implements Serializable {
   private TeamView enemyTeam;
   private Draft draft;
   private List<Timing> timings;
+  private List<Champion> flexpicks;
 
   @PostConstruct
   public void init() {
@@ -66,17 +69,32 @@ public class LoadPlayers implements Serializable {
           new Timing("Lategame", "Split", "Engage", "Carry", "Carry")
       );
 
-      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_INFO, "Geladen", "");
-      FacesContext.getCurrentInstance().addMessage(null, message);
+      List<Champion> we = ourTeam.getViews().stream().flatMap(view -> view.getView().getChampions().stream()).map(ChampionView::getChampion).collect(Collectors.toList());
+      we.addAll(enemyTeam.getViews().stream().flatMap(view -> view.getView().getChampions().stream()).map(ChampionView::getChampion).collect(Collectors.toList()));
+      Set<Champion> multiple = new HashSet<>();
+      for (Champion c : we) {
+        final int frequency = Collections.frequency(we, c);
+        if (frequency > 1) {
+          multiple.add(c);
+        }
+      }
+      this.flexpicks = new ArrayList<>(multiple);
+
+      ourTeam.getViews().stream()
+          .flatMap(view -> view.getView().getChampions().stream())
+          .filter(champion -> flexpicks.contains(champion.getChampion()))
+          .forEach(champion -> champion.setFlexpick(true));
+
+      enemyTeam.getViews().stream()
+          .flatMap(view -> view.getView().getChampions().stream())
+          .filter(champion -> flexpicks.contains(champion.getChampion()))
+          .forEach(champion -> champion.setFlexpick(true));
+
+      FacesUtil.sendMessage("Geladen", "");
       System.out.println("GELADEN!!!!!");
 
     } catch (Exception exception) {
-      exception.printStackTrace();
-      StringWriter sw = new StringWriter();
-      PrintWriter pw = new PrintWriter(sw);
-      exception.printStackTrace(pw);
-      FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR, "Exception loading Table + ", sw.toString());
-      FacesContext.getCurrentInstance().addMessage(null, message);
+      FacesUtil.sendException("Exception loading Table + ", exception);
       System.out.println("NICHT GELADEN!!!!!");
     }
   }
@@ -87,11 +105,14 @@ public class LoadPlayers implements Serializable {
 
   private List<String> determineMatchups(TeamView ourTeam, Draft draft) {
     final List<String> collect = IntStream.range(0, 3)
-        .mapToObj(i -> ourTeam.getViews().get(i).getSelectedPlayer().getMatchup(draft.getOur().getPicks().get(0), draft.getEnemy().getPicks().get(0)))
+        .mapToObj(i -> ourTeam.getViews().get(i).getSelectedPlayer().getMatchup(draft.getOur().getTeamView().getSelected().get(0),
+            draft.getEnemy().getTeamView().getSelected().get(0)))
         .map(matchup -> matchup.getGames() + " " + (Math.round(matchup.getWinrate() * 100) / 100) + "%")
         .collect(Collectors.toList());
-    final Matchup matchupBot = ourTeam.getViews().get(3).getSelectedPlayer().getMatchup(draft.getOur().getPicks().get(0), draft.getEnemy().getPicks().get(0));
-    final Matchup matchupSup = ourTeam.getViews().get(3).getSelectedPlayer().getMatchup(draft.getOur().getPicks().get(0), draft.getEnemy().getPicks().get(0));
+    final Matchup matchupBot = ourTeam.getViews().get(3).getSelectedPlayer().getMatchup(draft.getOur().getTeamView().getSelected().get(3),
+        draft.getEnemy().getTeamView().getSelected().get(3));
+    final Matchup matchupSup = ourTeam.getViews().get(3).getSelectedPlayer().getMatchup(draft.getOur().getTeamView().getSelected().get(3),
+        draft.getEnemy().getTeamView().getSelected().get(3));
     final String botSide = (matchupBot.getGames() + matchupSup.getGames()) + " " +
         (Math.round(Util.div(matchupBot.getWins() + matchupSup.getWins(), matchupBot.getGames() + matchupSup.getGames()) * 100) / 100) + "%";
     collect.add(botSide);
@@ -130,5 +151,9 @@ public class LoadPlayers implements Serializable {
     }
     init();
     return redirectOPgg();
+  }
+
+  public void update() {
+    this.draft = new Draft(ourTeam, enemyTeam);
   }
 }

@@ -2,7 +2,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:c="http://java.sun.com/jsp/jstl/core"
       xmlns:f="http://java.sun.com/jsf/core"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
@@ -33,7 +32,7 @@
                                     <p:inplace>
                                         <p:selectOneMenu id="advanced" value="#{homes.selected}" dynamic="true"
                                                          effect="fade" filter="true" filterMatchMode="startsWith"
-                                                         valueChangeListener="#{homes.PresetGroupChangeEvent}">>
+                                                         valueChangeListener="#{homes.PresetGroupChangeEvent}">
                                             <f:selectItem itemLabel="#{homes.selected}"/>
                                             <f:selectItems value="#{homes.playersList}"/>
                                             <p:ajax update="@form"/>
@@ -41,7 +40,8 @@
                                     </p:inplace>
                                 </div>
                                 <div class="p-col-fixed ranked-position-size">
-                                    <p:graphicImage id="rankImg" styleClass="ranked-position" url="#{homes.view.positionalIconUrl}"
+                                    <p:graphicImage id="rankImg" styleClass="ranked-position"
+                                                    url="#{homes.view.positionalIconUrl}"
                                                     onmouseover=""/>
                                     <p:tooltip for="rankImg" value="#{homes.view.seasonElo.display}" showEffect="clip"
                                                hideEffect="fold"/>
@@ -57,10 +57,11 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="objectivesWe" class="p-col-12 substat-value" value="#{homes.view.objectives}"/>
+                                        <h:outputText id="objectivesWe" class="p-col-12 substat-value"
+                                                      value="#{homes.view.objectives}"/>
                                         <div class="p-col-12 substat-tag">Wards</div>
                                     </div>
-                                    <p:tooltip for="objectivesWe" position="bottom" >
+                                    <p:tooltip for="objectivesWe" position="bottom">
                                         <div class="p-grid" style="width: 300px">
                                             <p:repeat value="#{homes.view.onObjectives}" var="value">
                                                 <div class="p-col-6">#{value}</div>
@@ -70,7 +71,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="roamingWe" class="p-col-12 substat-value" value="#{homes.view.roaming}"/>
+                                        <h:outputText id="roamingWe" class="p-col-12 substat-value"
+                                                      value="#{homes.view.roaming}"/>
                                         <div class="p-col-12 substat-tag">Roams</div>
                                     </div>
                                     <p:tooltip for="roamingWe" position="bottom">
@@ -83,7 +85,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="fightingWe" class="p-col-12 substat-value" value="#{homes.view.fighting}"/>
+                                        <h:outputText id="fightingWe" class="p-col-12 substat-value"
+                                                      value="#{homes.view.fighting}"/>
                                         <div class="p-col-12 substat-tag">Fight</div>
                                     </div>
                                     <p:tooltip for="fightingWe" position="bottom">
@@ -96,7 +99,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="incomeWe" class="p-col-12 substat-value" value="#{homes.view.income}"/>
+                                        <h:outputText id="incomeWe" class="p-col-12 substat-value"
+                                                      value="#{homes.view.income}"/>
                                         <div class="p-col-12 substat-tag">Gold</div>
                                     </div>
                                     <p:tooltip for="incomeWe" position="bottom">
@@ -109,7 +113,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="survivalWe" class="p-col-12 substat-value" value="#{homes.view.survival}"/>
+                                        <h:outputText id="survivalWe" class="p-col-12 substat-value"
+                                                      value="#{homes.view.survival}"/>
                                         <div class="p-col-12 substat-tag">Alive</div>
                                     </div>
                                     <p:tooltip for="survivalWe" position="bottom">
@@ -122,7 +127,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="laningWe" class="p-col-12 substat-value" value="#{homes.view.laning}"/>
+                                        <h:outputText id="laningWe" class="p-col-12 substat-value"
+                                                      value="#{homes.view.laning}"/>
                                         <div class="p-col-12 substat-tag">Lane</div>
                                     </div>
                                     <p:tooltip for="laningWe" position="bottom">
@@ -137,35 +143,14 @@
 
                             <p:dataTable id="homeChampStats" lazy="false" var="champ" value="#{homes.view.champions}"
                                          scrollable="true" scrollHeight="200" frozenRows="3"
-                                         size="small" style="font-size: 14px;">
-                                <!--  editable="true" editMode="cell" widgetVar="cellC" -->
-
-                                <p:column width="40%" headerText="#{homes.view.totalGames}">
-                                    #{champ.name}
-                                    <!-- <p:cellEditor>
-                                         <f:facet name="output">
-                                             <h:outputText value="#{perf.championName}"/>
-                                         </f:facet>
-                                         <f:facet name="input">
-                                             <h:selectOneMenu value="#{perf.championName}" style="width:100%">
-                                                 <f:selectItems value="#{championTable.champions}" var="champName"
-                                                                itemLabel="#{champName}" itemValue="#{champName}"/>
-                                             </h:selectOneMenu>
-                                         </f:facet>
-                                     </p:cellEditor> -->
-                                </p:column>
+                                         selection="#{homes.view.selectedChampion}" selectionMode="single"
+                                         size="small" style="font-size: 14px;" rowKey="#{champ.id}"
+                                         rowStyleClass="#{champ.recommended eq true ? 'recommended' : (loadPlayers.flexpicks.contains(champ.champion) eq true ? 'flexpick' : null)}">
+                                <p:column width="40%" headerText="#{homes.view.totalGames}">#{champ.name}</p:column>
                                 <p:column width="20%" headerText="Pr">#{champ.presence}</p:column>
                                 <p:column width="10%" headerText="G">#{champ.gamesCompetitive}</p:column>
                                 <p:column width="10%" headerText="G">#{champ.gamesOther}</p:column>
                                 <p:column width="20%" headerText="W%">#{champ.wins}</p:column>
-                                <!-- <p:ajax event="cellEdit" listener="#{homes.onCellEdit}" update=":scoutingForm:msgs"/> -->
-
-
-                                <!-- <p:contextMenu for="homeChampStats" widgetVar="cMenu">
-                                     <p:menuitem value="Edit Cell" icon="pi pi-search"
-                                                 onclick="PF('cellC').showCellEditor();return false;"/>
-                                     <p:menuitem value="Hide Menu" icon="pi pi-times" onclick="PF('cMenu').hide()"/>
-                                 </p:contextMenu> -->
                             </p:dataTable>
                         </div>
 
@@ -190,9 +175,11 @@
                                     </p:inplace>
                                 </div>
                                 <div class="p-col-fixed ranked-position-size">
-                                    <p:graphicImage id="enemyRankImg" styleClass="ranked-position" url="#{homes.view.positionalIconUrl}"
+                                    <p:graphicImage id="enemyRankImg" styleClass="ranked-position"
+                                                    url="#{homes.view.positionalIconUrl}"
                                                     onmouseover=""/>
-                                    <p:tooltip for="enemyRankImg" value="#{homes.view.seasonElo.display}" showEffect="clip"
+                                    <p:tooltip for="enemyRankImg" value="#{homes.view.seasonElo.display}"
+                                               showEffect="clip"
                                                hideEffect="fold"/>
                                 </div>
                             </div>
@@ -206,10 +193,11 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="objectivesEnemy" class="p-col-12 substat-value" value="#{homes.view.objectives}"/>
+                                        <h:outputText id="objectivesEnemy" class="p-col-12 substat-value"
+                                                      value="#{homes.view.objectives}"/>
                                         <div class="p-col-12 substat-tag">Wards</div>
                                     </div>
-                                    <p:tooltip for="objectivesEnemy" position="bottom" >
+                                    <p:tooltip for="objectivesEnemy" position="bottom">
                                         <div class="p-grid" style="width: 300px">
                                             <p:repeat value="#{homes.view.onObjectives}" var="value">
                                                 <div class="p-col-6">#{value}</div>
@@ -219,7 +207,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="roamingEnemy" class="p-col-12 substat-value" value="#{homes.view.roaming}"/>
+                                        <h:outputText id="roamingEnemy" class="p-col-12 substat-value"
+                                                      value="#{homes.view.roaming}"/>
                                         <div class="p-col-12 substat-tag">Roams</div>
                                     </div>
                                     <p:tooltip for="roamingEnemy" position="bottom">
@@ -232,7 +221,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="fightingEnemy" class="p-col-12 substat-value" value="#{homes.view.fighting}"/>
+                                        <h:outputText id="fightingEnemy" class="p-col-12 substat-value"
+                                                      value="#{homes.view.fighting}"/>
                                         <div class="p-col-12 substat-tag">Fight</div>
                                     </div>
                                     <p:tooltip for="fightingEnemy" position="bottom">
@@ -245,7 +235,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="incomeEnemy" class="p-col-12 substat-value" value="#{homes.view.income}"/>
+                                        <h:outputText id="incomeEnemy" class="p-col-12 substat-value"
+                                                      value="#{homes.view.income}"/>
                                         <div class="p-col-12 substat-tag">Gold</div>
                                     </div>
                                     <p:tooltip for="incomeEnemy" position="bottom">
@@ -258,7 +249,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="survivalEnemy" class="p-col-12 substat-value" value="#{homes.view.survival}"/>
+                                        <h:outputText id="survivalEnemy" class="p-col-12 substat-value"
+                                                      value="#{homes.view.survival}"/>
                                         <div class="p-col-12 substat-tag">Alive</div>
                                     </div>
                                     <p:tooltip for="survivalEnemy" position="bottom">
@@ -271,7 +263,8 @@
                                 </div>
                                 <div class="p-col stat-grid">
                                     <div class="p-grid">
-                                        <h:outputText id="laningEnemy" class="p-col-12 substat-value" value="#{homes.view.laning}"/>
+                                        <h:outputText id="laningEnemy" class="p-col-12 substat-value"
+                                                      value="#{homes.view.laning}"/>
                                         <div class="p-col-12 substat-tag">Lane</div>
                                     </div>
                                     <p:tooltip for="laningEnemy" position="bottom">
@@ -286,35 +279,13 @@
 
                             <p:dataTable id="enemyChampStats" lazy="false" var="champ" value="#{homes.view.champions}"
                                          scrollable="true" scrollHeight="200" frozenRows="3"
-                                         size="small" style="font-size: 14px;">
-                                <!--  editable="true" editMode="cell" widgetVar="cellC" -->
-
-                                <p:column width="40%" headerText="#{homes.view.totalGames}">
-                                    #{champ.name}
-                                    <!-- <p:cellEditor>
-                                         <f:facet name="output">
-                                             <h:outputText value="#{perf.championName}"/>
-                                         </f:facet>
-                                         <f:facet name="input">
-                                             <h:selectOneMenu value="#{perf.championName}" style="width:100%">
-                                                 <f:selectItems value="#{championTable.champions}" var="champName"
-                                                                itemLabel="#{champName}" itemValue="#{champName}"/>
-                                             </h:selectOneMenu>
-                                         </f:facet>
-                                     </p:cellEditor> -->
-                                </p:column>
+                                         selection="#{homes.view.selectedChampion}" selectionMode="single"
+                                         rowKey="#{champ.id}" size="small" style="font-size: 14px;">
+                                <p:column width="40%" headerText="#{homes.view.totalGames}">#{champ.name}</p:column>
                                 <p:column width="20%" headerText="Pr">#{champ.presence}</p:column>
                                 <p:column width="10%" headerText="G">#{champ.gamesCompetitive}</p:column>
                                 <p:column width="10%" headerText="G">#{champ.gamesOther}</p:column>
                                 <p:column width="20%" headerText="W%">#{champ.wins}</p:column>
-                                <!-- <p:ajax event="cellEdit" listener="#{homes.onCellEdit}" update=":scoutingForm:msgs"/> -->
-
-
-                                <!-- <p:contextMenu for="homeChampStats" widgetVar="cMenu">
-                                     <p:menuitem value="Edit Cell" icon="pi pi-search"
-                                                 onclick="PF('cellC').showCellEditor();return false;"/>
-                                     <p:menuitem value="Hide Menu" icon="pi pi-times" onclick="PF('cMenu').hide()"/>
-                                 </p:contextMenu> -->
                             </p:dataTable>
                         </div>
 
@@ -323,11 +294,15 @@
 
 
                 <div class="p-grid">
-                    <p:commandButton styleClass="p-col" value="Refresh" action="#{loadPlayers.init()}"/>
-                    <p:linkButton styleClass="p-col" outcome="teaminfo" value="Zum Team" icon="pi pi-star" style="margin-right:20px;">
+                    <p:commandButton styleClass="p-col" value="Refresh" action="#{loadPlayers.update}">
+                        <p:ajax update="@all"/>
+                    </p:commandButton>
+                    <p:linkButton styleClass="p-col" outcome="teaminfo" value="Zum Team" icon="pi pi-star"
+                                  style="margin-right:20px;">
                         <f:param name="teamId" value="#{loadPlayers.enemyTeam.leagueTeam.tourneyId}"/>
                     </p:linkButton>
-                    <p:linkButton styleClass="p-col" value="OP.gg" href="#{loadPlayers.redirectOPgg()}" target="_blank"/>
+                    <p:linkButton styleClass="p-col" value="OP.gg" href="#{loadPlayers.redirectOPgg()}"
+                                  target="_blank"/>
                 </div>
             </h:form>
         </div>

@@ -120,6 +120,14 @@ body .ui-card-title {
     animation: animateright 0.4s
 }
 
+.recommended {
+    background: none repeat scroll 0 0 darkseagreen;
+}
+
+.flexpick {
+    background: none repeat scroll 0 0 indianred;
+}
+
 @keyframes animateright {
     from {
         right: -300px;
