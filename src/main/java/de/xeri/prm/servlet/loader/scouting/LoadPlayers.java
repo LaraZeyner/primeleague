@@ -153,6 +153,16 @@ public class LoadPlayers implements Serializable {
     return redirectOPgg();
   }
 
+  public String redirectPorofessor() {
+    if (enemyTeam.getViews() != null) {
+      return enemyTeam.getViews().stream()
+          .map(view -> view.getSelectedPlayer().getActiveAccount().getName())
+          .collect(Collectors.joining(",", "https://porofessor.gg/pregame/euw/", "/season"));
+    }
+    init();
+    return redirectOPgg();
+  }
+
   public void update() {
     this.draft = new Draft(ourTeam, enemyTeam);
   }

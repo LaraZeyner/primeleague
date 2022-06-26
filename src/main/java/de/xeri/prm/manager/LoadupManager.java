@@ -74,7 +74,7 @@ public class LoadupManager {
     PrimeData.getInstance().commit();
     logger.info("Season geladen");
 
-    PlayerLoader.load();
+    PlayerLoader.loadAll();
     PrimeData.getInstance().commit();
     logger.info("Spielerdaten & Spiele geladen");
     // Search for players of Team without account
@@ -110,12 +110,11 @@ public class LoadupManager {
 
 
     // Games der nächsten Gegner + TRUES mit 3
-    // TODO Lange Ladezeit
     List<Team> teams1 = Arrays.asList(Team.findTid(Const.TEAMID), Schedule.nextOrLast().getEnemyTeam());
     final Query<ScheduledGame> query = PrimeData.getInstance().getSession().createQuery("FROM ScheduledGame s " +
-        "WHERE teams LIKE ?1 OR teams LIKE ?2");
-    query.setParameter(1, teams1.get(0).getId());
-    query.setParameter(2, teams1.size() > 1 ? teams1.get(1).getId() : teams1.get(0).getId());
+        "WHERE teams LIKE :t1 OR teams LIKE :t2");
+    query.setParameter("t1", "%" + teams1.get(0).getId() + "%");
+    query.setParameter("t2", teams1.size() > 1 ? ("%" + teams1.get(1).getId() + "%") : ("%" + teams1.get(0).getId() + "%"));
     final List<ScheduledGame> list = query.list();
     list.stream().filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.CLASH))
         .filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
@@ -125,30 +124,20 @@ public class LoadupManager {
         .filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
             .anyMatch(team -> teams1.contains(team) && scheduledGame.getTeamsMap().get(team) > 2))
         .forEach(RiotGameRequester::loadMatchmade);
-    /*ScheduledGame.findMode(QueueType.CLASH).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
-        .anyMatch(team -> teams1.contains(team) && scheduledGame.getTeamsMap().get(team) > 2)).forEach(RiotGameRequester::loadClashGame);
-    ScheduledGame.findMode(QueueType.OTHER).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
-        .anyMatch(team -> teams1.contains(team) && scheduledGame.getTeamsMap().get(team) > 2)).forEach(RiotGameRequester::loadMatchmade);*/
     logger.info("Games der nächsten Gegner + TRUES mit 3 geladen");
 
     // Clash der nächsten Gegner + TRUES
-
     ScheduledGame.findMode(QueueType.CLASH).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
         .anyMatch(teams1::contains)).forEach(RiotGameRequester::loadClashGame);
     logger.info("Clash der nächsten Gegner + TRUES geladen");
 
-    // Games der nächsten Gegner + TRUES
-    // TODO Lange Ladezeit
+    // Games der nächsten Gegner + TRUE
     final Query<ScheduledGame> query2 = PrimeData.getInstance().getSession().createQuery("FROM ScheduledGame s " +
-        "WHERE teams LIKE ?1 OR teams LIKE ?2");
-    query.setParameter(1, teams1.get(0).getId());
-    query.setParameter(2, teams1.size() > 1 ? teams1.get(1).getId() : teams1.get(0).getId());
+        "WHERE teams LIKE :t1 OR teams LIKE :t2");
+    query2.setParameter("t1", "%" + teams1.get(0).getId() + "%");
+    query2.setParameter("t2", teams1.size() > 1 ? ("%" + teams1.get(1).getId() + "%") : ("%" + teams1.get(0).getId() + "%"));
     final List<ScheduledGame> list2 = query2.list();
-    ///ScheduledGame.findMode(QueueType.OTHER).stream().filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream().anyMatch(teams1::contains)).forEach(RiotGameRequester::loadMatchmade);
-    list2.stream().filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.OTHER))
-        .filter(scheduledGame -> scheduledGame.getTeamsMap().keySet().stream()
-            .anyMatch(team -> teams1.contains(team) && scheduledGame.getTeamsMap().get(team) > 2))
-        .forEach(RiotGameRequester::loadMatchmade);
+    list2.stream().filter(scheduledGame -> scheduledGame.getQueueType().equals(QueueType.OTHER)).forEach(RiotGameRequester::loadMatchmade);
 
     logger.info("Games der nächsten Gegner + TRUES geladen");
 

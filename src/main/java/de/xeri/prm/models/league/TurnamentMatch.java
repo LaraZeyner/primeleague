@@ -115,7 +115,14 @@ public class TurnamentMatch implements Serializable {
         final Schedule schedule = Schedule.find(matchday.getStage().getStageType().name() + " - " +
             getScheduleType().name() + " gegen " + enemy.getTeamAbbr(), oldDate);
         if (schedule != null) {
-          schedule.setStartTime(newDate);
+          if (newDate.after(new Date()) && (state.equals(Matchstate.CLOSED) || score.equals("0:0"))) {
+            schedule.setStartTime(new Date());
+          } else {
+            schedule.setStartTime(newDate);
+          }
+          long endTimeMillis = schedule.getStartTime().getTime() + schedule.getType().getDuration();
+          schedule.setEndTime(new Date(endTimeMillis));
+
           PrimeData.getInstance().save(schedule);
         }
       } else {
@@ -241,8 +248,12 @@ public class TurnamentMatch implements Serializable {
    */
   public boolean update() {
     final boolean b = MatchLoader.analyseMatchPage(this);
+      getPlayers().stream()
+          .filter(Objects::nonNull)
+          .map(Player::getActiveAccount)
+          .filter(Objects::nonNull)
+          .forEach(GameIdLoader::loadGameIds);
 
-    getPlayers().stream().map(Player::getActiveAccount).forEach(GameIdLoader::loadGameIds);
     return b;
   }
 

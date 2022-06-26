@@ -46,9 +46,7 @@ public final class RiotAccountRequester {
 
         val neu = determineSeasonElo(elos);
         if (neu != null) {
-          val seasonElo = SeasonElo.get(neu, season, account);
-          account.addSeasonElo(seasonElo);
-          season.addSeaonElo(seasonElo);
+          SeasonElo.get(neu, season, account);
         }
       }
     }

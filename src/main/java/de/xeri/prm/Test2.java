@@ -31,6 +31,7 @@ public class Test2 {
     final LoadLeague loadLeague = new LoadLeague();
     loadLeague.init();
     loadLeague.updateAll();
+    loadLeague.updateElosAndGames();
 
     final LoadPlayers loadPlayers = new LoadPlayers();
     loadPlayers.init();

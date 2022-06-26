@@ -3,10 +3,10 @@ package de.xeri.prm.loader;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Team;
-import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.util.io.riot.RiotAccountRequester;
 import de.xeri.prm.util.logger.Logger;
 
@@ -14,7 +14,8 @@ import de.xeri.prm.util.logger.Logger;
  * Created by Lara on 07.04.2022 for web
  */
 public final class PlayerLoader {
-  static {
+
+  public static void loadAll() {
     Logger logger = Logger.getLogger("Spieler laden");
 
     Set<Team> teamList = new LinkedHashSet<>(PrimeData.getInstance().getCurrentGroup().getTeams());
@@ -41,9 +42,7 @@ public final class PlayerLoader {
     }
 
     logger.info("Alle Spieler wurden aktualisiert.");
-  }
 
-  public static void load() {
     PrimeData.getInstance().commit();
   }
 

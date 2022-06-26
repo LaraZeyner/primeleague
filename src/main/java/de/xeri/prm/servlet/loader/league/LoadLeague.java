@@ -20,14 +20,18 @@ import de.xeri.prm.loader.MatchLoader;
 import de.xeri.prm.manager.PrimeData;
 import de.xeri.prm.models.enums.Matchstate;
 import de.xeri.prm.models.enums.StageType;
+import de.xeri.prm.models.league.Account;
 import de.xeri.prm.models.league.League;
 import de.xeri.prm.models.league.Matchday;
+import de.xeri.prm.models.league.Player;
 import de.xeri.prm.models.league.Season;
 import de.xeri.prm.models.league.Team;
 import de.xeri.prm.models.league.TurnamentMatch;
 import de.xeri.prm.models.match.Teamperformance;
 import de.xeri.prm.util.Const;
 import de.xeri.prm.util.FacesUtil;
+import de.xeri.prm.util.io.riot.RiotAccountRequester;
+import de.xeri.prm.util.logger.Logger;
 import lombok.Getter;
 import lombok.Setter;
 //TODO (Abgie) 18.05.2022: Wenn Spieler ausgewählt wird - Spiele suchen
@@ -185,6 +189,24 @@ public class LoadLeague implements Serializable {
   public void updateGames() {
     league.getTeams().forEach(team -> team.getPlayers().forEach(player -> player.getAccounts().forEach(GameIdLoader::loadGameIds)));
     PrimeData.getInstance().commit();
+  }
+
+  public void updateElosAndGames() {
+    Logger logger = Logger.getLogger("Spieler laden");
+    for (Team team : league.getTeams()) {
+      for (Player player : team.getPlayers()) {
+        final Account account = player.getActiveAccount();
+        if (account != null) {
+          RiotAccountRequester.loadElo(account);
+          GameIdLoader.loadGameIds(account);
+          logger.info("Spieler " + player.getName() + " geladen");
+        } else {
+          System.err.println("BREAK");
+        }
+      }
+    }
+    PrimeData.getInstance().commit();
+    logger.info("Alle Spieler wurden aktualisiert.");
   }
 
   private void reload() {

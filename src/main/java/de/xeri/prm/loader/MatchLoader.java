@@ -99,7 +99,8 @@ public final class MatchLoader {
       val timeString = doc.select("div#league-match-time").select("span").attr("data-time");
       final Date start = new Date(Long.parseLong(timeString) * 1000L);
       boolean changed = !start.equals(match.getStart());
-      if (changed) {
+
+      if (changed || start.after(new Date()) && (match.getState().equals(Matchstate.CLOSED) || match.getScore().equals("0:0"))) {
         match.updateScheduleTime(match.getStart(), start);
       }
 
