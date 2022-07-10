@@ -1,11 +1,15 @@
 package de.xeri.prm.models.match.ratings.adaption;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
+import de.xeri.prm.util.Util;
 import lombok.Getter;
 
 /**
@@ -13,7 +17,7 @@ import lombok.Getter;
  */
 @Getter
 public class Adaption {
-  private Lane lane;
+  private final Lane lane;
   private final Mentality mentality;
   private final Consistency consistency;
   private final Adapt adaption;
@@ -44,6 +48,19 @@ public class Adaption {
 
   public double sum() {
     return mentality.get() + consistency.get() + adaption.get() + stats.get();
+  }
+
+  public List<String> subKeys() {
+    return Util.subkeys(StatSubcategory.GIVING_UP, StatSubcategory.CONSISTENCY, StatSubcategory.ADAPTION, StatSubcategory.STATS);
+  }
+
+  public List<String> subValues() {
+    return Util.subvalues(mentality, consistency, adaption, stats);
+  }
+
+  public List<String> getSubcategoryStats(int id) {
+    RatingSubcategory subcategory = Arrays.asList(mentality, consistency, adaption, stats).get(id);
+    return subcategory.getData();
   }
 
 }

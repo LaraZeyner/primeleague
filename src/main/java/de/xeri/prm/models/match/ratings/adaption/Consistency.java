@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.adaption;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,12 @@ public class Consistency extends RatingSubcategory {
 
   public double get() {
     return handleValues(getLevelupEarlier(), getGoldAdvantageFromAhead(), getGoldAdvantageFromBehind(), getXpAdvantageFromAhead(),
+        getXpAdvantageFromBehind());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getLevelupEarlier(), getGoldAdvantageFromAhead(), getGoldAdvantageFromBehind(), getXpAdvantageFromAhead(),
         getXpAdvantageFromBehind());
   }
 

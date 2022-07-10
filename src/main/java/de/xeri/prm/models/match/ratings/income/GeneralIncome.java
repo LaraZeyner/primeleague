@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.income;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class GeneralIncome extends RatingSubcategory {
 
   public double get() {
     return handleValues(getCreepsPerMinute(), getXpPerMinute(), getGoldPerMinute(), getCreepAdvantage(), getTrueKDA());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getCreepsPerMinute(), getXpPerMinute(), getGoldPerMinute(), getCreepAdvantage(), getTrueKDA());
   }
 
   public Stat getCreepsPerMinute() {

@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.survival;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class ResourceManagement extends RatingSubcategory {
 
   public double get() {
     return handleValues(getHealthState(), getResourceState(), getWaveState(), getPlanedResets());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getHealthState(), getResourceState(), getWaveState(), getPlanedResets());
   }
 
   public Stat getHealthState() {

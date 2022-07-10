@@ -152,6 +152,67 @@
                                 <p:column width="10%" headerText="G">#{champ.gamesOther}</p:column>
                                 <p:column width="20%" headerText="W%">#{champ.wins}</p:column>
                             </p:dataTable>
+
+                            <p:repeat value="#{homes.view.extremeValueTagsNegative}" var="tag">
+                                <p:tag id="weextremeNegativeTag" styleClass="p-mr-2" severity="danger" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="weextremeNegativeTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.extremeValueTagsPositive}" var="tag">
+                                <p:tag id="weextremePositiveTag" styleClass="p-mr-2" severity="success" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="weextremePositiveTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.highValueTagsNegative}" var="tag">
+                                <p:tag id="wehighlyNegativeTag" styleClass="p-mr-2" severity="danger" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="wehighlyNegativeTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.highValueTagsPositive}" var="tag">
+                                <p:tag id="wehighlyPositiveTag" styleClass="p-mr-2" severity="success" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="wehighlyPositiveTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.strongValueTagsNegative}" var="tag">
+                                <p:tag id="westrongNegativeTag" styleClass="p-mr-2" severity="warning" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="westrongNegativeTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.strongValueTagsPositive}" var="tag">
+                                <p:tag id="westrongPositiveTag" styleClass="p-mr-2" severity="info" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="westrongPositiveTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
                         </div>
 
                     </p:repeat>
@@ -287,25 +348,72 @@
                                 <p:column width="10%" headerText="G">#{champ.gamesOther}</p:column>
                                 <p:column width="20%" headerText="W%">#{champ.wins}</p:column>
                             </p:dataTable>
+
+                            <p:repeat value="#{homes.view.extremeValueTagsNegative}" var="tag">
+                                <p:tag id="extremeNegativeTag" styleClass="p-mr-2" severity="danger" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="extremeNegativeTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.extremeValueTagsPositive}" var="tag">
+                                <p:tag id="extremePositiveTag" styleClass="p-mr-2" severity="success" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="extremePositiveTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.highValueTagsNegative}" var="tag">
+                                <p:tag id="highlyNegativeTag" styleClass="p-mr-2" severity="danger" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="highlyNegativeTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.highValueTagsPositive}" var="tag">
+                                <p:tag id="highlyPositiveTag" styleClass="p-mr-2" severity="success" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="highlyPositiveTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.strongValueTagsNegative}" var="tag">
+                                <p:tag id="strongNegativeTag" styleClass="p-mr-2" severity="warning" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="strongNegativeTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
+                            <p:repeat value="#{homes.view.strongValueTagsPositive}" var="tag">
+                                <p:tag id="strongPositiveTag" styleClass="p-mr-2" severity="info" value="#{tag.name}" rounded="true"/>
+                                <p:tooltip for="strongPositiveTag" position="top">
+                                    <div class="p-grid" style="width: 300px">
+                                        <p:repeat value="#{tag.description}" var="value">
+                                            <div class="p-col-6">#{value}</div>
+                                        </p:repeat>
+                                    </div>
+                                </p:tooltip>
+                            </p:repeat>
                         </div>
 
                     </p:repeat>
                 </div>
 
-
-                <div class="p-grid">
-                    <p:commandButton styleClass="p-col" value="Refresh" action="#{loadPlayers.update}">
-                        <p:ajax update="@all"/>
-                    </p:commandButton>
-                    <p:linkButton styleClass="p-col" outcome="teaminfo" value="Zum Team" icon="pi pi-star"
-                                  style="margin-right:20px;">
-                        <f:param name="teamId" value="#{loadPlayers.enemyTeam.leagueTeam.tourneyId}"/>
-                    </p:linkButton>
-                    <p:linkButton styleClass="p-col" value="OP.gg" href="#{loadPlayers.redirectOPgg()}"
-                                  target="_blank"/>
-                    <p:linkButton styleClass="p-col" value="Poro" href="#{loadPlayers.redirectPorofessor()}"
-                                  target="_blank"/>
-                </div>
             </h:form>
         </div>
 

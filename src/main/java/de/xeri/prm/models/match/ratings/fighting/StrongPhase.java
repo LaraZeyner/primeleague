@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.fighting;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class StrongPhase extends RatingSubcategory {
 
   public double get() {
     return handleValues(getAllowComebacks(), getXpLead(), getLevelLead());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getAllowComebacks(), getXpLead(), getLevelLead());
   }
 
   public Stat getAllowComebacks() {

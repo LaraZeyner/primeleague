@@ -60,7 +60,7 @@ public final class Util {
 
   public static boolean inRange(Date date) {
     if (PrimeData.getInstance().getStatLimit() == 0) return true;
-    return date.after(new Date(System.currentTimeMillis() - PrimeData.getInstance().getStatLimit() * 86_400_000L));
+    return date.after(new Date(System.currentTimeMillis() - PrimeData.getInstance().getStatLimit() * Const.MILLIS_PER_DAY));
   }
 
   public static String capitalizeFirst(String str) {

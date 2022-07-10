@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.objectives;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class ObjectivePressure extends RatingSubcategory {
 
   public double get() {
     return handleValues(getObjectiveAfterSpawn(), getStolenObjectivesAndContestRate(), getDamageAgainstObjectives(),
+        getScuttleControlOverall(), getJunglerTakedownsBeforeObjective());
+  }
+
+  public List<String> getData() {
+    return handleData(getObjectiveAfterSpawn(), getStolenObjectivesAndContestRate(), getDamageAgainstObjectives(),
         getScuttleControlOverall(), getJunglerTakedownsBeforeObjective());
   }
 

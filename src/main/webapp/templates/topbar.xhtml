@@ -1,100 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 <body>
 <ui:composition>
-    <h:outputStylesheet library="css" name="bars.css"/>
-    <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
+  <h:outputStylesheet library="css" name="bars.css"/>
+  <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
 
-    <div class="true-topbar p-d-flex">
-        <div class="p-mr-1">
+  <div class="true-topbar p-d-flex">
+    <div class="p-mr-1">
+      <h:form>
+        <p:commandButton icon="pi pi-arrow-right" type="button" onclick="PF('sidebar1').show()" styleClass="p-mr-2"/>
+      </h:form>
+    </div>
+
+    <div class="p-mr-1">
+      <h:link outcome="/index">
+        <p:graphicImage styleClass="logo" name="images/logo.jpg"/>
+      </h:link>
+    </div>
+
+    <div class="p-mr-6">
+      <h:outputText styleClass="h1" value="TRU Esports"/>
+    </div>
+
+    <div class="p-mr-auto">
+      <h:form>
+        <p:growl id="navigation"/>
+        <p:menubar styleClass="true-topbar">
+          <p:menuitem value="Das Team" url="team.xhtml"/>
+          <p:menuitem value="Liga: #{loadLeague.league.name}" url="table.xhtml"/>
+          <p:menuitem value="Scouting" url="scouting.xhtml"/>
+          <p:menuitem value="Champions" url="champions.xhtml"/>
+          <p:divider layout="vertical"/>
+          <p:menuitem value="Mein Profil" url="profile.xhtml"/>
+        </p:menubar>
+      </h:form>
+    </div>
+
+
+    <div class="p-mr-auto">
+      Nächstes Spiel am #{loadWe.nextOrLast.startStringLong}<br/>
+      in #{loadWe.nextOrLast.startString} <br/>
+      gegen #{loadWe.nextOrLast.enemyTeam.teamName}
+    </div>
+
+    <p:sidebar widgetVar="sidebar1">
+      <h5 class="p-mt-0">Wähle deine Kategorie</h5>
+      <p:tabView>
+        <p:tab title="Spielplan" icon="pi pi-fw pi-calendar">
+          <p class="p-m-0">
+            <p:dataTable lazy="false" var="schedule" value="#{loadWe.upcomingSchedules}" size="small" rowKey="#{performance.id}"
+                         style="font-size: 14px">
+              <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
+              <p:column width="35%" headerText="Typ">#{schedule.type.displayname}</p:column>
+              <p:column width="45%" headerText="Zeit">#{schedule.startString}</p:column>
+              <p:column width="20%" headerText="vs">#{schedule.enemyTeam.teamAbbr}</p:column>
+            </p:dataTable>
+          </p>
+        </p:tab>
+        <p:tab title="Tabelle">
+          <p class="p-m-0">
             <h:form>
-                <p:commandButton icon="pi pi-arrow-right" type="button" onclick="PF('sidebar1').show()"
-                                 styleClass="p-mr-2"/>
-            </h:form>
-        </div>
+              <h5>Tabelle: #{loadLeague.league.name}</h5>
 
-        <div class="p-mr-1">
-            <h:link outcome="/index">
-                <p:graphicImage styleClass="logo" name="images/logo.jpg"/>
-            </h:link>
-        </div>
-
-        <div class="p-mr-6">
-            <h:outputText styleClass="h1" value="TRU Esports"/>
-        </div>
-
-        <div class="p-mr-auto">
-            <h:form>
-                <p:growl id="navigation"/>
-                <p:menubar styleClass="true-topbar">
-                    <p:menuitem value="Das Team" url="team.xhtml"/>
-                    <p:menuitem value="Liga: #{loadLeague.league.name}" url="table.xhtml"/>
-                    <p:menuitem value="Scouting" url="scouting.xhtml"/>
-                    <p:menuitem value="Champions" url="champions.xhtml"/>
-                    <p:divider layout="vertical"/>
-                    <p:menuitem value="Mein Profil" url="profile.xhtml"/>
-                </p:menubar>
-            </h:form>
-        </div>
-
-
-        <div class="p-mr-auto">
-            Nächstes Spiel am #{loadWe.nextOrLast.startStringLong}<br/>
-            in #{loadWe.nextOrLast.startString} <br/>
-            gegen #{loadWe.nextOrLast.enemyTeam.teamName}
-        </div>
-
-        <p:sidebar widgetVar="sidebar1">
-            <h5 class="p-mt-0">Wähle deine Kategorie</h5>
-            <p:tabView>
-                <p:tab title="Spielplan" icon="pi pi-fw pi-calendar">
-                    <p class="p-m-0">
-                        <p:dataTable lazy="false" var="schedule" value="#{loadWe.upcomingSchedules}"
-                                     size="small" rowKey="#{performance.id}" style="font-size: 14px">
-                            <!-- <p:column width="1%"><p:rowToggler/></p:column> -->
-                            <p:column width="35%" headerText="Typ">#{schedule.type.displayname}</p:column>
-                            <p:column width="45%" headerText="Zeit">#{schedule.startString}</p:column>
-                            <p:column width="20%" headerText="vs">#{schedule.enemyTeam.teamAbbr}</p:column>
-                        </p:dataTable>
-                    </p>
-                </p:tab>
-                <p:tab title="Tabelle">
-                    <p class="p-m-0">
-                        <h:form>
-                            <h5>Tabelle: #{loadLeague.league.name}</h5>
-
-                            <p:dataTable lazy="false" var="team" value="#{loadLeague.leagueTeams}" size="small"
-                                         rowIndexVar="rowIndex" showGridlines="false"
-                                         style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
+              <p:dataTable lazy="false" var="team" value="#{loadLeague.leagueTeams}" size="small" rowIndexVar="rowIndex"
+                           showGridlines="false" style="border : 0 !important;" rowStyleClass="#{rowIndex gt 5 ?
                                                  'row-down' : (rowIndex lt 2 ? 'row-up' : (rowIndex eq 2 ?
                                                  'row-limit-upper' : (rowIndex eq 5 ? 'row-limit-bottiom' :
                                                  'row-stay')))}">
-                                <p:column width="4%" headerText="Pl">#{team.place}</p:column>
-                                <p:column width="15%">
-                                    <h:graphicImage style="width: 80%" value="#{team.logoUrl}"/>
-                                </p:column>
-                                <p:column width="31%" style="font-weight: bold"
-                                          headerText="Team">#{team.abbreviation}</p:column>
-                                <p:column width="14%" headerText="Win">#{team.winsPerMatch}</p:column>
-                                <p:column width="14%" headerText="Pkt.">#{team.teamScore}</p:column>
-                                <p:column width="22%" headerText="SUN">#{team.bilance}</p:column>
-                            </p:dataTable>
-                        </h:form>
-                    </p>
-                </p:tab>
-                <p:tab title="Online">
-                    <p class="p-m-0">
-                        Dies ist die Onlineliste.
-                    </p>
-                </p:tab>
-            </p:tabView>
-        </p:sidebar>
-    </div>
+                <p:column width="4%" headerText="Pl">#{team.place}</p:column>
+                <p:column width="15%">
+                  <h:graphicImage style="width: 80%" value="#{team.logoUrl}"/>
+                </p:column>
+                <p:column width="31%" style="font-weight: bold" headerText="Team"><abbr
+                      title="#{team.name}">#{team.abbreviation}</abbr></p:column>
+                <p:column width="14%" headerText="Win">#{team.winsPerMatch}</p:column>
+                <p:column width="14%" headerText="Pkt.">#{team.teamScore}</p:column>
+                <p:column width="22%" headerText="SUN">#{team.bilance}</p:column>
+              </p:dataTable>
+            </h:form>
+          </p>
+        </p:tab>
+        <p:tab title="Online">
+          <p class="p-m-0">
+            Dies ist die Onlineliste.
+          </p>
+        </p:tab>
+      </p:tabView>
+    </p:sidebar>
+  </div>
 
 </ui:composition>
 </body>

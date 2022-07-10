@@ -1,7 +1,9 @@
 package de.xeri.prm.models.match.ratings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -242,5 +244,18 @@ public class Stat {
 
   public String getText() {
     return text;
+  }
+
+  public List<String> getSubvalues() {
+    List<String> list = new ArrayList<>();
+    for (String s : subvalues.keySet()) {
+      list.add(s);
+      list.add(Math.round(subvalues.get(s) * 1000) / 1000 + "");
+    }
+    return list;
+  }
+
+  public String getReference() {
+    return reference;
   }
 }

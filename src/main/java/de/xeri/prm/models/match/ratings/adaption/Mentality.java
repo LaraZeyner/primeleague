@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.adaption;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Mentality extends RatingSubcategory {
 
   public double get() {
     return handleValues(getSurrender(), getLaneLeadAfterDiedEarly(), getFarmingFromBehind(), getWardingFromBehind(), getDeathsFromBehind());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getSurrender(), getLaneLeadAfterDiedEarly(), getFarmingFromBehind(), getWardingFromBehind(), getDeathsFromBehind());
   }
 
   public Stat getSurrender() {

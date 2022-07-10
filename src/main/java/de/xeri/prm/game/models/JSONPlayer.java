@@ -52,7 +52,7 @@ public class JSONPlayer {
     this.puuid = puuid;
     this.infos = new ArrayList<>();
     IntStream.range(0, highestMinute + 1).forEach(i -> this.infos.add(null));
-    this.account = Account.hasPuuid(puuid) ? Account.findPuuid(puuid) : null;
+    this.account = Account.findPuuid(puuid);
     this.firstPick = firstPick;
     this.highestMinute = highestMinute;
   }

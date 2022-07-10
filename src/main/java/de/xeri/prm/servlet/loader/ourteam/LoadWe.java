@@ -61,6 +61,7 @@ public class LoadWe implements Serializable {
 
   @PostConstruct
   public void init() {
+    PrimeData.getInstance(); // establish connection
     updateMatches();
 
     this.start = LocalDateTime.now().minusHours(24);

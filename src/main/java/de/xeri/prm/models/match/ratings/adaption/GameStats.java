@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.adaption;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class GameStats extends RatingSubcategory {
 
   public double get() {
     return handleValues(getWinrate(), getBlueWinrate(), getRedWinrate(), getKillParticipation(), getKDA());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getWinrate(), getBlueWinrate(), getRedWinrate(), getKillParticipation(), getKDA());
   }
 
   public Stat getWinrate() {

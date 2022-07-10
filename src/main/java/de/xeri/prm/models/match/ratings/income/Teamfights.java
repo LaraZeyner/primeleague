@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.income;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Teamfights extends RatingSubcategory {
 
   public double get() {
     return handleValues(getParticipation(), getMultikills(), getDeathOrder(), getSuccessRate(), getAcesEarlyAndCleanFights(), getDamage());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getParticipation(), getMultikills(), getDeathOrder(), getSuccessRate(), getAcesEarlyAndCleanFights(), getDamage());
   }
 
   public Stat getParticipation() {

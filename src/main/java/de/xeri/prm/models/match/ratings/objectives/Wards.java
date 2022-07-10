@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.objectives;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Wards extends RatingSubcategory {
 
   public double get() {
     return handleValues(getVisionscoreAdvantage(), getTrinketEfficiency(), getFirstWardTime(), getWardsCleared(), getTrinketSwapTime());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getVisionscoreAdvantage(), getTrinketEfficiency(), getFirstWardTime(), getWardsCleared(), getTrinketSwapTime());
   }
 
   public Stat getVisionscoreAdvantage() {

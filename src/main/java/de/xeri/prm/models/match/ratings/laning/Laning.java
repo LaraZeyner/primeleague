@@ -1,9 +1,11 @@
 package de.xeri.prm.models.match.ratings.laning;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
@@ -58,6 +60,11 @@ public class Laning {
 
   public List<String> subValues() {
     return Util.subvalues(resets, preReset, postReset, laneBilance, playstyle);
+  }
+
+  public List<String> getSubcategoryStats(int id) {
+    RatingSubcategory subcategory = Arrays.asList(resets, preReset, postReset, laneBilance, playstyle).get(id);
+    return subcategory.getData();
   }
 
 }

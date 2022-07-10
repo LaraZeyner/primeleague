@@ -47,13 +47,13 @@ public class ScheduledGame implements Serializable {
       PrimeData.getInstance().save(game);
       return game;
     }
-    if (!Game.has(neu.getId())) {
+    if (game == null && !Game.has(neu.getId())) {
       if (neu.getId().startsWith("EUW")) {
         if (teamId != null) {
           neu.setTeams(teamId + "");
         }
-        Logger.getLogger("Scheduled-Game-Creation").info("Spiel erstellt", neu.getId());
         PrimeData.getInstance().save(neu);
+        Logger.getLogger("Scheduled-Game-Creation").info("Spiel erstellt", neu.getId());
         return neu;
       } else {
         Logger.getLogger("Scheduled-Game-Creation").attention("Spiel auf anderem Server", neu.getId());
@@ -92,7 +92,7 @@ public class ScheduledGame implements Serializable {
 
   public Map<Team, Integer> getTeamsMap() {
     Map<Team, Integer> map = new HashMap<>();
-    if (teams.contains(",")) {
+    if (teams != null && teams.contains(",")) {
       for (String s : teams.split(",")) {
         short id = Short.parseShort(s);
         final Team team = Team.find(id);

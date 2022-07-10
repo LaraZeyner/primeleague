@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.laning;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Playstyle extends RatingSubcategory {
 
   public double get() {
     return handleValues(getPositioning(), getKillDeathPosition(), getKeyspellsUsed(), getSpellBilance(), getReactions());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getPositioning(), getKillDeathPosition(), getKeyspellsUsed(), getSpellBilance(), getReactions());
   }
 
   public Stat getPositioning() {

@@ -34,8 +34,7 @@ public class LoadupManager {
   public static Date init() {
     if (Const.check()) {
       final Date date = new Date();
-      final PrimeData primeData = PrimeData.getInstance();
-      primeData.init();
+      PrimeData.getInstance();
       return date;
     }
     System.exit(1);

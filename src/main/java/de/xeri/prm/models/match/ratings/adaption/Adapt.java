@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.adaption;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Adapt extends RatingSubcategory {
 
   public double get() {
     return handleValues(getAntiHealing(), getPenetration(), getDamageBuild(), getResistanceBuild(), getFarmstop());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getAntiHealing(), getPenetration(), getDamageBuild(), getResistanceBuild(), getFarmstop());
   }
 
   public Stat getAntiHealing() {

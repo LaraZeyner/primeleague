@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.income;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Itemization extends RatingSubcategory {
 
   public double get() {
     return handleValues(getLegendaryItems(), getItemsBought(), getMejaisTime(), getGrievousWoundsAndPenetrationTime(), getStartitemSold());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getLegendaryItems(), getItemsBought(), getMejaisTime(), getGrievousWoundsAndPenetrationTime(), getStartitemSold());
   }
 
   public Stat getLegendaryItems() {

@@ -195,7 +195,7 @@ public final class SeasonLoader {
     final long start = calibrationStage.getStageStart().getTimeInMillis() + 51_000_000L;
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 5; j++) {
-        final long startMillis = start + i * 86_400_000L + j * 4_500_000L;
+        final long startMillis = start + i * Const.MILLIS_PER_DAY + j * 4_500_000L;
         final Matchday matchday = new Matchday("Runde " + ((i * 5) + j + 1), new Date(startMillis), new Date(startMillis + 2_700_000L));
         calibrationStage.addMatchday(matchday);
         System.out.println(((i * 5) + j + 1));

@@ -61,6 +61,7 @@ import org.hibernate.query.Query;
 @NamedQuery(name = "Account.findByName", query = "FROM Account a WHERE name = :name")
 @Getter
 @Setter
+@ToString
 @RequiredArgsConstructor
 public class Account implements Serializable {
 
@@ -73,7 +74,10 @@ public class Account implements Serializable {
 
   public static Account get(Account neu) {
     if (neu.getPuuid() != null && hasPuuid(neu.getPuuid()) || hasName(neu.getName())) {
-      final Account account = hasPuuid(neu.getPuuid()) ? findPuuid(neu.getPuuid()) : findName(neu.getName());
+      Account account = findPuuid(neu.getPuuid());
+      if (account == null) {
+        account = findName(neu.getName());
+      }
       account.setName(neu.getName());
       if (neu.getPuuid() != null) account.setPuuid(neu.getPuuid());
       if (neu.getSummonerId() != null) account.setSummonerId(neu.getSummonerId());
@@ -272,31 +276,14 @@ public class Account implements Serializable {
 
   public boolean isPlaying() {
     return getLastCompetitiveGame() != null &&
-        !getLastCompetitiveGame().after(new Date(System.currentTimeMillis() - Const.DAYS_UNTIL_INACTIVE * 86_400_000L));
+        !getLastCompetitiveGame().after(new Date(System.currentTimeMillis() - Const.DAYS_UNTIL_INACTIVE * Const.MILLIS_PER_DAY));
   }
-
-  @Override
-  public String toString() {
-    return "Account{" +
-        "puuid='" + puuid + '\'' +
-        ", summonerId='" + summonerId + '\'' +
-        ", name='" + name + '\'' +
-        ", player=" + player +
-        ", icon=" + icon +
-        ", level=" + level +
-        ", lastUpdate=" + lastUpdate +
-        ", active=" + active +
-        ", playerperformances=" + playerperformances.size() +
-        ", seasonElos=" + seasonElos.size() +
-        '}';
-  }
-  //</editor-fold>
 
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-    final Account account = (Account) o;
+    Account account = (Account) o;
     return Objects.equals(id, account.id);
   }
 

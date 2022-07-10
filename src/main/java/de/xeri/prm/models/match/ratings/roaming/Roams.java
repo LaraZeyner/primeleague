@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Roams extends RatingSubcategory {
 
   public double get() {
     return handleValues(getMinionAvantagePerRoam(), getRoamSuccess(), getGoldXpEfficiency(), getRoamExpense(), getObjectiveDamageWhileRoaming());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getMinionAvantagePerRoam(), getRoamSuccess(), getGoldXpEfficiency(), getRoamExpense(), getObjectiveDamageWhileRoaming());
   }
 
   public Stat getMinionAvantagePerRoam() {

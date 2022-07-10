@@ -16,11 +16,14 @@ import org.hibernate.Transaction;
  * Created by Lara on 29.03.2022 for TRUES
  */
 public class PrimeData {
-  private static PrimeData PrimeData;
+  private static PrimeData primeData;
 
   public static PrimeData getInstance() {
-    if (PrimeData == null) PrimeData = new PrimeData();
-    return PrimeData;
+    if (primeData == null) {
+      primeData = new PrimeData();
+      primeData.init();
+    }
+    return primeData;
   }
 
   private final RequestManager requester;
@@ -38,16 +41,16 @@ public class PrimeData {
     this.transaction = session.beginTransaction();
   }
 
-  public void init() {
+  private void init() {
     if (currentGroup == null) {
       Logger logger = Logger.getLogger("Init");
       val team = Team.findTid(Const.TEAMID);
-      PrimeData.setCurrentGroup(team.getLastLeague());
+      primeData.setCurrentGroup(team.getLastLeague());
       logger.info("Gruppe geladen");
 
       val season = Season.current();
-      PrimeData.setCurrentSeason(season);
-      PrimeData.setTrueTeam(team);
+      primeData.setCurrentSeason(season);
+      primeData.setTrueTeam(team);
       logger.info("Season geladen");
       logger.info("Datenbank geladen");
     }
@@ -60,7 +63,7 @@ public class PrimeData {
   //<editor-fold desc="getter and setter">
   public League getCurrentGroup() {
     if (currentGroup == null) {
-      PrimeData.init();
+      primeData.init();
     }
     return currentGroup;
   }
@@ -71,21 +74,21 @@ public class PrimeData {
 
   public Season getCurrentSeason() {
     if (currentSeason == null) {
-      PrimeData.init();
+      primeData.init();
     }
     return currentSeason;
   }
 
   public Team getTrueTeam() {
     if (trueTeam == null) {
-      PrimeData.init();
+      primeData.init();
     }
     return trueTeam;
   }
 
   public String getCurrentVersion() {
     if (currentVersion == null) {
-      final JSON json = PrimeData.getInstance().getRequester().requestJSON("https://ddragon.leagueoflegends.com/api/versions.json");
+      final JSON json = getInstance().getRequester().requestJSON("https://ddragon.leagueoflegends.com/api/versions.json");
       final Object versionObject = json.getJSONArray().get(0);
       currentVersion = String.valueOf(versionObject);
     }

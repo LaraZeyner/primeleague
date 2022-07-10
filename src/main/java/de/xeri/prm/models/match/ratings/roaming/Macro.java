@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -22,6 +23,11 @@ public class Macro extends RatingSubcategory {
 
   public double get() {
     return handleValues(getTeleportKills(), getJungleCampsStolen(), getMidgameGoldXPEfficiency(), getGrouping(), getLateXPGoldLead());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getTeleportKills(), getJungleCampsStolen(), getMidgameGoldXPEfficiency(), getGrouping(), getLateXPGoldLead());
   }
 
   public Stat getTeleportKills() {

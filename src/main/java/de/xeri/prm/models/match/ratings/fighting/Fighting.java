@@ -1,9 +1,11 @@
 package de.xeri.prm.models.match.ratings.fighting;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
@@ -60,5 +62,9 @@ public class Fighting {
     return Util.subvalues(damage, plays, catches, snowball, strongPhase);
   }
 
+  public List<String> getSubcategoryStats(int id) {
+    RatingSubcategory subcategory = Arrays.asList(damage, plays, catches, snowball, strongPhase).get(id);
+    return subcategory.getData();
+  }
 
 }

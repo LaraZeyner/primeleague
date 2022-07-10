@@ -1,9 +1,11 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
@@ -58,6 +60,11 @@ public class Roaming {
 
   public List<String> subValues() {
     return Util.subvalues(turretPressure, macro, roams, ganks, dives);
+  }
+
+  public List<String> getSubcategoryStats(int id) {
+    RatingSubcategory subcategory = Arrays.asList(turretPressure, macro, roams, ganks, dives).get(id);
+    return subcategory.getData();
   }
 
 }

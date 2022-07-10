@@ -1,9 +1,11 @@
 package de.xeri.prm.models.match.ratings.income;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
@@ -58,6 +60,11 @@ public class Income {
 
   public List<String> subValues() {
     return Util.subvalues(teamfights, skirmishes, earlyIncome, generalIncome, itemization);
+  }
+
+  public List<String> getSubcategoryStats(int id) {
+    RatingSubcategory subcategory = Arrays.asList(teamfights, skirmishes, earlyIncome, generalIncome, itemization).get(id);
+    return subcategory.getData();
   }
 
 }

@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.objectives;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,12 @@ public class Controlwards extends RatingSubcategory {
 
   public double get() {
     return handleValues(getControlwardsPlaced(), getControlwardsProtected(), getControlwardsEnemyJungle(), getFirstControlwardTime(),
+        getAverageControlwardInventoryTime());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getControlwardsPlaced(), getControlwardsProtected(), getControlwardsEnemyJungle(), getFirstControlwardTime(),
         getAverageControlwardInventoryTime());
   }
 

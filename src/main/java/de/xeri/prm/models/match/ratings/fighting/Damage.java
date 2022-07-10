@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.fighting;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Damage extends RatingSubcategory {
 
   public double get() {
     return handleValues(getTeamDamage(), getTeamTankyness(), getTeamDurability(), getHealing(), getTimeInCombat());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getTeamDamage(), getTeamTankyness(), getTeamDurability(), getHealing(), getTimeInCombat());
   }
 
   public Stat getTeamDamage() {

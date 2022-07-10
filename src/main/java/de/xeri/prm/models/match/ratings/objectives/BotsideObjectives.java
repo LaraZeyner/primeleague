@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.objectives;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class BotsideObjectives extends RatingSubcategory {
 
   public double get() {
     return handleValues(getDragonTime(), getDragonTakedowns(), getElderTime(), getFirstDrake(), getSoulrateAndPerfect());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getDragonTime(), getDragonTakedowns(), getElderTime(), getFirstDrake(), getSoulrateAndPerfect());
   }
 
   public Stat getDragonTime() {

@@ -1,71 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+      "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:p="http://primefaces.org/ui"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets">
 <h:head>
-    <title>Technical Really Unique Esports</title>
-    <h:outputStylesheet library="css" name="styles.css"/>
-    <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
+  <title>Technical Really Unique Esports</title>
+  <h:outputStylesheet library="css" name="styles.css"/>
+  <h:outputStylesheet library="webjars" name="primeflex/2.0.0/primeflex.min.css"/>
 </h:head>
 
 <h:body styleClass="w3-light-grey w3-content" style="max-width: 1920px">
-    <ui:insert name="topbar">
-        <ui:include src="/templates/topbar.xhtml"/>
-    </ui:insert>
+  <ui:insert name="topbar">
+    <ui:include src="/templates/topbar.xhtml"/>
+  </ui:insert>
 
-    <div class="p-grid nested-grid">
-        <div class="p-col-10">
-            <h1> Willkommen bei den TRUES</h1>
-            <div class="p-grid">
-                <div class="p-col-4">
-                    <h:form>
-                        <div class="ui-card">
-                            <h5>Anmeldung</h5>
-                            <div class="ui-fluid">
-                                <div class="p-field">
-                                    <label for="username">Kennung</label>
-                                    <p:inputText id="username" type="text"/>
-                                </div>
-                                <div class="p-field">
-                                    <label for="password">Passwort</label>
-                                    <p:inputText id="password" type="text"/>
-                                </div>
-                                <p:commandButton type="button" value="Anmelden"/>
-                            </div>
-                        </div>
-                        <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
-                    </h:form>
-
-                    <div id="angemeldet">
-                        Angemeldet.
-
-                        <p>
-                            Wähle entsprechendes Team aus.
-                            Aktuell wird nur TRUE unterstützt.
-                        </p>
-
-                    </div>
+  <div class="p-grid nested-grid">
+    <div class="p-col-10">
+      <h1> Willkommen bei den TRUES</h1>
+      <div class="p-grid">
+        <div class="p-col-4">
+          <h:form>
+            <div class="ui-card">
+              <h5>Anmeldung</h5>
+              <div class="ui-fluid">
+                <div class="p-field">
+                  <label for="username">Kennung</label>
+                  <p:inputText id="username" type="text"/>
                 </div>
-
-                <div id="nicht-gemeldet" class="p-col-8">
-                    <div class="ui-card">
-                        <h5>Aktuelle Scrimtermine</h5>
-                        <p:dataTable lazy="false" var="scrims" value="#{loadScrims.scrimmagePlannings}" size="small">
-                            <p:column headerText="Startzeit">#{scrims.start}</p:column>
-                            <p:column headerText="Anzahl Spiele">#{scrims.games}</p:column>
-                        </p:dataTable>
-                    </div>
-
+                <div class="p-field">
+                  <label for="password">Passwort</label>
+                  <p:inputText id="password" type="text"/>
                 </div>
+                <p:commandButton type="button" value="Anmelden"/>
+              </div>
             </div>
+            <p:button value="Logout" icon="pi pi-fw pi-sign-out" styleClass="ui-button-info"/>
+          </h:form>
+
+          <div id="angemeldet">
+            Angemeldet.
+
+            <p>
+              Wähle entsprechendes Team aus.
+              Aktuell wird nur TRUE unterstützt.
+            </p>
+
+          </div>
         </div>
-        <div class="p-col-2">
-            Sidebar
+
+        <div id="nicht-gemeldet" class="p-col-8">
+          <div class="ui-card">
+            <h5>Aktuelle Scrimtermine</h5>
+            <p:dataTable lazy="false" var="scrims" value="#{loadScrims.scrimmagePlannings}" size="small">
+              <p:column headerText="Startzeit">#{scrims.start}</p:column>
+              <p:column headerText="Anzahl Spiele">#{scrims.games}</p:column>
+            </p:dataTable>
+          </div>
+
         </div>
+      </div>
     </div>
+    <div class="p-col-2">
+      Sidebar
+    </div>
+  </div>
 
 </h:body>
 </html>

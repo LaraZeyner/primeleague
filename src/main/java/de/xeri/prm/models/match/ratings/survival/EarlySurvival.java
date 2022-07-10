@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.survival;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class EarlySurvival extends RatingSubcategory {
 
   public double get() {
     return handleValues(getFirstKillDeath(), getFirstBaseThroughRecall(), getLaneLeadWithoutDeaths());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getFirstKillDeath(), getFirstBaseThroughRecall(), getLaneLeadWithoutDeaths());
   }
 
   public Stat getFirstKillDeath() {

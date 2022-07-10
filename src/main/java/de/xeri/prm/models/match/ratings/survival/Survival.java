@@ -1,9 +1,11 @@
 package de.xeri.prm.models.match.ratings.survival;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
+import de.xeri.prm.models.match.ratings.RatingSubcategory;
 import de.xeri.prm.models.match.ratings.Ratings;
 import de.xeri.prm.models.match.ratings.StatSubcategory;
 import de.xeri.prm.util.Const;
@@ -58,6 +60,11 @@ public class Survival {
 
   public List<String> subValues() {
     return Util.subvalues(earlySurvival, generalSurvival, utility, resourceManagement, isolation);
+  }
+
+  public List<String> getSubcategoryStats(int id) {
+    RatingSubcategory subcategory = Arrays.asList(earlySurvival, generalSurvival, utility, resourceManagement, isolation).get(id);
+    return subcategory.getData();
   }
 
 }

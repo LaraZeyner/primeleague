@@ -58,6 +58,13 @@ public class PlayerView implements Serializable {
   private String firstItem;
   private List<String> playerTags; //TODO (Abgie) 24.05.2022:
 
+  private List<Tag> extremeValueTagsPositive;
+  private List<Tag> highValueTagsPositive;
+  private List<Tag> strongValueTagsPositive;
+  private List<Tag> extremeValueTagsNegative;
+  private List<Tag> highValueTagsNegative;
+  private List<Tag> strongValueTagsNegative;
+
   public PlayerView(Player player, Lane lane) {
     this.player = player;
     this.name = player.getDisplayName();
@@ -88,12 +95,36 @@ public class PlayerView implements Serializable {
     this.selectedChampion = championsPresence.get(0);
     this.recommended = new ArrayList<>();
 
+
+    this.extremeValueTagsPositive = new ArrayList<>();
+    this.highValueTagsPositive = new ArrayList<>();
+    this.strongValueTagsPositive = new ArrayList<>();
+    this.extremeValueTagsNegative = new ArrayList<>();
+    this.highValueTagsNegative = new ArrayList<>();
+    this.strongValueTagsNegative = new ArrayList<>();
+
     final Objectives objectives = ratings.getObjectives();
     final List<String> objectiveKeys = objectives.subKeys();
     final List<String> objectiveOut = new ArrayList<>();
     for (int i = 0; i < objectiveKeys.size(); i++) {
-      objectiveOut.add(objectiveKeys.get(i));
-      objectiveOut.add(objectives.subValues().get(i));
+      final String objectiveKey = objectiveKeys.get(i);
+      objectiveOut.add(objectiveKey);
+      final String objectiveValueString = objectives.subValues().get(i);
+      objectiveOut.add(objectiveValueString);
+      int objectiveValue = Integer.parseInt(objectiveValueString);
+      if (objectiveValue > 66) {
+        extremeValueTagsPositive.add(new Tag(objectiveKey, objectives.getSubcategoryStats(i)));
+      } else if (objectiveValue > 49) {
+        highValueTagsPositive.add(new Tag(objectiveKey, objectives.getSubcategoryStats(i)));
+      } else if (objectiveValue > 33) {
+        strongValueTagsPositive.add(new Tag(objectiveKey, objectives.getSubcategoryStats(i)));
+      } else if (objectiveValue < -66) {
+        extremeValueTagsNegative.add(new Tag(objectiveKey, objectives.getSubcategoryStats(i)));
+      } else if (objectiveValue < -49) {
+        highValueTagsNegative.add(new Tag(objectiveKey, objectives.getSubcategoryStats(i)));
+      } else if (objectiveValue < -33) {
+        strongValueTagsNegative.add(new Tag(objectiveKey, objectives.getSubcategoryStats(i)));
+      }
     }
     this.onObjectives = objectiveOut;
 
@@ -101,8 +132,24 @@ public class PlayerView implements Serializable {
     final List<String> roamingKeys = roaming.subKeys();
     final List<String> roamingOut = new ArrayList<>();
     for (int i = 0; i < roamingKeys.size(); i++) {
-      roamingOut.add(roamingKeys.get(i));
-      roamingOut.add(roaming.subValues().get(i));
+      final String roamingKey = roamingKeys.get(i);
+      roamingOut.add(roamingKey);
+      final String roamingValueString = roaming.subValues().get(i);
+      roamingOut.add(roamingValueString);
+      int roamingValue = Integer.parseInt(roamingValueString);
+      if (roamingValue > 66) {
+        extremeValueTagsPositive.add(new Tag(roamingKey, roaming.getSubcategoryStats(i)));
+      } else if (roamingValue > 49) {
+        highValueTagsPositive.add(new Tag(roamingKey, roaming.getSubcategoryStats(i)));
+      } else if (roamingValue > 33) {
+        strongValueTagsPositive.add(new Tag(roamingKey, roaming.getSubcategoryStats(i)));
+      } else if (roamingValue < -66) {
+        extremeValueTagsNegative.add(new Tag(roamingKey, roaming.getSubcategoryStats(i)));
+      } else if (roamingValue < -49) {
+        highValueTagsNegative.add(new Tag(roamingKey, roaming.getSubcategoryStats(i)));
+      } else if (roamingValue < -33) {
+        strongValueTagsNegative.add(new Tag(roamingKey, roaming.getSubcategoryStats(i)));
+      }
     }
     this.onRoaming = roamingOut;
 
@@ -110,8 +157,24 @@ public class PlayerView implements Serializable {
     final List<String> fightingKeys = fighting.subKeys();
     final List<String> fightingOut = new ArrayList<>();
     for (int i = 0; i < fightingKeys.size(); i++) {
-      fightingOut.add(fightingKeys.get(i));
-      fightingOut.add(fighting.subValues().get(i));
+      final String fightingKey = fightingKeys.get(i);
+      fightingOut.add(fightingKey);
+      final String fightingValueString = fighting.subValues().get(i);
+      fightingOut.add(fightingValueString);
+      int fightingValue = Integer.parseInt(fightingValueString);
+      if (fightingValue > 66) {
+        extremeValueTagsPositive.add(new Tag(fightingKey, fighting.getSubcategoryStats(i)));
+      } else if (fightingValue > 49) {
+        highValueTagsPositive.add(new Tag(fightingKey, fighting.getSubcategoryStats(i)));
+      } else if (fightingValue > 33) {
+        strongValueTagsPositive.add(new Tag(fightingKey, fighting.getSubcategoryStats(i)));
+      } else if (fightingValue < -66) {
+        extremeValueTagsNegative.add(new Tag(fightingKey, fighting.getSubcategoryStats(i)));
+      } else if (fightingValue < -49) {
+        highValueTagsNegative.add(new Tag(fightingKey, fighting.getSubcategoryStats(i)));
+      } else if (fightingValue < -33) {
+        strongValueTagsNegative.add(new Tag(fightingKey, fighting.getSubcategoryStats(i)));
+      }
     }
     this.onFighting = fightingOut;
 
@@ -119,8 +182,24 @@ public class PlayerView implements Serializable {
     final List<String> incomeKeys = income.subKeys();
     final List<String> incomeOut = new ArrayList<>();
     for (int i = 0; i < incomeKeys.size(); i++) {
-      incomeOut.add(incomeKeys.get(i));
-      incomeOut.add(income.subValues().get(i));
+      final String incomeKey = incomeKeys.get(i);
+      incomeOut.add(incomeKey);
+      final String incomeValueString = income.subValues().get(i);
+      incomeOut.add(incomeValueString);
+      int incomeValue = Integer.parseInt(incomeValueString);
+      if (incomeValue > 66) {
+        extremeValueTagsPositive.add(new Tag(incomeKey, income.getSubcategoryStats(i)));
+      } else if (incomeValue > 49) {
+        highValueTagsPositive.add(new Tag(incomeKey, income.getSubcategoryStats(i)));
+      } else if (incomeValue > 33) {
+        strongValueTagsPositive.add(new Tag(incomeKey, income.getSubcategoryStats(i)));
+      } else if (incomeValue < -66) {
+        extremeValueTagsNegative.add(new Tag(incomeKey, income.getSubcategoryStats(i)));
+      } else if (incomeValue < -49) {
+        highValueTagsNegative.add(new Tag(incomeKey, income.getSubcategoryStats(i)));
+      } else if (incomeValue < -33) {
+        strongValueTagsNegative.add(new Tag(incomeKey, income.getSubcategoryStats(i)));
+      }
     }
     this.onIncome = incomeOut;
 
@@ -128,8 +207,24 @@ public class PlayerView implements Serializable {
     final List<String> survivalKeys = survival.subKeys();
     final List<String> survivalOut = new ArrayList<>();
     for (int i = 0; i < survivalKeys.size(); i++) {
-      survivalOut.add(survivalKeys.get(i));
-      survivalOut.add(survival.subValues().get(i));
+      final String survivalKey = survivalKeys.get(i);
+      survivalOut.add(survivalKey);
+      final String survivalValueString = survival.subValues().get(i);
+      survivalOut.add(survivalValueString);
+      int survivalValue = Integer.parseInt(survivalValueString);
+      if (survivalValue > 66) {
+        extremeValueTagsPositive.add(new Tag(survivalKey, survival.getSubcategoryStats(i)));
+      } else if (survivalValue > 49) {
+        highValueTagsPositive.add(new Tag(survivalKey, survival.getSubcategoryStats(i)));
+      } else if (survivalValue > 33) {
+        strongValueTagsPositive.add(new Tag(survivalKey, survival.getSubcategoryStats(i)));
+      } else if (survivalValue < -66) {
+        extremeValueTagsNegative.add(new Tag(survivalKey, survival.getSubcategoryStats(i)));
+      } else if (survivalValue < -49) {
+        highValueTagsNegative.add(new Tag(survivalKey, survival.getSubcategoryStats(i)));
+      } else if (survivalValue < -33) {
+        strongValueTagsNegative.add(new Tag(survivalKey, survival.getSubcategoryStats(i)));
+      }
     }
     this.onSurvival = survivalOut;
 
@@ -137,8 +232,24 @@ public class PlayerView implements Serializable {
     final List<String> laningKeys = laning.subKeys();
     final List<String> laningOut = new ArrayList<>();
     for (int i = 0; i < laningKeys.size(); i++) {
-      laningOut.add(laningKeys.get(i));
-      laningOut.add(laning.subValues().get(i));
+      final String laningKey = laningKeys.get(i);
+      laningOut.add(laningKey);
+      final String laningValueString = laning.subValues().get(i);
+      laningOut.add(laningValueString);
+      int laningValue = Integer.parseInt(laningValueString);
+      if (laningValue > 66) {
+        extremeValueTagsPositive.add(new Tag(laningKey, laning.getSubcategoryStats(i)));
+      } else if (laningValue > 49) {
+        highValueTagsPositive.add(new Tag(laningKey, laning.getSubcategoryStats(i)));
+      } else if (laningValue > 33) {
+        strongValueTagsPositive.add(new Tag(laningKey, laning.getSubcategoryStats(i)));
+      } else if (laningValue < -66) {
+        extremeValueTagsNegative.add(new Tag(laningKey, laning.getSubcategoryStats(i)));
+      } else if (laningValue < -49) {
+        highValueTagsNegative.add(new Tag(laningKey, laning.getSubcategoryStats(i)));
+      } else if (laningValue < -33) {
+        strongValueTagsNegative.add(new Tag(laningKey, laning.getSubcategoryStats(i)));
+      }
     }
     this.onLaning = laningOut;
   }

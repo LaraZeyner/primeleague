@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class Ganks extends RatingSubcategory {
 
   public double get() {
     return handleValues(getTeamInvadesAndBuffsTaken(), getEarlyGanksSpottedAndTimeWasted(), getProximity(), getGankPriority(), getGankSetups());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getTeamInvadesAndBuffsTaken(), getEarlyGanksSpottedAndTimeWasted(), getProximity(), getGankPriority(), getGankSetups());
   }
 
   public Stat getTeamInvadesAndBuffsTaken() {

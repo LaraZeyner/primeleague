@@ -1,5 +1,6 @@
 package de.xeri.prm.models.match.ratings.roaming;
 
+import java.util.List;
 import java.util.Map;
 
 import de.xeri.prm.models.enums.Lane;
@@ -21,6 +22,11 @@ public class TurretPressure extends RatingSubcategory {
 
   public double get() {
     return handleValues(getFirstTowerAdvantage(), getTurretPlatings(), getTurretTakedownsEarly(), getSplitpush(), getTurretParticipation());
+  }
+
+  @Override
+  public List<String> getData() {
+    return handleData(getFirstTowerAdvantage(), getTurretPlatings(), getTurretTakedownsEarly(), getSplitpush(), getTurretParticipation());
   }
 
   public Stat getFirstTowerAdvantage() {
